@@ -1,3 +1,7 @@
 export default async function (context, req) {
-  return { status: 200, body: "pong " + new Date().toISOString() };
+  context.res = {
+    status: 200,
+    headers: { "content-type": "text/plain" },
+    body: "pong " + new Date().toISOString()
+  };
 }
