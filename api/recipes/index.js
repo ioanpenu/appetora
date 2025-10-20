@@ -6,17 +6,10 @@ export default async function (context, req) {
     // auth din cookie
     const cookie = (req.headers && req.headers.cookie) || "";
     const m = /appetora_token=([^;]+)/.exec(cookie);
-    if (!m) {
-      context.res = json(401, { error: "No session" });
-      return;
-    }
+    if (!m) return respond(context, 401, { error: "No session" });
     const me = verify(m[1]);
-    if (!me) {
-      context.res = json(401, { error: "Invalid session" });
-      return;
-    }
+    if (!me) return respond(context, 401, { error: "Invalid session" });
 
-    // doar GET pentru moment – returnează lista de rețete a userului
     if (req.method === "GET") {
       const pk = `recipes#${me.uid}`;
       const { resources = [] } = await colRecipes.items
@@ -25,24 +18,47 @@ export default async function (context, req) {
           parameters: [{ name: "@pk", value: pk }],
         })
         .fetchAll();
-
-      context.res = json(200, resources);
-      return;
+      return respond(context, 200, resources);
     }
 
-    // fallback pt metode neacoperite acum
-    context.res = json(405, { error: "Method not allowed" });
+    if (req.method === "POST") {
+      const b = await readBody(req);
+      const name = String(b.name || "").trim();
+      if (!name) return respond(context, 400, { error: "Name required" });
+
+      const recipe = {
+        id: String(Date.now()),
+        pk: `recipes#${me.uid}`,
+        uid: me.uid,
+        name,
+        category: String(b.category || "").trim() || null,
+        ingredients: Array.isArray(b.ingredients) ? b.ingredients.map(x => String(x)) : [],
+        instructions: String(b.instructions || ""),
+        paused: !!b.paused,
+        createdAt: new Date().toISOString(),
+      };
+
+      await colRecipes.items.upsert(recipe);
+      return respond(context, 201, recipe);
+    }
+
+    return respond(context, 405, { error: "Method not allowed" });
   } catch (e) {
     context.log.error(e);
-    context.res = json(500, { error: e.message });
+    return respond(context, 500, { error: e.message });
   }
 }
 
 /* helpers */
-function json(status, obj) {
-  return {
+function respond(context, status, obj) {
+  context.res = {
     status,
     headers: { "content-type": "application/json" },
     body: JSON.stringify(obj),
   };
+}
+
+async function readBody(req) {
+  if (!req.body) return {};
+  return typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body;
 }
