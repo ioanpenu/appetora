@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appetora</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 p-6">
+  <div class="max-w-3xl mx-auto grid gap-4">
+    <header class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Appetora</h1>
+      <div class="flex gap-2 items-center text-sm">
+        <span id="usage" class="text-slate-500"></span>
+        <span id="whoami" class="text-slate-600"></span>
+        <button id="btn-login" class="px-3 py-1 rounded bg-slate-100 border">Sign in</button>
+        <button id="btn-register" class="px-3 py-1 rounded bg-slate-100 border">Register</button>
+        <button id="btn-logout" class="px-3 py-1 rounded bg-slate-100 border hidden">Sign out</button>
+        <a href="/admin.html" class="px-3 py-1 rounded bg-slate-100 border">Admin</a>
+      </div>
+    </header>
+
+    <section class="bg-white rounded-xl p-4 shadow grid gap-3">
+      <div class="flex gap-2">
+        <input id="inp-url" placeholder="Recipe URL (no YouTube)" class="border rounded px-3 py-2 flex-1"/>
+        <button id="btn-import-url" class="px-3 py-2 rounded bg-slate-100 border">Import URL</button>
+      </div>
+      <div class="flex gap-2">
+        <input id="inp-file" type="file" accept=".txt,text/plain" class="border rounded px-3 py-2 bg-white"/>
+        <button id="btn-import-file" class="px-3 py-2 rounded bg-slate-100 border">Import .txt</button>
+      </div>
+      <div id="import-status" class="text-sm text-slate-500"></div>
+    </section>
+
+    <section class="bg-white rounded-xl p-4 shadow grid gap-3">
+      <form id="form-recipe" class="grid gap-2">
+        <input id="inp-name" placeholder="Recipe name" class="border rounded px-3 py-2" required/>
+        <input id="inp-category" placeholder="Category (optional)" class="border rounded px-3 py-2"/>
+        <textarea id="inp-ingredients" rows="5" placeholder="Ingredients (one per line)" class="border rounded px-3 py-2"></textarea>
+        <textarea id="inp-instructions" rows="5" placeholder="Instructions" class="border rounded px-3 py-2"></textarea>
+        <button id="btn-save" class="px-3 py-2 rounded bg-orange-500 text-white">Save to list</button>
+        <div id="save-status" class="text-sm text-slate-500"></div>
+      </form>
+      <div class="text-sm text-slate-600"><span id="count">0</span> recipes</div>
+      <ul id="list" class="grid gap-2"></ul>
+    </section>
+  </div>
+
+<script>
+const state = { user:null, recipes:[] };
+
+function show(el, on){ el.classList[on?'remove':'add']('hidden'); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function setAuthUI(){ 
+  const who=document.getElementById('whoami');
+  const btnLogin=document.getElementById('btn-login');
+  const btnReg=document.getElementById('btn-register');
+  const btnLogout=document.getElementById('btn-logout');
+  who.textContent = state.user ? (state.user.name || state.user.email) : '';
+  show(btnLogin, !state.user); show(btnReg, !state.user); show(btnLogout, !!state.user);
+}
+
+async function refreshUsage(){ if(!state.user) return;
+  try{ const r=await fetch('/api/usage/today'); const j=await r.json();
+    if(r.ok) document.getElementById('usage').textContent = `Today: ${j.calls||0}/5 imports`; }catch{}
+}
+
+function renderList(){
+  const ul=document.getElementById('list'); ul.innerHTML='';
+  document.getElementById('count').textContent = state.recipes.length;
+  state.recipes.forEach(r=>{
+    const li=document.createElement('li'); li.className='p-3 rounded border flex justify-between items-center';
+    const ingCount = (r.ingredients && r.ingredients.length) ? r.ingredients.length : 0;
+    li.innerHTML = `<div><div class="font-medium">${esc(r.name)}</div><div class="text-xs text-slate-500">${esc(r.category||'Uncategorized')} • ${ingCount} ingredients</div></div><div class="flex gap-2"><button class="px-2 py-1 rounded bg-slate-100 border">Edit</button><button class="px-2 py-1 rounded bg-red-50 text-red-700 border">Delete</button></div>`;
+    const [btnEdit, btnDel] = li.querySelectorAll('button');
+    btnEdit.onclick=()=>{ document.getElementById('inp-name').value=r.name||''; document.getElementById('inp-category').value=r.category||''; document.getElementById('inp-ingredients').value=(r.ingredients||[]).join('\n'); document.getElementById('inp-instructions').value=r.instructions||''; state.editingId=r.id; };
+    btnDel.onclick=async()=>{ await fetch('/api/recipes?id='+encodeURIComponent(r.id),{method:'DELETE'}); state.recipes=state.recipes.filter(x=>x.id!==r.id); renderList(); };
+    ul.appendChild(li);
+  });
+}
+
+document.getElementById('btn-login').onclick=()=>openModal('login');
+document.getElementById('btn-register').onclick=()=>openModal('register');
+document.getElementById('btn-logout').onclick=async()=>{ try{ await fetch('/api/auth/logout',{method:'POST'});}catch{} state.user=null; setAuthUI(); };
+
+function openModal(kind){
+  const email=prompt(kind==='login'?'Email to sign in:':'Email to register:');
+  if(!email) return;
+  const pwd=prompt('Password:');
+  if(!pwd) return;
+  fetch('/api/auth/'+(kind==='login'?'login':'register'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email, password:pwd})})
+   .then(r=>r.json().then(j=>({ok:r.ok,j})))
+   .then(({ok,j})=>{ if(!ok) return alert(j.error||'Auth error'); state.user=j.user; setAuthUI(); refreshAll(); });
+}
+
+document.getElementById('form-recipe').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name=document.getElementById('inp-name').value.trim();
+  const category=document.getElementById('inp-category').value.trim();
+  const ingredients=document.getElementById('inp-ingredients').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const instructions=document.getElementById('inp-instructions').value.trim();
+  if(!name) return;
+  const rec={name,category:category||null,ingredients,instructions,paused:false};
+  if(state.editingId){
+    rec.id=state.editingId;
+    const u=await fetch('/api/recipes',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)}).then(r=>r.json());
+    const i=state.recipes.findIndex(x=>x.id===state.editingId); if(i>=0) state.recipes[i]=u;
+    state.editingId=null;
+  }else{
+    const c=await fetch('/api/recipes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)}).then(r=>r.json());
+    state.recipes.unshift(c);
+  }
+  document.getElementById('save-status').textContent='Saved'; setTimeout(()=>document.getElementById('save-status').textContent='',1500);
+  e.target.reset();
+  renderList();
+});
+
+document.getElementById('btn-import-url').onclick=async()=>{
+  const url=document.getElementById('inp-url').value.trim();
+  const st=document.getElementById('import-status');
+  if(!url){ st.textContent='Add a URL first.'; return; }
+  st.textContent='Importing...';
+  try{ const r=await fetch('/api/import?url='+encodeURIComponent(url)); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Import error');
+    document.getElementById('inp-name').value=j.name||'';
+    document.getElementById('inp-category').value=j.category||'';
+    document.getElementById('inp-ingredients').value=(j.ingredients||[]).join('\n');
+    document.getElementById('inp-instructions').value=j.instructions||'';
+    st.textContent='Imported. Review & Save.';
+  }catch(e){ st.textContent='Error: '+e.message; }
+};
+
+document.getElementById('btn-import-file').onclick=async()=>{
+  const f=document.getElementById('inp-file').files[0];
+  const st=document.getElementById('import-status');
+  if(!f){ st.textContent='Choose a .txt file first.'; return; }
+  st.textContent='Importing...';
+  const text=await f.text();
+  try{ const r=await fetch('/api/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Import error');
+    document.getElementById('inp-name').value=j.name||'';
+    document.getElementById('inp-category').value=j.category||'';
+    document.getElementById('inp-ingredients').value=(j.ingredients||[]).join('\n');
+    document.getElementById('inp-instructions').value=j.instructions||'';
+    st.textContent='Imported. Review & Save.';
+  }catch(e){ st.textContent='Error: '+e.message; }
+};
+
+async function refreshAll(){
+  if(!state.user) return;
+  const [recipes] = await Promise.all([fetch('/api/recipes').then(r=>r.json())]);
+  state.recipes = recipes;
+  renderList();
+  refreshUsage();
+}
+
+(async function boot(){ try{ const r=await fetch('/api/auth/me'); if(r.ok){ const j=await r.json(); state.user=j.user; } }catch{} setAuthUI(); if(state.user) refreshAll(); })();
+</script>
+</body>
+</html>
