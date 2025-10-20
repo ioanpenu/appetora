@@ -1,159 +1,260 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8"/>
   <title>Appetora</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;--accent:#ff7a17;}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    .wrap{max-width:980px;margin:24px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    h1{font-size:24px;margin:0}
+    .btn{padding:.55rem .9rem;border:1px solid var(--border);border-radius:10px;background:#f8fafc;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+    .btn.ghost{background:transparent}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    input,textarea{width:100%;padding:.6rem .7rem;border:1px solid var(--border);border-radius:12px;background:#fff}
+    label{font-size:12px;color:var(--muted)}
+    .grid{display:grid;gap:10px}
+    .recipes{display:grid;gap:8px}
+    .item{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px}
+    .muted{color:var(--muted);font-size:12px}
+    .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
+    .right{display:flex;gap:6px;align-items:center}
+    .hidden{display:none}
+    dialog{border:none;border-radius:16px;padding:0;max-width:420px;width:calc(100% - 24px)}
+    .dlg{padding:16px}
+    .dlg h3{margin:0 0 8px}
+    .hr{height:1px;background:var(--border);margin:12px 0}
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-900 p-6">
-  <div class="max-w-3xl mx-auto grid gap-4">
-    <header class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold">Appetora</h1>
-      <div class="flex gap-2 items-center text-sm">
-        <span id="usage" class="text-slate-500"></span>
-        <span id="whoami" class="text-slate-600"></span>
-        <button id="btn-login" class="px-3 py-1 rounded bg-slate-100 border">Sign in</button>
-        <button id="btn-register" class="px-3 py-1 rounded bg-slate-100 border">Register</button>
-        <button id="btn-logout" class="px-3 py-1 rounded bg-slate-100 border hidden">Sign out</button>
-        <a href="/admin.html" class="px-3 py-1 rounded bg-slate-100 border">Admin</a>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Appetora</h1>
+      <div id="authBox" class="row">
+        <span id="hello" class="muted hidden">Hi, <b id="helloName"></b></span>
+        <button id="btnSignin" class="btn">Sign in</button>
+        <button id="btnRegister" class="btn">Register</button>
+        <button id="btnLogout" class="btn hidden">Sign out</button>
       </div>
     </header>
 
-    <section class="bg-white rounded-xl p-4 shadow grid gap-3">
-      <div class="flex gap-2">
-        <input id="inp-url" placeholder="Recipe URL (no YouTube)" class="border rounded px-3 py-2 flex-1"/>
-        <button id="btn-import-url" class="px-3 py-2 rounded bg-slate-100 border">Import URL</button>
+    <!-- Add/Edit form -->
+    <section class="card grid">
+      <h2 style="margin:0">Recipe</h2>
+      <div class="row">
+        <div style="flex:1">
+          <label>Name</label>
+          <input id="fName" placeholder="e.g. Pasta Carbonara"/>
+        </div>
+        <div style="width:280px;max-width:100%">
+          <label>Category</label>
+          <input id="fCat" placeholder="optional"/>
+        </div>
       </div>
-      <div class="flex gap-2">
-        <input id="inp-file" type="file" accept=".txt,text/plain" class="border rounded px-3 py-2 bg-white"/>
-        <button id="btn-import-file" class="px-3 py-2 rounded bg-slate-100 border">Import .txt</button>
+      <div>
+        <label>Ingredients (one per line)</label>
+        <textarea id="fIngr" rows="6" placeholder="spaghetti&#10;eggs&#10;bacon&#10;parmesan"></textarea>
       </div>
-      <div id="import-status" class="text-sm text-slate-500"></div>
+      <div>
+        <label>Instructions</label>
+        <textarea id="fInstr" rows="6" placeholder="Steps..."></textarea>
+      </div>
+      <div class="row">
+        <button id="btnSave" class="btn primary">Save to list</button>
+        <button id="btnClear" class="btn">Clear</button>
+        <span id="formInfo" class="muted"></span>
+      </div>
     </section>
 
-    <section class="bg-white rounded-xl p-4 shadow grid gap-3">
-      <form id="form-recipe" class="grid gap-2">
-        <input id="inp-name" placeholder="Recipe name" class="border rounded px-3 py-2" required/>
-        <input id="inp-category" placeholder="Category (optional)" class="border rounded px-3 py-2"/>
-        <textarea id="inp-ingredients" rows="5" placeholder="Ingredients (one per line)" class="border rounded px-3 py-2"></textarea>
-        <textarea id="inp-instructions" rows="5" placeholder="Instructions" class="border rounded px-3 py-2"></textarea>
-        <button id="btn-save" class="px-3 py-2 rounded bg-orange-500 text-white">Save to list</button>
-        <div id="save-status" class="text-sm text-slate-500"></div>
-      </form>
-      <div class="text-sm text-slate-600"><span id="count">0</span> recipes</div>
-      <ul id="list" class="grid gap-2"></ul>
+    <!-- List -->
+    <section class="card grid" style="margin-top:12px">
+      <div class="row" style="align-items:center;justify-content:space-between">
+        <h2 style="margin:0">My recipes</h2>
+        <span id="count" class="pill">0 recipes</span>
+      </div>
+      <div id="empty" class="muted">No recipes yet. Add one above.</div>
+      <div id="list" class="recipes"></div>
     </section>
   </div>
 
+  <!-- Sign in dialog -->
+  <dialog id="dlgSignin"><div class="dlg">
+    <h3>Sign in</h3>
+    <div class="grid">
+      <input id="siEmail" placeholder="email"/>
+      <input id="siPass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doSignin" class="btn primary">Sign in</button>
+        <button class="btn" onclick="dlgSignin.close()">Cancel</button>
+      </div>
+      <div id="siErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
+  <!-- Register dialog -->
+  <dialog id="dlgRegister"><div class="dlg">
+    <h3>Register</h3>
+    <div class="grid">
+      <input id="reEmail" placeholder="email"/>
+      <input id="rePass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doRegister" class="btn primary">Create account</button>
+        <button class="btn" onclick="dlgRegister.close()">Cancel</button>
+      </div>
+      <div id="reErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
 <script>
-const state = { user:null, recipes:[] };
+const $ = (s)=>document.querySelector(s);
+const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count');
+const hello = $('#hello'), helloName = $('#helloName');
+const btnSignin = $('#btnSignin'), btnRegister = $('#btnRegister'), btnLogout = $('#btnLogout');
+const dlgSignin = $('#dlgSignin'), dlgRegister = $('#dlgRegister');
 
-function show(el, on){ el.classList[on?'remove':'add']('hidden'); }
-function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let currentUser = null;
+let editId = null;
 
-function setAuthUI(){ 
-  const who=document.getElementById('whoami');
-  const btnLogin=document.getElementById('btn-login');
-  const btnReg=document.getElementById('btn-register');
-  const btnLogout=document.getElementById('btn-logout');
-  who.textContent = state.user ? (state.user.name || state.user.email) : '';
-  show(btnLogin, !state.user); show(btnReg, !state.user); show(btnLogout, !!state.user);
+async function api(path, opts={}) {
+  const res = await fetch(path, { credentials:'include', ...opts });
+  const ct = res.headers.get('content-type') || '';
+  const body = ct.includes('application/json') ? await res.json() : await res.text();
+  return { status: res.status, body };
 }
 
-async function refreshUsage(){ if(!state.user) return;
-  try{ const r=await fetch('/api/usage/today'); const j=await r.json();
-    if(r.ok) document.getElementById('usage').textContent = `Today: ${j.calls||0}/5 imports`; }catch{}
-}
-
-function renderList(){
-  const ul=document.getElementById('list'); ul.innerHTML='';
-  document.getElementById('count').textContent = state.recipes.length;
-  state.recipes.forEach(r=>{
-    const li=document.createElement('li'); li.className='p-3 rounded border flex justify-between items-center';
-    const ingCount = (r.ingredients && r.ingredients.length) ? r.ingredients.length : 0;
-    li.innerHTML = `<div><div class="font-medium">${esc(r.name)}</div><div class="text-xs text-slate-500">${esc(r.category||'Uncategorized')} • ${ingCount} ingredients</div></div><div class="flex gap-2"><button class="px-2 py-1 rounded bg-slate-100 border">Edit</button><button class="px-2 py-1 rounded bg-red-50 text-red-700 border">Delete</button></div>`;
-    const [btnEdit, btnDel] = li.querySelectorAll('button');
-    btnEdit.onclick=()=>{ document.getElementById('inp-name').value=r.name||''; document.getElementById('inp-category').value=r.category||''; document.getElementById('inp-ingredients').value=(r.ingredients||[]).join('\n'); document.getElementById('inp-instructions').value=r.instructions||''; state.editingId=r.id; };
-    btnDel.onclick=async()=>{ await fetch('/api/recipes?id='+encodeURIComponent(r.id),{method:'DELETE'}); state.recipes=state.recipes.filter(x=>x.id!==r.id); renderList(); };
-    ul.appendChild(li);
-  });
-}
-
-document.getElementById('btn-login').onclick=()=>openModal('login');
-document.getElementById('btn-register').onclick=()=>openModal('register');
-document.getElementById('btn-logout').onclick=async()=>{ try{ await fetch('/api/auth/logout',{method:'POST'});}catch{} state.user=null; setAuthUI(); };
-
-function openModal(kind){
-  const email=prompt(kind==='login'?'Email to sign in:':'Email to register:');
-  if(!email) return;
-  const pwd=prompt('Password:');
-  if(!pwd) return;
-  fetch('/api/auth/'+(kind==='login'?'login':'register'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email, password:pwd})})
-   .then(r=>r.json().then(j=>({ok:r.ok,j})))
-   .then(({ok,j})=>{ if(!ok) return alert(j.error||'Auth error'); state.user=j.user; setAuthUI(); refreshAll(); });
-}
-
-document.getElementById('form-recipe').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const name=document.getElementById('inp-name').value.trim();
-  const category=document.getElementById('inp-category').value.trim();
-  const ingredients=document.getElementById('inp-ingredients').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  const instructions=document.getElementById('inp-instructions').value.trim();
-  if(!name) return;
-  const rec={name,category:category||null,ingredients,instructions,paused:false};
-  if(state.editingId){
-    rec.id=state.editingId;
-    const u=await fetch('/api/recipes',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)}).then(r=>r.json());
-    const i=state.recipes.findIndex(x=>x.id===state.editingId); if(i>=0) state.recipes[i]=u;
-    state.editingId=null;
-  }else{
-    const c=await fetch('/api/recipes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)}).then(r=>r.json());
-    state.recipes.unshift(c);
+async function loadMe() {
+  const r = await api('/api/auth/me');
+  if (r.status === 200 && r.body && r.body.user) {
+    currentUser = r.body.user;
+    hello.classList.remove('hidden');
+    helloName.textContent = currentUser.name || currentUser.email;
+    btnLogout.classList.remove('hidden');
+    btnSignin.classList.add('hidden'); btnRegister.classList.add('hidden');
+    await loadRecipes();
+  } else {
+    currentUser = null;
+    hello.classList.add('hidden');
+    btnLogout.classList.add('hidden');
+    btnSignin.classList.remove('hidden'); btnRegister.classList.remove('hidden');
+    renderRecipes([]);
   }
-  document.getElementById('save-status').textContent='Saved'; setTimeout(()=>document.getElementById('save-status').textContent='',1500);
-  e.target.reset();
-  renderList();
-});
-
-document.getElementById('btn-import-url').onclick=async()=>{
-  const url=document.getElementById('inp-url').value.trim();
-  const st=document.getElementById('import-status');
-  if(!url){ st.textContent='Add a URL first.'; return; }
-  st.textContent='Importing...';
-  try{ const r=await fetch('/api/import?url='+encodeURIComponent(url)); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Import error');
-    document.getElementById('inp-name').value=j.name||'';
-    document.getElementById('inp-category').value=j.category||'';
-    document.getElementById('inp-ingredients').value=(j.ingredients||[]).join('\n');
-    document.getElementById('inp-instructions').value=j.instructions||'';
-    st.textContent='Imported. Review & Save.';
-  }catch(e){ st.textContent='Error: '+e.message; }
-};
-
-document.getElementById('btn-import-file').onclick=async()=>{
-  const f=document.getElementById('inp-file').files[0];
-  const st=document.getElementById('import-status');
-  if(!f){ st.textContent='Choose a .txt file first.'; return; }
-  st.textContent='Importing...';
-  const text=await f.text();
-  try{ const r=await fetch('/api/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Import error');
-    document.getElementById('inp-name').value=j.name||'';
-    document.getElementById('inp-category').value=j.category||'';
-    document.getElementById('inp-ingredients').value=(j.ingredients||[]).join('\n');
-    document.getElementById('inp-instructions').value=j.instructions||'';
-    st.textContent='Imported. Review & Save.';
-  }catch(e){ st.textContent='Error: '+e.message; }
-};
-
-async function refreshAll(){
-  if(!state.user) return;
-  const [recipes] = await Promise.all([fetch('/api/recipes').then(r=>r.json())]);
-  state.recipes = recipes;
-  renderList();
-  refreshUsage();
 }
 
-(async function boot(){ try{ const r=await fetch('/api/auth/me'); if(r.ok){ const j=await r.json(); state.user=j.user; } }catch{} setAuthUI(); if(state.user) refreshAll(); })();
+async function loadRecipes() {
+  const r = await api('/api/recipes');
+  if (r.status === 200 && Array.isArray(r.body)) renderRecipes(r.body);
+  else renderRecipes([]);
+}
+
+function renderRecipes(items) {
+  countEl.textContent = `${items.length} recipe${items.length===1?'':'s'}`;
+  if (!items.length) { emptyEl.style.display='block'; listEl.innerHTML=''; return; }
+  emptyEl.style.display='none';
+  listEl.innerHTML = items.map(r => `
+    <div class="item" data-id="${r.id}">
+      <div style="min-width:0">
+        <div style="font-weight:600">${esc(r.name)}</div>
+        <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients ${r.paused? ' • ⏸ paused':''}</div>
+      </div>
+      <div class="right">
+        <button class="btn" onclick="editRecipe('${r.id}')">Edit</button>
+        <button class="btn" onclick="togglePause('${r.id}', ${!!r.paused})">${r.paused?'Resume':'Pause'}</button>
+        <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
+
+async function saveRecipe() {
+  const name = $('#fName').value.trim();
+  if (!name) { info('Name required'); return; }
+  const payload = {
+    id: editId || undefined,
+    name,
+    category: $('#fCat').value.trim(),
+    ingredients: $('#fIngr').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    instructions: $('#fInstr').value
+  };
+  const method = editId ? 'PUT' : 'POST';
+  const r = await api('/api/recipes', {
+    method, headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (r.status===200 || r.status===201) {
+    clearForm(); info(editId?'Updated.':'Saved.');
+    await loadRecipes();
+  } else info(r.body?.error || 'Error');
+}
+
+async function delRecipe(id) {
+  if (!confirm('Delete recipe?')) return;
+  const r = await api('/api/recipes?id='+encodeURIComponent(id), { method:'DELETE' });
+  if (r.status===200) loadRecipes();
+}
+
+async function togglePause(id, paused) {
+  const r = await api('/api/recipes', {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id, paused: !paused })
+  });
+  if (r.status===200) loadRecipes();
+}
+
+async function editRecipe(id) {
+  const r = await api('/api/recipes');
+  if (r.status!==200) return;
+  const rec = (r.body||[]).find(x=>x.id===id);
+  if (!rec) return;
+  editId = rec.id;
+  $('#fName').value = rec.name || '';
+  $('#fCat').value = rec.category || '';
+  $('#fIngr').value = (rec.ingredients||[]).join('\n');
+  $('#fInstr').value = rec.instructions || '';
+  info('Editing… Save to apply or Clear to cancel.');
+}
+
+function clearForm(){
+  editId = null;
+  $('#fName').value=''; $('#fCat').value=''; $('#fIngr').value=''; $('#fInstr').value='';
+  info('');
+}
+
+function info(t){ $('#formInfo').textContent = t; }
+
+/* auth UI */
+$('#btnSave').onclick = saveRecipe;
+$('#btnClear').onclick = clearForm;
+
+btnSignin.onclick = ()=> dlgSignin.showModal();
+btnRegister.onclick = ()=> dlgRegister.showModal();
+btnLogout.onclick = async ()=>{
+  await api('/api/auth/logout', { method:'POST' });
+  await loadMe();
+};
+
+$('#doSignin').onclick = async ()=>{
+  $('#siErr').textContent='';
+  const email = $('#siEmail').value.trim(), password = $('#siPass').value;
+  const r = await api('/api/auth/login',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
+  if (r.status===200) { dlgSignin.close(); await loadMe(); }
+  else $('#siErr').textContent = r.body?.error || 'Sign in failed';
+};
+
+$('#doRegister').onclick = async ()=>{
+  $('#reErr').textContent='';
+  const email = $('#reEmail').value.trim(), password = $('#rePass').value;
+  const r = await api('/api/auth/register',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
+  if (r.status===200) { dlgRegister.close(); await loadMe(); }
+  else $('#reErr').textContent = r.body?.error || 'Register failed';
+};
+
+loadMe();
 </script>
 </body>
 </html>
