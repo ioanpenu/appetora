@@ -23,6 +23,8 @@
     .right{display:flex;gap:6px;align-items:center}
     .grid{display:grid;gap:10px}
     .section{display:grid;gap:8px}
+    .ok{color:#10b981}
+    .warn{color:#f59e0b}
   </style>
 </head>
 <body>
@@ -51,6 +53,8 @@
               <th>Total imports</th>
               <th>Today</th>
               <th>Last import</th>
+              <th>Limit</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -91,23 +95,59 @@ async function adminGet(path){
   const body = ct.includes('application/json') ? await res.json() : await res.text();
   return { status: res.status, body };
 }
+async function adminPost(path, data){
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'x-admin-key': getKey(), 'content-type':'application/json' },
+    body: JSON.stringify(data),
+    credentials: 'omit'
+  });
+  const ct = res.headers.get('content-type')||'';
+  const body = ct.includes('application/json') ? await res.json() : await res.text();
+  return { status: res.status, body };
+}
 
 btnRefresh.onclick = async ()=>{
   keyState.textContent = '';
   const r = await adminGet('/api/admin/users');
   if (r.status !== 200){ keyState.textContent = r.body?.error || 'Auth failed or API error'; return; }
   const rows = (r.body.users||[]).map(u=>{
-    return `<tr>
+    const limitTxt = u.noLimit ? '<span class="ok">no limit</span>' : '<span class="warn">5/day</span>';
+    const btnTxt = u.noLimit ? 'Disable no-limit' : 'Enable no-limit';
+    return `<tr data-uid="${esc(u.id)}" data-nolimit="${u.noLimit?'1':'0'}">
       <td>${esc(u.email)}<div class="muted">${esc(u.name||'')}</div></td>
       <td>${esc(u.createdAt||'')}</td>
       <td>${u.totalImports||0}</td>
       <td>${u.todayImports||0}</td>
       <td>${u.lastImportAt||''}</td>
+      <td class="limitCell">${limitTxt}</td>
+      <td><button class="btn toggleBtn">${btnTxt}</button></td>
     </tr>`;
   }).join('');
   tblBody.innerHTML = rows;
   meta.textContent = `${r.body.users?.length||0} users`;
   sum.textContent = `Totals — imports today: ${r.body.totals?.today||0}, all-time imports: ${r.body.totals?.all||0}`;
+
+  // attach handlers
+  tblBody.querySelectorAll('.toggleBtn').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const tr = btn.closest('tr');
+      const uid = tr.getAttribute('data-uid');
+      const current = tr.getAttribute('data-nolimit') === '1';
+      const next = !current;
+      btn.disabled = true; btn.textContent = 'Saving...';
+      const r2 = await adminPost('/api/admin/limit', { uid, noLimit: next });
+      if (r2.status === 200){
+        tr.setAttribute('data-nolimit', next?'1':'0');
+        tr.querySelector('.limitCell').innerHTML = next ? '<span class="ok">no limit</span>' : '<span class="warn">5/day</span>';
+        btn.textContent = next ? 'Disable no-limit' : 'Enable no-limit';
+      }else{
+        alert(r2.body?.error || 'Error updating limit');
+        btn.textContent = current ? 'Disable no-limit' : 'Enable no-limit';
+      }
+      btn.disabled = false;
+    };
+  });
 };
 
 btnDay.onclick = async ()=>{

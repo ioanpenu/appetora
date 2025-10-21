@@ -1,5 +1,5 @@
 import { verify } from "../shared/jwt.js";
-import { colUsage } from "../shared/cosmos.js";
+import { colUsage, colUsers } from "../shared/cosmos.js";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import OpenAI from "openai";
@@ -34,18 +34,29 @@ export default async function (context, req) {
       return respond(context, 400, { error: "Provide url or text" });
     }
 
-    // ---- Rate limit: 5 imports per day per user ----
+    // ---- citește userul pentru a vedea dacă are noLimit ----
+    let noLimit = false;
+    try {
+      const { resource: udoc } = await colUsers.item(uid, "users").read();
+      if (udoc && (udoc.noLimit === true || udoc.role === "pro")) noLimit = true;
+    } catch { /* ignore */ }
+
+    // ---- Rate limit: 5 imports per day per user (dacă nu e noLimit) ----
     const today = ymd(new Date());
     const pk = `usage#${uid}`;
     const id = `${uid}:${today}`;
-    const { resource: dayDoc } = await colUsage.item(id, pk).read();
-    const used = dayDoc?.imports || 0;
-    const limit = 5;
-    if (used >= limit) {
-      return respond(context, 429, { error: "Daily limit reached (5 imports)" });
+    let used = 0;
+
+    if (!noLimit) {
+      const { resource: dayDoc } = await colUsage.item(id, pk).read();
+      used = dayDoc?.imports || 0;
+      const limit = 5;
+      if (used >= limit) {
+        return respond(context, 429, { error: "Daily limit reached (5 imports)" });
+      }
     }
 
-    // ---- Call OpenAI to parse recipe ----
+    // ---- OpenAI parse ----
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const messages = [
       { role: "system", content: "You are a precise recipe parser. Return strict JSON with keys: name, category, ingredients (array of strings), instructions (string). Language is Romanian if the source is Romanian." },
@@ -84,16 +95,17 @@ export default async function (context, req) {
       out.name = out.instructions.slice(0, 40) + "…";
     }
 
-    // ---- Log usage (increment per-day doc) ----
-    const nowIso = new Date().toISOString();
-    const newDoc = {
-      id, pk, uid,
-      date: today,
-      imports: (used + 1),
-      updatedAt: nowIso
-      // optional: tokens/cost if calculezi ulterior
-    };
-    await colUsage.items.upsert(newDoc);
+    // ---- Log usage (increment per-day doc) dacă e limitat ----
+    if (!noLimit) {
+      const nowIso = new Date().toISOString();
+      const newDoc = {
+        id, pk, uid,
+        date: today,
+        imports: (used + 1),
+        updatedAt: nowIso
+      };
+      await colUsage.items.upsert(newDoc);
+    }
 
     return respond(context, 200, out);
   } catch (e) {
