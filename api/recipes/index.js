@@ -3,7 +3,6 @@ import { verify } from "../shared/jwt.js";
 
 export default async function (context, req) {
   try {
-    // auth din cookie
     const cookie = (req.headers && req.headers.cookie) || "";
     const m = /appetora_token=([^;]+)/.exec(cookie);
     if (!m) return respond(context, 401, { error: "No session" });
@@ -12,7 +11,6 @@ export default async function (context, req) {
 
     const pk = `recipes#${me.uid}`;
 
-    // LIST
     if (req.method === "GET") {
       const { resources = [] } = await colRecipes.items
         .query({
@@ -23,7 +21,6 @@ export default async function (context, req) {
       return respond(context, 200, resources);
     }
 
-    // CREATE
     if (req.method === "POST") {
       const b = await readBody(req);
       const name = String(b.name || "").trim();
@@ -35,6 +32,7 @@ export default async function (context, req) {
         uid: me.uid,
         name,
         category: String(b.category || "").trim() || null,
+        imageUrl: String(b.imageUrl || "").trim() || null,
         ingredients: Array.isArray(b.ingredients) ? b.ingredients.map(String) : [],
         instructions: String(b.instructions || ""),
         paused: !!b.paused,
@@ -45,21 +43,19 @@ export default async function (context, req) {
       return respond(context, 201, item);
     }
 
-    // UPDATE (edit / pause toggle)
     if (req.method === "PUT") {
       const b = await readBody(req);
       const id = String(b.id || "");
       if (!id) return respond(context, 400, { error: "id required" });
 
-      // citește existentul (asigurăm că aparține userului curent)
       const { resource: existing } = await colRecipes.item(id, pk).read();
       if (!existing || existing.uid !== me.uid) {
         return respond(context, 404, { error: "Not found" });
       }
 
-      // merge controlat (doar câmpurile permise)
       if (typeof b.name === "string") existing.name = b.name.trim();
       if (typeof b.category === "string") existing.category = b.category.trim() || null;
+      if (typeof b.imageUrl === "string") existing.imageUrl = b.imageUrl.trim() || null;
       if (Array.isArray(b.ingredients)) existing.ingredients = b.ingredients.map(String);
       if (typeof b.instructions === "string") existing.instructions = b.instructions;
       if (typeof b.paused === "boolean") existing.paused = b.paused;
@@ -70,13 +66,11 @@ export default async function (context, req) {
       return respond(context, 200, existing);
     }
 
-    // DELETE
     if (req.method === "DELETE") {
-      const url = new URL(req.url, "http://x"); // SWA nu dă origin, punem unul dummy
+      const url = new URL(req.url, "http://x");
       const id = url.searchParams.get("id");
       if (!id) return respond(context, 400, { error: "id required" });
 
-      // verifică existența și proprietatea
       const { resource: existing } = await colRecipes.item(id, pk).read();
       if (!existing || existing.uid !== me.uid) {
         return respond(context, 404, { error: "Not found" });
@@ -93,7 +87,6 @@ export default async function (context, req) {
   }
 }
 
-/* helpers */
 function respond(context, status, obj) {
   context.res = {
     status,
