@@ -8,7 +8,7 @@
     :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;--accent:#ff7a17;}
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:980px;margin:24px auto;padding:0 16px}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
     header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
     h1{font-size:24px;margin:0}
     .btn{padding:.55rem .9rem;border:1px solid var(--border);border-radius:10px;background:#f8fafc;cursor:pointer}
@@ -25,7 +25,7 @@
     .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
     .right{display:flex;gap:6px;align-items:center}
     .hidden{display:none}
-    dialog{border:none;border-radius:16px;padding:0;max-width:720px;width:calc(100% - 24px)}
+    dialog{border:none;border-radius:16px;padding:0;max-width:760px;width:calc(100% - 24px)}
     .dlg{padding:16px}
     .dlg h3{margin:0 0 8px}
     .hr{height:1px;background:var(--border);margin:12px 0}
@@ -37,9 +37,14 @@
     .hero h2{font-size:28px;margin:0}
     .hero p{margin:0;color:var(--muted)}
     .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
+    /* tabs (meniu) */
+    .menubar{display:flex;gap:8px;margin:16px 0 12px}
+    .tabBtn{padding:.45rem .7rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
+    .tabBtn.active{background:var(--accent);color:#fff;border-color:transparent}
+    /* thumbnails */
     .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
     .titleline{display:flex;align-items:center;gap:12px;min-width:0}
-    .titleline .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
+    .titleline .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
     /* uploader */
     .uploader{border:1px dashed var(--border);border-radius:12px;padding:10px;background:#fff}
     .uploader .preview{display:flex;align-items:center;gap:10px}
@@ -53,6 +58,9 @@
     .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
     .tab.active{background:var(--accent);color:#fff;border-color:transparent}
     .checklist li{list-style:none;margin:4px 0;display:flex;align-items:center;gap:8px}
+    /* section layout */
+    .section{display:none}
+    .section.active{display:block}
   </style>
 </head>
 <body>
@@ -78,17 +86,90 @@
         <li>Generate a 7-day plan from active recipes</li>
         <li>Pause recipes you don’t want this week</li>
       </ul>
-      <div class="row" style="margin-top:6px">
+      <div id="heroCtas" class="row" style="margin-top:6px">
         <button id="ctaRegister" class="btn primary">Create a free account</button>
         <button id="ctaSignin" class="btn">I already have an account</button>
       </div>
     </section>
 
-    <!-- APP (vizibil doar logat) -->
-    <section id="app" class="hidden">
+    <!-- MENIU (vizibil doar logat) -->
+    <div id="menu" class="menubar hidden">
+      <button class="tabBtn" data-tab="planner">Planner</button>
+      <button class="tabBtn" data-tab="search">Search Recipe</button>
+      <button class="tabBtn" data-tab="read">Read Recipe</button>
+      <button class="tabBtn" data-tab="add">Add Recipe</button>
+      <button class="tabBtn" data-tab="my">My Recipes</button>
+    </div>
+
+    <!-- APP SECTIONS -->
+    <section id="sec-planner" class="section">
+      <section class="card grid">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <h2 style="margin:0">Planner</h2>
+          <button id="btnPlan" class="btn">Generate weekly plan</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="sec-search" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Search Recipe</h2>
+        <div class="row">
+          <input id="qSearch" placeholder="Search by name, category or ingredient… (min 2 chars)" />
+          <button id="btnSearch" class="btn">Search</button>
+          <span id="searchInfo" class="muted"></span>
+        </div>
+        <div id="searchResults" class="recipes"></div>
+      </section>
+    </section>
+
+    <section id="sec-read" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Read Recipe (URL or .txt)</h2>
+        <div class="row">
+          <input id="readUrl" placeholder="Paste a URL to a recipe page"/>
+          <button id="btnReadUrl" class="btn">Read from URL</button>
+        </div>
+        <div class="row">
+          <input id="readFile" type="file" accept=".txt" />
+          <button id="btnReadFile" class="btn">Read from file</button>
+        </div>
+        <span id="readInfo" class="muted"></span>
+
+        <div id="readPreview" class="card hidden" style="margin-top:10px">
+          <h3 style="margin:0 0 8px">Preview (not saved yet)</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label>Name</label>
+              <input id="rName"/>
+            </div>
+            <div style="width:280px;max-width:100%">
+              <label>Category</label>
+              <input id="rCat"/>
+            </div>
+          </div>
+          <div class="row">
+            <div style="flex:1">
+              <label>Ingredients (one per line)</label>
+              <textarea id="rIngr" rows="6"></textarea>
+            </div>
+            <div style="flex:1">
+              <label>Instructions</label>
+              <textarea id="rInstr" rows="6"></textarea>
+            </div>
+          </div>
+          <div class="row">
+            <button id="btnLoadToForm" class="btn">Load into Add Recipe</button>
+            <button id="btnSaveParsed" class="btn primary">Save as new recipe</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="sec-add" class="section">
       <!-- Add/Edit form -->
       <section class="card grid">
-        <h2 style="margin:0">Recipe</h2>
+        <h2 style="margin:0">Add Recipe</h2>
         <div class="row">
           <div style="flex:1">
             <label>Name</label>
@@ -118,7 +199,6 @@
                 <button id="btnCamera" class="btn">Take photo</button>
                 <button id="btnRemoveImg" class="btn">Remove</button>
               </div>
-              <!-- camera area -->
               <div id="camWrap" class="hidden" style="margin-top:10px">
                 <video id="cam" autoplay playsinline></video>
                 <div class="actions" style="margin-top:8px">
@@ -141,56 +221,24 @@
           <span id="formInfo" class="muted"></span>
         </div>
       </section>
+    </section>
 
-      <!-- Actions (plan) -->
-      <section class="card grid" style="margin-top:12px">
+    <section id="sec-my" class="section">
+      <section class="card grid">
         <div class="row" style="align-items:center;justify-content:space-between">
-          <h2 style="margin:0">Planner</h2>
-          <button id="btnPlan" class="btn">Generate weekly plan</button>
-        </div>
-      </section>
-
-      <!-- List -->
-      <section class="card grid" style="margin-top:12px">
-        <div class="row" style="align-items:center;justify-content:space-between">
-          <h2 style="margin:0">My recipes</h2>
+          <h2 style="margin:0">My Recipes</h2>
           <span id="count" class="pill">0 recipes</span>
         </div>
         <div id="empty" class="muted">No recipes yet. Add one above.</div>
         <div id="list" class="recipes"></div>
+        <div class="row" style="justify-content:center;margin-top:8px">
+          <button id="btnMore" class="btn hidden">Show more (+5)</button>
+        </div>
       </section>
     </section>
   </div>
 
-  <!-- Sign in dialog -->
-  <dialog id="dlgSignin"><div class="dlg">
-    <h3>Sign in</h3>
-    <div class="grid">
-      <input id="siEmail" placeholder="email"/>
-      <input id="siPass" type="password" placeholder="password"/>
-      <div class="row">
-        <button id="doSignin" class="btn primary">Sign in</button>
-        <button class="btn" onclick="dlgSignin.close()">Cancel</button>
-      </div>
-      <div id="siErr" class="muted"></div>
-    </div>
-  </div></dialog>
-
-  <!-- Register dialog -->
-  <dialog id="dlgRegister"><div class="dlg">
-    <h3>Register</h3>
-    <div class="grid">
-      <input id="reEmail" placeholder="email"/>
-      <input id="rePass" type="password" placeholder="password"/>
-      <div class="row">
-        <button id="doRegister" class="btn primary">Create account</button>
-        <button class="btn" onclick="dlgRegister.close()">Cancel</button>
-      </div>
-      <div id="reErr" class="muted"></div>
-    </div>
-  </div></dialog>
-
-  <!-- View recipe dialog (read-only) -->
+  <!-- View dialog -->
   <dialog id="dlgView"><div class="dlg">
     <div class="titleline">
       <img id="vwImg" class="thumb" alt="" onerror="this.style.display='none'"/>
@@ -224,7 +272,6 @@
     <div id="planErr" class="muted"></div>
     <div class="hr"></div>
 
-    <!-- PLAN VIEW -->
     <div id="viewPlan">
       <div style="overflow:auto">
         <table id="planTable">
@@ -233,40 +280,79 @@
         </table>
       </div>
     </div>
-
-    <!-- SHOPPING LIST VIEW -->
     <div id="viewShop" class="hidden">
       <ul id="shopList" class="checklist"></ul>
     </div>
-
     <div class="row" style="margin-top:12px;justify-content:flex-end">
       <button class="btn" onclick="dlgPlan.close()">Close</button>
     </div>
   </div></dialog>
 
+  <!-- Auth dialogs -->
+  <dialog id="dlgSignin"><div class="dlg">
+    <h3>Sign in</h3>
+    <div class="grid">
+      <input id="siEmail" placeholder="email"/>
+      <input id="siPass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doSignin" class="btn primary">Sign in</button>
+        <button class="btn" onclick="dlgSignin.close()">Cancel</button>
+      </div>
+      <div id="siErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
+  <dialog id="dlgRegister"><div class="dlg">
+    <h3>Register</h3>
+    <div class="grid">
+      <input id="reEmail" placeholder="email"/>
+      <input id="rePass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doRegister" class="btn primary">Create account</button>
+        <button class="btn" onclick="dlgRegister.close()">Cancel</button>
+      </div>
+      <div id="reErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
 <script>
 const $ = (s)=>document.querySelector(s);
-const hero = $('#hero'), app = $('#app');
-const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count');
+const hero = $('#hero'), heroCtas = $('#heroCtas');
+const menu = $('#menu');
 const hello = $('#hello'), helloName = $('#helloName');
 const btnSignin = $('#btnSignin'), btnRegister = $('#btnRegister'), btnLogout = $('#btnLogout');
 const ctaRegister = $('#ctaRegister'), ctaSignin = $('#ctaSignin');
+
+const secPlanner = $('#sec-planner'), secSearch = $('#sec-search'), secRead = $('#sec-read'),
+      secAdd = $('#sec-add'), secMy = $('#sec-my');
+const tabButtons = document.querySelectorAll('.tabBtn');
+
+const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count'), btnMore = $('#btnMore');
 const btnPlan = $('#btnPlan');
-const dlgSignin = $('#dlgSignin'), dlgRegister = $('#dlgRegister'), dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
+const dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
+const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
+const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
 
 const fFile = $('#fFile'), btnChoose = $('#btnChoose'), btnCamera = $('#btnCamera');
 const imgPreview = $('#imgPreview'), imgLabel = $('#imgLabel'), btnRemoveImg = $('#btnRemoveImg');
 const camWrap = $('#camWrap'), cam = $('#cam'), btnSnap = $('#btnSnap'), btnCloseCam = $('#btnCloseCam');
 
-const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
-const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
+const qSearch = $('#qSearch'), btnSearch = $('#btnSearch'), searchInfo = $('#searchInfo'), searchResults = $('#searchResults');
+
+const readUrl = $('#readUrl'), readFile = $('#readFile'), btnReadUrl = $('#btnReadUrl'), btnReadFile = $('#btnReadFile'),
+      readInfo = $('#readInfo'), readPreview = $('#readPreview'),
+      rName = $('#rName'), rCat = $('#rCat'), rIngr = $('#rIngr'), rInstr = $('#rInstr'),
+      btnLoadToForm = $('#btnLoadToForm'), btnSaveParsed = $('#btnSaveParsed');
 
 let currentUser = null;
 let editId = null;
-let currentBlobPath = null; // imaginea selectată/uploadată pentru form
-
-// cache pentru linkuri de vizualizare (SAS read)
+let currentBlobPath = null; // imagine selectată/uploadată pentru Add form
 const imageUrlCache = new Map();
+
+// pagination state
+let recipesAll = [];
+let showCount = 0;
+const firstPage = 10, stepPage = 5;
 
 async function api(path, opts={}) {
   const res = await fetch(path, { credentials:'include', ...opts });
@@ -275,52 +361,60 @@ async function api(path, opts={}) {
   return { status: res.status, body };
 }
 
-function showApp(loggedIn){
-  if (loggedIn) { hero.classList.add('hidden'); app.classList.remove('hidden'); }
-  else { app.classList.add('hidden'); hero.classList.remove('hidden'); }
+function showLoggedInUI(on){
+  if (on){
+    hero.classList.add('hidden');
+    heroCtas.classList.add('hidden');
+    menu.classList.remove('hidden');
+    hello.classList.remove('hidden');
+    btnLogout.classList.remove('hidden');
+    btnSignin.classList.add('hidden'); btnRegister.classList.add('hidden');
+  }else{
+    menu.classList.add('hidden');
+    hello.classList.add('hidden');
+    btnLogout.classList.add('hidden');
+    btnSignin.classList.remove('hidden'); btnRegister.classList.remove('hidden');
+    hero.classList.remove('hidden');
+    heroCtas.classList.remove('hidden');
+  }
+}
+
+function activateTab(name){
+  const map = { planner:secPlanner, search:secSearch, read:secRead, add:secAdd, my:secMy };
+  Object.values(map).forEach(el=>el.classList.remove('active'));
+  tabButtons.forEach(b=>b.classList.remove('active'));
+  map[name].classList.add('active');
+  document.querySelector(`.tabBtn[data-tab="${name}"]`).classList.add('active');
 }
 
 async function loadMe() {
   const r = await api('/api/auth/me');
   if (r.status === 200 && r.body && r.body.user) {
     currentUser = r.body.user;
-    hello.classList.remove('hidden');
     helloName.textContent = currentUser.name || currentUser.email;
-    btnLogout.classList.remove('hidden');
-    btnSignin.classList.add('hidden'); btnRegister.classList.add('hidden');
-    showApp(true);
+    showLoggedInUI(true);
+    activateTab('planner');
     await loadRecipes();
   } else {
     currentUser = null;
-    hello.classList.add('hidden');
-    btnLogout.classList.add('hidden');
-    btnSignin.classList.remove('hidden'); btnRegister.classList.remove('hidden');
-    showApp(false);
-    renderRecipes([]);
+    showLoggedInUI(false);
   }
 }
 
 async function loadRecipes() {
   const r = await api('/api/recipes');
-  if (r.status === 200 && Array.isArray(r.body)) renderRecipes(r.body);
-  else renderRecipes([]);
+  recipesAll = (r.status === 200 && Array.isArray(r.body)) ? r.body : [];
+  renderRecipesPaged(true);
 }
 
-async function getImageUrl(blobPath){
-  if (!blobPath) return null;
-  if (imageUrlCache.has(blobPath)) return imageUrlCache.get(blobPath);
-  const r = await api('/api/view-url?blob='+encodeURIComponent(blobPath));
-  const url = (r.status===200 && r.body?.url) ? r.body.url : null;
-  imageUrlCache.set(blobPath, url);
-  return url;
-}
-
-async function renderRecipes(items) {
-  countEl.textContent = `${items.length} recipe${items.length===1?'':'s'}`;
-  if (!items.length) { emptyEl.style.display='block'; listEl.innerHTML=''; return; }
+function renderRecipesPaged(reset){
+  if (reset){ showCount = Math.min(recipesAll.length, firstPage); }
+  countEl.textContent = `${recipesAll.length} recipe${recipesAll.length===1?'':'s'}`;
+  if (!recipesAll.length){ emptyEl.style.display='block'; listEl.innerHTML=''; btnMore.classList.add('hidden'); return; }
   emptyEl.style.display='none';
 
-  listEl.innerHTML = items.map(r => {
+  const items = recipesAll.slice(0, showCount);
+  listEl.innerHTML = items.map(r=>{
     const label = r.paused ? 'Resume' : 'Pause';
     const pausedCls = r.paused ? 'paused' : '';
     return `
@@ -342,7 +436,7 @@ async function renderRecipes(items) {
     `;
   }).join('');
 
-  // load imagini
+  // lazy load thumbs
   const imgs = listEl.querySelectorAll('img[data-blob]');
   imgs.forEach(async img=>{
     const blob = img.getAttribute('data-blob');
@@ -350,9 +444,185 @@ async function renderRecipes(items) {
     const url = await getImageUrl(blob);
     if (url) { img.src = url; img.classList.remove('hidden'); }
   });
+
+  // show more control
+  if (showCount < recipesAll.length) btnMore.classList.remove('hidden');
+  else btnMore.classList.add('hidden');
 }
 
+btnMore.onclick = ()=>{ showCount = Math.min(recipesAll.length, showCount + stepPage); renderRecipesPaged(false); };
+
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
+
+/* ---------- Search ---------- */
+btnSearch.onclick = ()=>{
+  const q = qSearch.value.trim().toLowerCase();
+  if (q.length < 2){ searchResults.innerHTML=''; searchInfo.textContent='Type at least 2 characters.'; return; }
+  const hit = recipesAll.filter(r=>{
+    const hay = [
+      r.name||'',
+      r.category||'',
+      ...(Array.isArray(r.ingredients)? r.ingredients : [])
+    ].join(' \n ').toLowerCase();
+    return hay.includes(q);
+  });
+  searchInfo.textContent = `${hit.length} result${hit.length===1?'':'s'}`;
+  searchResults.innerHTML = hit.map(r => `
+    <div class="item" data-id="${r.id}">
+      <div class="titleline" style="min-width:0">
+        <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+        <div>
+          <div class="name">${esc(r.name)}</div>
+          <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
+        <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
+      </div>
+    </div>
+  `).join('');
+  // load thumbs
+  const imgs = searchResults.querySelectorAll('img[data-blob]');
+  imgs.forEach(async img=>{
+    const blob = img.getAttribute('data-blob');
+    if (!blob) return;
+    const url = await getImageUrl(blob);
+    if (url) { img.src = url; img.classList.remove('hidden'); }
+  });
+};
+
+/* ---------- Read Recipe (URL / .txt) ---------- */
+btnReadUrl.onclick = async ()=>{
+  const url = readUrl.value.trim();
+  if (!url){ readInfo.textContent='Please paste a URL.'; return; }
+  readInfo.textContent='Reading…';
+  const r = await api('/api/import', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ url })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read URL'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+
+btnReadFile.onclick = async ()=>{
+  const f = readFile.files?.[0];
+  if (!f){ readInfo.textContent='Choose a .txt file first.'; return; }
+  const text = await f.text();
+  readInfo.textContent='Parsing…';
+  const r = await api('/api/import', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ text })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to parse'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+
+function applyParsedToPreview(obj){
+  rName.value = obj.name || '';
+  rCat.value = obj.category || '';
+  rIngr.value = (obj.ingredients||[]).join('\n');
+  rInstr.value = obj.instructions || '';
+  readInfo.textContent = 'Parsed. You can edit before saving.';
+  readPreview.classList.remove('hidden');
+}
+
+btnLoadToForm.onclick = ()=>{
+  $('#fName').value = rName.value;
+  $('#fCat').value  = rCat.value;
+  $('#fIngr').value = rIngr.value;
+  $('#fInstr').value= rInstr.value;
+  activateTab('add');
+};
+
+btnSaveParsed.onclick = async ()=>{
+  const payload = {
+    name: rName.value.trim(),
+    category: rCat.value.trim(),
+    ingredients: rIngr.value.split('\n').map(s=>s.trim()).filter(Boolean),
+    instructions: rInstr.value
+  };
+  if (!payload.name){ readInfo.textContent = 'Name required'; return; }
+  const res = await api('/api/recipes', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.status===201 || res.status===200){
+    readInfo.textContent='Saved.';
+    await loadRecipes();
+    activateTab('my');
+  }else{
+    readInfo.textContent = res.body?.error || 'Save failed';
+  }
+};
+
+/* ---------- Planner ---------- */
+tabPlan.onclick = ()=> setPlanTab(true);
+tabShop.onclick = ()=> setPlanTab(false);
+function setPlanTab(showPlan){
+  tabPlan.classList.toggle('active', showPlan);
+  tabShop.classList.toggle('active', !showPlan);
+  viewPlan.classList.toggle('hidden', !showPlan);
+  viewShop.classList.toggle('hidden', showPlan);
+}
+
+async function generatePlan() {
+  const out = await api('/api/plan');
+  const errEl = $('#planErr');
+  const tbody = document.querySelector('#planTable tbody');
+
+  if (out.status !== 200 || !out.body?.plan) {
+    errEl.textContent = out.body?.error || 'Could not generate plan';
+    tbody.innerHTML = '';
+    $('#shopList').innerHTML = '';
+    setPlanTab(true);
+    dlgPlan.showModal();
+    return;
+  }
+  errEl.textContent = '';
+  const plan = out.body.plan;
+
+  // plan table
+  tbody.innerHTML = plan.map(p => `
+    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
+  `).join('');
+
+  // shopping list
+  const r = await api('/api/recipes');
+  const all = Array.isArray(r.body) ? r.body : [];
+  const byId = new Map(all.map(x=>[x.id, x]));
+  const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
+  const counts = new Map();
+  for (const day of plan) {
+    const rec = byId.get(day.recipeId);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr) {
+      const key = norm(String(raw));
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  $('#shopList').innerHTML = items.map(([name,count])=>`
+    <li><input type="checkbox"> <span>${esc(name)}</span>${count>1?` <span class="muted">×${count}</span>`:''}</li>
+  `).join('');
+
+  setPlanTab(true);
+  dlgPlan.showModal();
+}
+
+/* ---------- Add / Edit / Delete / Pause ---------- */
+async function getImageUrl(blobPath){
+  if (!blobPath) return null;
+  if (imageUrlCache.has(blobPath)) return imageUrlCache.get(blobPath);
+  const r = await api('/api/view-url?blob='+encodeURIComponent(blobPath));
+  const url = (r.status===200 && r.body?.url) ? r.body.url : null;
+  imageUrlCache.set(blobPath, url);
+  return url;
+}
 
 async function saveRecipe() {
   const name = $('#fName').value.trim();
@@ -373,6 +643,7 @@ async function saveRecipe() {
   if (r.status===200 || r.status===201) {
     clearForm(); info(editId?'Updated.':'Saved.');
     await loadRecipes();
+    activateTab('my');
   } else {
     info(r.body?.error || 'Error');
   }
@@ -381,22 +652,20 @@ async function saveRecipe() {
 async function delRecipe(id) {
   if (!confirm('Delete recipe?')) return;
   const r = await api('/api/recipes?id='+encodeURIComponent(id), { method:'DELETE' });
-  if (r.status===200) loadRecipes();
+  if (r.status===200) { await loadRecipes(); activateTab('my'); }
 }
 
-// determină starea actuală înainte de toggle (evită confuzii)
 async function togglePause(id) {
   const r = await api('/api/recipes');
   if (r.status !== 200 || !Array.isArray(r.body)) return;
   const rec = r.body.find(x => x.id === id);
   if (!rec) return;
-
   const upd = await api('/api/recipes', {
     method: 'PUT',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ id, paused: !rec.paused })
   });
-  if (upd.status === 200) await loadRecipes();
+  if (upd.status === 200) { await loadRecipes(); }
 }
 
 async function editRecipe(id) {
@@ -442,90 +711,6 @@ async function viewRecipe(id) {
   dlgView.showModal();
 }
 
-/* ---------- Weekly plan + Shopping list ---------- */
-tabPlan.onclick = ()=>{ setTab(true); };
-tabShop.onclick = ()=>{ setTab(false); };
-
-function setTab(showPlan){
-  tabPlan.classList.toggle('active', showPlan);
-  tabShop.classList.toggle('active', !showPlan);
-  viewPlan.classList.toggle('hidden', !showPlan);
-  viewShop.classList.toggle('hidden', showPlan);
-}
-
-async function generatePlan() {
-  const out = await api('/api/plan');
-  const errEl = $('#planErr');
-  const tbody = document.querySelector('#planTable tbody');
-
-  if (out.status !== 200 || !out.body?.plan) {
-    errEl.textContent = out.body?.error || 'Could not generate plan';
-    tbody.innerHTML = '';
-    $('#shopList').innerHTML = '';
-    setTab(true);
-    dlgPlan.showModal();
-    return;
-  }
-
-  errEl.textContent = '';
-  const plan = out.body.plan;
-
-  // PLAN TABLE
-  const rows = plan.map(p => `
-    <tr>
-      <td>${esc(p.date)}</td>
-      <td>${esc(p.name)}</td>
-      <td>${esc(p.category || '')}</td>
-    </tr>
-  `).join('');
-  tbody.innerHTML = rows;
-
-  // SHOPPING LIST (aggregated)
-  // luăm rețetele pt a extrage ingredientele
-  const r = await api('/api/recipes');
-  const all = Array.isArray(r.body) ? r.body : [];
-  const byId = new Map(all.map(x=>[x.id, x]));
-
-  // normalizare simplă (lower + trim extra spaces)
-  const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
-
-  const counts = new Map();
-  for (const day of plan) {
-    const rec = byId.get(day.recipeId);
-    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
-    for (const raw of ingr) {
-      const key = norm(String(raw));
-      if (!key) continue;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    }
-  }
-
-  const items = [...counts.entries()]
-    .sort((a,b)=> a[0].localeCompare(b[0]))
-    .map(([name,count]) => ({ name, count }));
-
-  const listHtml = items.map(it => `
-    <li><input type="checkbox"> <span>${esc(it.name)}</span>${it.count>1?` <span class="muted">×${it.count}</span>`:''}</li>
-  `).join('');
-  $('#shopList').innerHTML = listHtml;
-
-  // deschidem pe tab-ul „Plan”; utilizatorul poate comuta pe „Shopping list”
-  setTab(true);
-  dlgPlan.showModal();
-}
-
-function clearForm(){
-  editId = null;
-  $('#fName').value=''; $('#fCat').value='';
-  $('#fIngr').value=''; $('#fInstr').value='';
-  currentBlobPath = null;
-  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
-  imgLabel.textContent = 'No image selected';
-  info('');
-}
-
-function info(t){ $('#formInfo').textContent = t; }
-
 /* ---------- Upload logic ---------- */
 btnChoose.onclick = ()=> fFile.click();
 fFile.onchange = async (e)=>{
@@ -539,11 +724,11 @@ btnRemoveImg.onclick = ()=>{
   imgLabel.textContent = 'No image selected';
 };
 
-/* Camera */
 let mediaStream = null;
 btnCamera.onclick = async ()=>{
   try{
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio:false });
+    mediaDevices = navigator.mediaDevices;
+    mediaStream = await mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio:false });
     cam.srcObject = mediaStream;
     camWrap.classList.remove('hidden');
   }catch(e){ alert('Camera not available: ' + e.message); }
@@ -576,7 +761,6 @@ async function uploadSelectedFile(file){
   });
   if (up.status !== 200 || !up.body?.uploadUrl) { info('Could not get upload URL'); return; }
 
-  // PUT direct în blob
   const putRes = await fetch(up.body.uploadUrl, {
     method:'PUT',
     headers:{ 'x-ms-blob-type': 'BlockBlob', 'Content-Type': file.type || 'application/octet-stream' },
@@ -604,20 +788,22 @@ async function updatePreviewFromBlob(blobPath){
   }
 }
 
-/* ---------- auth & init ---------- */
-$('#btnSave').onclick = saveRecipe;
-$('#btnClear').onclick = clearForm;
-btnPlan.onclick = generatePlan;
+function clearForm(){
+  editId = null;
+  $('#fName').value=''; $('#fCat').value='';
+  $('#fIngr').value=''; $('#fInstr').value='';
+  currentBlobPath = null;
+  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
+  imgLabel.textContent = 'No image selected';
+  info('');
+}
+function info(t){ $('#formInfo').textContent = t; }
 
+/* ---------- Auth ---------- */
 btnSignin.onclick = ()=> dlgSignin.showModal();
 btnRegister.onclick = ()=> dlgRegister.showModal();
 ctaRegister.onclick = ()=> dlgRegister.showModal();
 ctaSignin .onclick = ()=> dlgSignin.showModal();
-
-btnLogout.onclick = async ()=>{
-  await api('/api/auth/logout', { method:'POST' });
-  await loadMe();
-};
 
 $('#doSignin').onclick = async ()=>{
   $('#siErr').textContent='';
@@ -635,6 +821,20 @@ $('#doRegister').onclick = async ()=>{
   else $('#reErr').textContent = r.body?.error || 'Register failed';
 };
 
+btnLogout.onclick = async ()=>{
+  await api('/api/auth/logout', { method:'POST' });
+  await loadMe();
+};
+
+/* ---------- Menu routing ---------- */
+tabButtons.forEach(b=>{
+  b.onclick = ()=> activateTab(b.getAttribute('data-tab'));
+});
+
+/* ---------- Planner button ---------- */
+btnPlan.onclick = generatePlan;
+
+/* ---------- Init ---------- */
 loadMe();
 </script>
 </body>
