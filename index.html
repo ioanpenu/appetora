@@ -33,7 +33,7 @@
     th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
     th{color:var(--muted);font-weight:600}
     /* hero */
-    .hero{display:grid;gap:14px;place-items:start;background:linear-gradient(180deg,#fff, #f6f7fb);border:1px solid var(--border);border-radius:18px;padding:24px}
+    .hero{display:grid;gap:14px;place-items:start;background:linear-gradient(180deg,#fff,#f6f7fb);border:1px solid var(--border);border-radius:18px;padding:24px}
     .hero h2{font-size:28px;margin:0}
     .hero p{margin:0;color:var(--muted)}
     .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
@@ -296,7 +296,7 @@ async function renderRecipes(items) {
   if (!items.length) { emptyEl.style.display='block'; listEl.innerHTML=''; return; }
   emptyEl.style.display='none';
 
-  // Rander inițial fără imagini, apoi le completăm asincron
+  // rander inițial fără imagini, apoi le completăm asincron
   listEl.innerHTML = items.map(r => `
     <div class="item" data-id="${r.id}">
       <div class="titleline" style="min-width:0">
@@ -309,7 +309,7 @@ async function renderRecipes(items) {
       <div class="right">
         <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
         <button class="btn" onclick="editRecipe('${r.id}')">Edit</button>
-        <button class="btn" onclick="togglePause('${r.id}', ${!!r.paused})">${r.paused?'Resume':'Pause'}</button>
+        <button class="btn" onclick="togglePause('${r.id}')">Pause/Resume</button>
         <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
       </div>
     </div>
@@ -357,12 +357,19 @@ async function delRecipe(id) {
   if (r.status===200) loadRecipes();
 }
 
-async function togglePause(id, paused) {
-  const r = await api('/api/recipes', {
-    method:'PUT', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ id, paused: !paused })
+// ✅ FIX: determinăm starea actuală înainte de toggle
+async function togglePause(id) {
+  const r = await api('/api/recipes');
+  if (r.status !== 200 || !Array.isArray(r.body)) return;
+  const rec = r.body.find(x => x.id === id);
+  if (!rec) return;
+
+  const upd = await api('/api/recipes', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ id, paused: !rec.paused })
   });
-  if (r.status===200) loadRecipes();
+  if (upd.status === 200) await loadRecipes();
 }
 
 async function editRecipe(id) {
