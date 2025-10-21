@@ -25,21 +25,27 @@
     .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
     .right{display:flex;gap:6px;align-items:center}
     .hidden{display:none}
-    dialog{border:none;border-radius:16px;padding:0;max-width:520px;width:calc(100% - 24px)}
+    dialog{border:none;border-radius:16px;padding:0;max-width:620px;width:calc(100% - 24px)}
     .dlg{padding:16px}
     .dlg h3{margin:0 0 8px}
     .hr{height:1px;background:var(--border);margin:12px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
+    th{color:var(--muted);font-weight:600}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>Appetora</h1>
-      <div id="authBox" class="row">
-        <span id="hello" class="muted hidden">Hi, <b id="helloName"></b></span>
-        <button id="btnSignin" class="btn">Sign in</button>
-        <button id="btnRegister" class="btn">Register</button>
-        <button id="btnLogout" class="btn hidden">Sign out</button>
+      <div class="row" style="gap:10px">
+        <button id="btnPlan" class="btn hidden">Generate weekly plan</button>
+        <div id="authBox" class="row">
+          <span id="hello" class="muted hidden">Hi, <b id="helloName"></b></span>
+          <button id="btnSignin" class="btn">Sign in</button>
+          <button id="btnRegister" class="btn">Register</button>
+          <button id="btnLogout" class="btn hidden">Sign out</button>
+        </div>
       </div>
     </header>
 
@@ -129,12 +135,29 @@
     </div>
   </div></dialog>
 
+  <!-- Weekly plan dialog -->
+  <dialog id="dlgPlan"><div class="dlg">
+    <h3 style="margin:0 0 8px">Your weekly plan</h3>
+    <div id="planErr" class="muted"></div>
+    <div class="hr"></div>
+    <div style="overflow:auto">
+      <table id="planTable">
+        <thead><tr><th style="width:140px">Date</th><th>Recipe</th><th style="width:140px">Category</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end">
+      <button class="btn" onclick="dlgPlan.close()">Close</button>
+    </div>
+  </div></dialog>
+
 <script>
 const $ = (s)=>document.querySelector(s);
 const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count');
 const hello = $('#hello'), helloName = $('#helloName');
 const btnSignin = $('#btnSignin'), btnRegister = $('#btnRegister'), btnLogout = $('#btnLogout');
-const dlgSignin = $('#dlgSignin'), dlgRegister = $('#dlgRegister'), dlgView = $('#dlgView');
+const btnPlan = $('#btnPlan');
+const dlgSignin = $('#dlgSignin'), dlgRegister = $('#dlgRegister'), dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
 
 let currentUser = null;
 let editId = null;
@@ -154,12 +177,14 @@ async function loadMe() {
     helloName.textContent = currentUser.name || currentUser.email;
     btnLogout.classList.remove('hidden');
     btnSignin.classList.add('hidden'); btnRegister.classList.add('hidden');
+    btnPlan.classList.remove('hidden');
     await loadRecipes();
   } else {
     currentUser = null;
     hello.classList.add('hidden');
     btnLogout.classList.add('hidden');
     btnSignin.classList.remove('hidden'); btnRegister.classList.remove('hidden');
+    btnPlan.classList.add('hidden');
     renderRecipes([]);
   }
 }
@@ -248,7 +273,6 @@ async function viewRecipe(id) {
   const rec = (r.body || []).find(x => x.id === id);
   if (!rec) return;
 
-  // populate dialog (read-only)
   $('#vwTitle').textContent = rec.name || '';
   $('#vwCat').textContent = rec.category ? `Category: ${rec.category}` : 'No category';
 
@@ -265,6 +289,28 @@ async function viewRecipe(id) {
   dlgView.showModal();
 }
 
+async function generatePlan() {
+  const out = await api('/api/plan');
+  const errEl = $('#planErr');
+  const tbody = document.querySelector('#planTable tbody');
+  if (out.status !== 200 || !out.body?.plan) {
+    errEl.textContent = out.body?.error || 'Could not generate plan';
+    tbody.innerHTML = '';
+    dlgPlan.showModal();
+    return;
+  }
+  errEl.textContent = '';
+  const rows = out.body.plan.map(p => `
+    <tr>
+      <td>${esc(p.date)}</td>
+      <td>${esc(p.name)}</td>
+      <td>${esc(p.category || '')}</td>
+    </tr>
+  `).join('');
+  tbody.innerHTML = rows;
+  dlgPlan.showModal();
+}
+
 function clearForm(){
   editId = null;
   $('#fName').value=''; $('#fCat').value=''; $('#fIngr').value=''; $('#fInstr').value='';
@@ -276,6 +322,7 @@ function info(t){ $('#formInfo').textContent = t; }
 /* auth UI */
 $('#btnSave').onclick = saveRecipe;
 $('#btnClear').onclick = clearForm;
+btnPlan.onclick = generatePlan;
 
 btnSignin.onclick = ()=> dlgSignin.showModal();
 btnRegister.onclick = ()=> dlgRegister.showModal();
