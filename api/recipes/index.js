@@ -18,7 +18,7 @@ export default async function (context, req) {
       const { resources = [] } = await colRecipes.items
         .query({
           query:
-            "SELECT * FROM c WHERE c.pk=@pk ORDER BY c._ts DESC",
+            "SELECT * FROM c WHERE c.pk=@pk ORDER BY c.createdAt DESC",
           parameters: [{ name: "@pk", value: pk }],
         })
         .fetchAll();

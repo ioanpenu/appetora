@@ -25,7 +25,7 @@
     .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
     .right{display:flex;gap:6px;align-items:center}
     .hidden{display:none}
-    dialog{border:none;border-radius:16px;padding:0;max-width:620px;width:calc(100% - 24px)}
+    dialog{border:none;border-radius:16px;padding:0;max-width:720px;width:calc(100% - 24px)}
     .dlg{padding:16px}
     .dlg h3{margin:0 0 8px}
     .hr{height:1px;background:var(--border);margin:12px 0}
@@ -46,6 +46,13 @@
     .uploader .preview img{width:96px;height:96px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
     .uploader .actions{display:flex;gap:8px;flex-wrap:wrap}
     video#cam{width:240px;border-radius:12px;border:1px solid var(--border)}
+    /* paused look */
+    .item.paused{opacity:.65}
+    /* plan tabs */
+    .tabs{display:flex;gap:6px;margin-bottom:8px}
+    .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
+    .tab.active{background:var(--accent);color:#fff;border-color:transparent}
+    .checklist li{list-style:none;margin:4px 0;display:flex;align-items:center;gap:8px}
   </style>
 </head>
 <body>
@@ -209,15 +216,29 @@
 
   <!-- Weekly plan dialog -->
   <dialog id="dlgPlan"><div class="dlg">
-    <h3 style="margin:0 0 8px">Your weekly plan</h3>
+    <h3 style="margin:0 0 8px">Weekly plan</h3>
+    <div class="tabs">
+      <button id="tabPlan" class="tab active">Plan</button>
+      <button id="tabShop" class="tab">Shopping list</button>
+    </div>
     <div id="planErr" class="muted"></div>
     <div class="hr"></div>
-    <div style="overflow:auto">
-      <table id="planTable">
-        <thead><tr><th style="width:140px">Date</th><th>Recipe</th><th style="width:160px">Category</th></tr></thead>
-        <tbody></tbody>
-      </table>
+
+    <!-- PLAN VIEW -->
+    <div id="viewPlan">
+      <div style="overflow:auto">
+        <table id="planTable">
+          <thead><tr><th style="width:140px">Date</th><th>Recipe</th><th style="width:160px">Category</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
+
+    <!-- SHOPPING LIST VIEW -->
+    <div id="viewShop" class="hidden">
+      <ul id="shopList" class="checklist"></ul>
+    </div>
+
     <div class="row" style="margin-top:12px;justify-content:flex-end">
       <button class="btn" onclick="dlgPlan.close()">Close</button>
     </div>
@@ -236,6 +257,9 @@ const dlgSignin = $('#dlgSignin'), dlgRegister = $('#dlgRegister'), dlgView = $(
 const fFile = $('#fFile'), btnChoose = $('#btnChoose'), btnCamera = $('#btnCamera');
 const imgPreview = $('#imgPreview'), imgLabel = $('#imgLabel'), btnRemoveImg = $('#btnRemoveImg');
 const camWrap = $('#camWrap'), cam = $('#cam'), btnSnap = $('#btnSnap'), btnCloseCam = $('#btnCloseCam');
+
+const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
+const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
 
 let currentUser = null;
 let editId = null;
@@ -296,24 +320,27 @@ async function renderRecipes(items) {
   if (!items.length) { emptyEl.style.display='block'; listEl.innerHTML=''; return; }
   emptyEl.style.display='none';
 
-  // rander inițial fără imagini, apoi le completăm asincron
-  listEl.innerHTML = items.map(r => `
-    <div class="item" data-id="${r.id}">
-      <div class="titleline" style="min-width:0">
-        <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
-        <div>
-          <div class="name">${esc(r.name)}</div>
-          <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients ${r.paused? ' • ⏸ paused':''}</div>
+  listEl.innerHTML = items.map(r => {
+    const label = r.paused ? 'Resume' : 'Pause';
+    const pausedCls = r.paused ? 'paused' : '';
+    return `
+      <div class="item ${pausedCls}" data-id="${r.id}">
+        <div class="titleline" style="min-width:0">
+          <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+          <div>
+            <div class="name">${esc(r.name)}</div>
+            <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients${r.paused ? ' • ⏸ paused' : ''}</div>
+          </div>
+        </div>
+        <div class="right">
+          <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
+          <button class="btn" onclick="editRecipe('${r.id}')">Edit</button>
+          <button class="btn" onclick="togglePause('${r.id}')">${label}</button>
+          <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
         </div>
       </div>
-      <div class="right">
-        <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
-        <button class="btn" onclick="editRecipe('${r.id}')">Edit</button>
-        <button class="btn" onclick="togglePause('${r.id}')">Pause/Resume</button>
-        <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   // load imagini
   const imgs = listEl.querySelectorAll('img[data-blob]');
@@ -357,7 +384,7 @@ async function delRecipe(id) {
   if (r.status===200) loadRecipes();
 }
 
-// ✅ FIX: determinăm starea actuală înainte de toggle
+// determină starea actuală înainte de toggle (evită confuzii)
 async function togglePause(id) {
   const r = await api('/api/recipes');
   if (r.status !== 200 || !Array.isArray(r.body)) return;
@@ -415,18 +442,36 @@ async function viewRecipe(id) {
   dlgView.showModal();
 }
 
+/* ---------- Weekly plan + Shopping list ---------- */
+tabPlan.onclick = ()=>{ setTab(true); };
+tabShop.onclick = ()=>{ setTab(false); };
+
+function setTab(showPlan){
+  tabPlan.classList.toggle('active', showPlan);
+  tabShop.classList.toggle('active', !showPlan);
+  viewPlan.classList.toggle('hidden', !showPlan);
+  viewShop.classList.toggle('hidden', showPlan);
+}
+
 async function generatePlan() {
   const out = await api('/api/plan');
   const errEl = $('#planErr');
   const tbody = document.querySelector('#planTable tbody');
+
   if (out.status !== 200 || !out.body?.plan) {
     errEl.textContent = out.body?.error || 'Could not generate plan';
     tbody.innerHTML = '';
+    $('#shopList').innerHTML = '';
+    setTab(true);
     dlgPlan.showModal();
     return;
   }
+
   errEl.textContent = '';
-  const rows = out.body.plan.map(p => `
+  const plan = out.body.plan;
+
+  // PLAN TABLE
+  const rows = plan.map(p => `
     <tr>
       <td>${esc(p.date)}</td>
       <td>${esc(p.name)}</td>
@@ -434,6 +479,38 @@ async function generatePlan() {
     </tr>
   `).join('');
   tbody.innerHTML = rows;
+
+  // SHOPPING LIST (aggregated)
+  // luăm rețetele pt a extrage ingredientele
+  const r = await api('/api/recipes');
+  const all = Array.isArray(r.body) ? r.body : [];
+  const byId = new Map(all.map(x=>[x.id, x]));
+
+  // normalizare simplă (lower + trim extra spaces)
+  const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
+
+  const counts = new Map();
+  for (const day of plan) {
+    const rec = byId.get(day.recipeId);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr) {
+      const key = norm(String(raw));
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+
+  const items = [...counts.entries()]
+    .sort((a,b)=> a[0].localeCompare(b[0]))
+    .map(([name,count]) => ({ name, count }));
+
+  const listHtml = items.map(it => `
+    <li><input type="checkbox"> <span>${esc(it.name)}</span>${it.count>1?` <span class="muted">×${it.count}</span>`:''}</li>
+  `).join('');
+  $('#shopList').innerHTML = listHtml;
+
+  // deschidem pe tab-ul „Plan”; utilizatorul poate comuta pe „Shopping list”
+  setTab(true);
   dlgPlan.showModal();
 }
 
