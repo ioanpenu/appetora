@@ -32,33 +32,25 @@
     table{width:100%;border-collapse:collapse}
     th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
     th{color:var(--muted);font-weight:600}
-    /* hero */
     .hero{display:grid;gap:14px;place-items:start;background:linear-gradient(180deg,#fff,#f6f7fb);border:1px solid var(--border);border-radius:18px;padding:24px}
     .hero h2{font-size:28px;margin:0}
     .hero p{margin:0;color:var(--muted)}
     .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
-    /* tabs (meniu) */
     .menubar{display:flex;gap:8px;margin:16px 0 12px}
     .tabBtn{padding:.45rem .7rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
     .tabBtn.active{background:var(--accent);color:#fff;border-color:transparent}
-    /* thumbnails */
     .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
     .titleline{display:flex;align-items:center;gap:12px;min-width:0}
     .titleline .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
-    /* uploader */
     .uploader{border:1px dashed var(--border);border-radius:12px;padding:10px;background:#fff}
     .uploader .preview{display:flex;align-items:center;gap:10px}
     .uploader .preview img{width:96px;height:96px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
     .uploader .actions{display:flex;gap:8px;flex-wrap:wrap}
     video.preview{width:240px;border-radius:12px;border:1px solid var(--border)}
-    /* paused look */
     .item.paused{opacity:.65}
-    /* plan tabs */
     .tabs{display:flex;gap:6px;margin-bottom:8px}
     .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
     .tab.active{background:var(--accent);color:#fff;border-color:transparent}
-
-    /* shopping list curată */
     .checklist{margin:0;padding:0;list-style:none}
     .checklist li{margin:4px 0;padding:6px 0;border-bottom:1px dashed var(--border)}
     .checklist li:last-child{border-bottom:none}
@@ -67,15 +59,12 @@
     .checklist .name{flex:1;line-height:1.45}
     .checklist .qty{font-size:12px;color:#64748b;white-space:nowrap;margin-left:6px}
     .checklist label.item.done .name{text-decoration:line-through;color:#94a3b8}
-
-    /* Manual select dialog */
     .pickRow{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fff}
     .pickList{display:grid;gap:8px;max-height:420px;overflow:auto}
     .pickHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
     .help{font-size:12px;color:var(--muted)}
     .selCount{font-size:12px}
-    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;color:var(--muted)}
-    /* section layout */
+    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;color:#var(--muted)}
     .section{display:none}
     .section.active{display:block}
   </style>
@@ -94,7 +83,6 @@
       </div>
     </header>
 
-    <!-- HERO (vizibil numai nelogat) -->
     <section id="hero" class="hero">
       <h2>Your weekly peek. Your daily pick.</h2>
       <p>Plan your week in seconds, avoid repeats, and keep your favorite recipes in one place.</p>
@@ -109,7 +97,6 @@
       </div>
     </section>
 
-    <!-- MENIU (vizibil doar logat) -->
     <div id="menu" class="menubar hidden">
       <button class="tabBtn" data-tab="planner">Planner</button>
       <button class="tabBtn" data-tab="search">Search Recipe</button>
@@ -118,7 +105,6 @@
       <button class="tabBtn" data-tab="my">My Recipes</button>
     </div>
 
-    <!-- SECTIUNI APP (vizibile doar după login) -->
     <section id="sec-planner" class="section">
       <section class="card grid">
         <div class="row" style="align-items:center;justify-content:space-between">
@@ -147,19 +133,16 @@
       <section class="card grid">
         <h2 style="margin:0">Read Recipe (URL, .txt, or Photo)</h2>
 
-        <!-- URL -->
         <div class="row">
           <input id="readUrl" placeholder="Paste a URL to a recipe page"/>
           <button id="btnReadUrl" class="btn">Read from URL</button>
         </div>
 
-        <!-- .txt -->
         <div class="row">
           <input id="readFile" type="file" accept=".txt" />
           <button id="btnReadFile" class="btn">Read from file</button>
         </div>
 
-        <!-- IMAGE (upload / camera) -->
         <div class="row">
           <div class="uploader" style="flex:1;min-width:280px">
             <div class="preview">
@@ -286,7 +269,6 @@
     </section>
   </div>
 
-  <!-- View dialog -->
   <dialog id="dlgView"><div class="dlg">
     <div class="titleline">
       <img id="vwImg" class="thumb" alt="" onerror="this.style.display='none'"/>
@@ -310,7 +292,6 @@
     </div>
   </div></dialog>
 
-  <!-- Weekly plan dialog -->
   <dialog id="dlgPlan"><div class="dlg">
     <h3 style="margin:0 0 8px">Weekly plan</h3>
     <div class="tabs">
@@ -336,7 +317,6 @@
     </div>
   </div></dialog>
 
-  <!-- Manual select dialog -->
   <dialog id="dlgPick"><div class="dlg">
     <div class="pickHeader">
       <h3 style="margin:0">Pick up to 7 recipes</h3>
@@ -353,7 +333,6 @@
     </div>
   </div></dialog>
 
-  <!-- Auth dialogs -->
   <dialog id="dlgSignin"><div class="dlg">
     <h3>Sign in</h3>
     <div class="grid">
@@ -383,7 +362,6 @@
 <script>
 const $ = (s)=>document.querySelector(s);
 
-// hero & auth UI
 const hero = $('#hero'), heroCtas = $('#heroCtas');
 const menu = $('#menu');
 const hello = $('#hello'), helloName = $('#helloName');
@@ -394,33 +372,27 @@ const secPlanner = $('#sec-planner'), secSearch = $('#sec-search'), secRead = $(
       secAdd = $('#sec-add'), secMy = $('#sec-my');
 const tabButtons = document.querySelectorAll('.tabBtn');
 
-// lists, dialogs
 const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count'), btnMore = $('#btnMore');
 const btnPlan = $('#btnPlan'), btnManual = $('#btnManual');
 const dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
 const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
 const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
 
-// manual pick dialog
 const dlgPick = $('#dlgPick'), pickQuery = $('#pickQuery'),
       pickList = $('#pickList'), btnPickCancel = $('#btnPickCancel'),
       btnPickConfirm = $('#btnPickConfirm'), selCountEl = $('#selCount');
 
-// add form & upload
 const fFile = $('#fFile'), btnChoose = $('#btnChoose'), btnCamera = $('#btnCamera');
 const imgPreview = $('#imgPreview'), imgLabel = $('#imgLabel'), btnRemoveImg = $('#btnRemoveImg');
 const camWrap = $('#camWrap'), cam = $('#cam'), btnSnap = $('#btnSnap'), btnCloseCam = $('#btnCloseCam');
 
-// search
 const qSearch = $('#qSearch'), btnSearch = $('#btnSearch'), searchInfo = $('#searchInfo'), searchResults = $('#searchResults');
 
-// read (import)
 const readUrl = $('#readUrl'), readFile = $('#readFile'), btnReadUrl = $('#btnReadUrl'), btnReadFile = $('#btnReadFile'),
       readInfo = $('#readInfo'), readPreview = $('#readPreview'),
       rName = $('#rName'), rCat = $('#rCat'), rIngr = $('#rIngr'), rInstr = $('#rInstr'),
       btnLoadToForm = $('#btnLoadToForm'), btnSaveParsed = $('#btnSaveParsed');
 
-// read: image & camera
 const readImgPreview = $('#readImgPreview'), readImgLabel = $('#readImgLabel'),
       readImgFile = $('#readImgFile'), btnReadChoose = $('#btnReadChoose'),
       btnReadCamera = $('#btnReadCamera'), btnReadRemoveImg = $('#btnReadRemoveImg'),
@@ -428,22 +400,19 @@ const readImgPreview = $('#readImgPreview'), readImgLabel = $('#readImgLabel'),
       readCamWrap = $('#readCamWrap'), readCam = $('#readCam'),
       btnReadSnap = $('#btnReadSnap'), btnReadCloseCam = $('#btnReadCloseCam');
 
-let readImageDataURL = null;    // imaginea pentru parsare (data URL)
-let readMediaStream = null;     // camera (read)
+let readImageDataURL = null;
+let readMediaStream = null;
 
-// state
 let currentUser = null;
 let editId = null;
 let currentBlobPath = null;
 const imageUrlCache = new Map();
 
-// pagination
 let recipesAll = [];
 let showCount = 0;
 const firstPage = 10, stepPage = 5;
 
-// manual select state
-const manualSelected = new Map(); // id -> timestamp (pentru ordinea selectării)
+const manualSelected = new Map();
 const MAX_SEL = 7;
 
 async function api(path, opts={}) {
@@ -544,8 +513,7 @@ function renderRecipesPaged(reset){
   const imgs = listEl.querySelectorAll('img[data-blob]');
   imgs.forEach(async img=>{
     const blob = img.getAttribute('data-blob');
-    if (!blob) return;
-    const url = await getImageUrl(blob);
+    const url = blob ? await getImageUrl(blob) : null;
     if (url) { img.src = url; img.classList.remove('hidden'); }
   });
 
@@ -557,17 +525,13 @@ btnMore.onclick = ()=>{ showCount = Math.min(recipesAll.length, showCount + step
 
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
 
-/* ---------- Search ---------- */
 $('#btnSearch').onclick = ()=>{
   if (!requireLogin()) return;
   const q = qSearch.value.trim().toLowerCase();
   if (q.length < 2){ searchResults.innerHTML=''; searchInfo.textContent='Type at least 2 characters.'; return; }
   const hit = recipesAll.filter(r=>{
-    const hay = [
-      r.name||'',
-      r.category||'',
-      ...(Array.isArray(r.ingredients)? r.ingredients : [])
-    ].join(' \n ').toLowerCase();
+    const hay = [ r.name||'', r.category||'', ...(Array.isArray(r.ingredients)? r.ingredients : []) ]
+      .join(' \n ').toLowerCase();
     return hay.includes(q);
   });
   searchInfo.textContent = `${hit.length} result${hit.length===1?'':'s'}`;
@@ -589,8 +553,7 @@ $('#btnSearch').onclick = ()=>{
   const imgs = searchResults.querySelectorAll('img[data-blob]');
   imgs.forEach(async img=>{
     const blob = img.getAttribute('data-blob');
-    if (!blob) return;
-    const url = await getImageUrl(blob);
+    const url = blob ? await getImageUrl(blob) : null;
     if (url) { img.src = url; img.classList.remove('hidden'); }
   });
 };
@@ -602,8 +565,7 @@ btnReadUrl.onclick = async ()=>{
   if (!url){ readInfo.textContent='Please paste a URL.'; return; }
   readInfo.textContent='Reading…';
   const r = await api('/api/import', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ url })
   });
   if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read URL'; readPreview.classList.add('hidden'); return; }
@@ -617,15 +579,25 @@ btnReadFile.onclick = async ()=>{
   const text = await f.text();
   readInfo.textContent='Parsing…';
   const r = await api('/api/import', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ text })
   });
   if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to parse'; readPreview.classList.add('hidden'); return; }
   applyParsedToPreview(r.body);
 };
 
-// ---- IMAGE: upload or camera ----
+const readImgPreview = $('#readImgPreview');
+const readImgLabel = $('#readImgLabel');
+const readImgFile = $('#readImgFile');
+const btnReadChoose = $('#btnReadChoose');
+const btnReadCamera = $('#btnReadCamera');
+const btnReadRemoveImg = $('#btnReadRemoveImg');
+const btnReadImage = $('#btnReadImage');
+const readCamWrap = $('#readCamWrap');
+const readCam = $('#readCam');
+const btnReadSnap = $('#btnReadSnap');
+const btnReadCloseCam = $('#btnReadCloseCam');
+
 btnReadChoose.onclick = ()=> readImgFile.click();
 readImgFile.onchange = async (e)=>{
   const file = e.target.files?.[0];
@@ -637,7 +609,6 @@ btnReadRemoveImg.onclick = ()=>{
   readImageDataURL = null;
   updateReadImagePreview();
 };
-
 btnReadCamera.onclick = async ()=>{
   try{
     readMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }, audio:false });
@@ -660,7 +631,6 @@ btnReadSnap.onclick = async ()=>{
   updateReadImagePreview();
   btnReadCloseCam.click();
 };
-
 btnReadImage.onclick = async ()=>{
   if (!requireLogin()) return;
   if (!readImageDataURL){ readInfo.textContent = 'Select or take a photo first.'; return; }
@@ -738,7 +708,6 @@ btnSaveParsed.onclick = async ()=>{
   }
 };
 
-/* ---------- Planner: auto ---------- */
 tabPlan.onclick = ()=> setPlanTab(true);
 tabShop.onclick = ()=> setPlanTab(false);
 function setPlanTab(showPlan){
@@ -795,7 +764,7 @@ async function generatePlan() {
   dlgPlan.showModal();
 }
 
-/* ---------- Planner: manual select ---------- */
+/* ---------- Manual select & SAVE ---------- */
 btnManual.onclick = ()=>{
   if (!requireLogin()) return;
   manualSelected.clear();
@@ -808,10 +777,9 @@ btnManual.onclick = ()=>{
 pickQuery.addEventListener('input', renderPickList);
 btnPickCancel.onclick = ()=> dlgPick.close();
 
-btnPickConfirm.onclick = ()=>{
-  // transformă selecția într-un plan local (1..7 zile, date consecutive de azi)
+btnPickConfirm.onclick = async ()=>{
   const ids = [...manualSelected.entries()]
-                .sort((a,b)=> a[1]-b[1]) // după timestamp de selectare
+                .sort((a,b)=> a[1]-b[1])
                 .map(([id])=>id);
   const byId = new Map(recipesAll.map(x=>[x.id,x]));
   const today = new Date();
@@ -826,14 +794,13 @@ btnPickConfirm.onclick = ()=>{
     };
   });
 
-  // randare tabel
+  // Render plan + shopping list
   const tbody = document.querySelector('#planTable tbody');
   tbody.innerHTML = plan.map(p => `
     <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
   `).join('');
   $('#planErr').textContent = '';
 
-  // agregă shopping list din rețetele selectate
   const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
   const counts = new Map();
   for (const id of ids){
@@ -849,26 +816,31 @@ btnPickConfirm.onclick = ()=>{
                  .map(([key,count]) => ({ key, name:key, qty:count }));
   renderShoppingList(items);
 
-  // show dialog
+  // **SALVEAZĂ** în backend
+  const saveRes = await api('/api/plan-save', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ plan })
+  });
+  if (saveRes.status !== 200) {
+    alert(saveRes.body?.error || 'Could not save plan.');
+  }
+
   setPlanTab(true);
   dlgPick.close();
   dlgPlan.showModal();
 };
 
 function renderPickList(){
-  // filtrează active (not paused)
   const q = pickQuery.value.trim().toLowerCase();
   let arr = recipesAll.filter(r=>!r.paused);
   if (q.length>=2){
     arr = arr.filter(r=>{
-      const hay = [
-        r.name||'', r.category||'',
-        ...(Array.isArray(r.ingredients)? r.ingredients : [])
-      ].join(' \n ').toLowerCase();
+      const hay = [ r.name||'', r.category||'', ...(Array.isArray(r.ingredients)? r.ingredients : []) ]
+        .join(' \n ').toLowerCase();
       return hay.includes(q);
     });
   }
-  // render
   pickList.innerHTML = arr.map(r=>{
     const checked = manualSelected.has(r.id);
     return `
@@ -885,15 +857,12 @@ function renderPickList(){
     `;
   }).join('');
 
-  // lazy load thumbs
   pickList.querySelectorAll('img[data-blob]').forEach(async img=>{
     const blob = img.getAttribute('data-blob');
-    if (!blob) return;
-    const url = await getImageUrl(blob);
+    const url = blob ? await getImageUrl(blob) : null;
     if (url){ img.src = url; img.classList.remove('hidden'); }
   });
 
-  // bind checkbox
   pickList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
     cb.addEventListener('change',(e)=>{
       const id = e.target.getAttribute('data-id');
@@ -903,7 +872,7 @@ function renderPickList(){
           alert('You can select up to 7 recipes.');
           return;
         }
-        manualSelected.set(id, Date.now()+Math.random()); // timestamp pt ordine stabilă
+        manualSelected.set(id, Date.now()+Math.random());
       }else{
         manualSelected.delete(id);
       }
@@ -912,12 +881,11 @@ function renderPickList(){
     });
   });
 
-  // init counter + confirm state
   selCountEl.textContent = String(manualSelected.size);
   btnPickConfirm.disabled = manualSelected.size === 0;
 }
 
-/* ---------- Shopping list with persistence ---------- */
+/* ---------- Shopping list ---------- */
 function renderShoppingList(agg){
   const list = $('#shopList');
   const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
@@ -1046,7 +1014,6 @@ async function viewRecipe(id) {
   dlgView.showModal();
 }
 
-/* ---------- Add: upload logic ---------- */
 $('#btnSave').onclick = saveRecipe;
 $('#btnClear').onclick = clearForm;
 
@@ -1137,7 +1104,6 @@ function clearForm(){
 }
 function info(t){ $('#formInfo').textContent = t; }
 
-/* ---------- Auth ---------- */
 btnSignin.onclick = ()=> dlgSignin.showModal();
 btnRegister.onclick = ()=> dlgRegister.showModal();
 ctaRegister.onclick = ()=> dlgRegister.showModal();
@@ -1164,10 +1130,8 @@ btnLogout.onclick = async ()=>{
   await loadMe();
 };
 
-/* ---------- Init ---------- */
 loadMe();
 
-/* ===== utilities ===== */
 function renderShoppingList(agg){
   const list = $('#shopList');
   const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
