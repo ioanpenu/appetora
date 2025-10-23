@@ -57,7 +57,17 @@
     .tabs{display:flex;gap:6px;margin-bottom:8px}
     .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
     .tab.active{background:var(--accent);color:#fff;border-color:transparent}
-    .checklist li{list-style:none;margin:4px 0;display:flex;align-items:center;gap:8px}
+
+    /* ===== shopping list curată, aliniere checkbox + text ===== */
+    .checklist{margin:0;padding:0;list-style:none}
+    .checklist li{margin:4px 0;padding:6px 0;border-bottom:1px dashed var(--border)}
+    .checklist li:last-child{border-bottom:none}
+    .checklist label.item{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+    .checklist input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin-top:2px}
+    .checklist .name{flex:1;line-height:1.45}
+    .checklist .qty{font-size:12px;color:var(--muted);white-space:nowrap;margin-left:6px}
+    .checklist label.item.done .name{text-decoration:line-through;color:#94a3b8}
+
     /* section layout */
     .section{display:none}
     .section.active{display:block}
@@ -609,14 +619,17 @@ async function generatePlan() {
   errEl.textContent = '';
   const plan = out.body.plan;
 
+  // tabelul
   tbody.innerHTML = plan.map(p => `
     <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
   `).join('');
 
+  // agregare ingrediente + păstrare checkbox-uri
   const r = await api('/api/recipes');
   const all = Array.isArray(r.body) ? r.body : [];
   const byId = new Map(all.map(x=>[x.id, x]));
   const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
+
   const counts = new Map();
   for (const day of plan) {
     const rec = byId.get(day.recipeId);
@@ -627,13 +640,39 @@ async function generatePlan() {
       counts.set(key, (counts.get(key) || 0) + 1);
     }
   }
-  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
-  $('#shopList').innerHTML = items.map(([name,count])=>`
-    <li><input type="checkbox"> <span>${esc(name)}</span>${count>1?` <span class="muted">×${count}</span>`:''}</li>
-  `).join('');
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+                 .map(([key,count]) => ({ key, name:key, qty:count }));
+
+  renderShoppingList(items);
 
   setPlanTab(true);
   dlgPlan.showModal();
+}
+
+// Shopping list cu păstrare bife
+function renderShoppingList(agg){
+  const list = $('#shopList');
+  const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
+
+  list.innerHTML = agg.map(it => `
+    <li>
+      <label class="item ${saved[it.key] ? 'done' : ''}">
+        <input type="checkbox" data-key="${it.key}" ${saved[it.key] ? 'checked' : ''}/>
+        <span class="name">${esc(it.name)}</span>
+        ${it.qty>1?`<span class="qty">×${it.qty}</span>`:''}
+      </label>
+    </li>
+  `).join('');
+
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const key = e.target.getAttribute('data-key');
+      const label = e.target.closest('label.item');
+      if (e.target.checked){ saved[key]=true; label.classList.add('done'); }
+      else { delete saved[key]; label.classList.remove('done'); }
+      localStorage.setItem('shopping_checked', JSON.stringify(saved));
+    });
+  });
 }
 
 /* ---------- Add / Edit / Delete / Pause ---------- */
