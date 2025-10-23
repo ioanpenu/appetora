@@ -31,8 +31,10 @@ export default async function (context, req) {
       return;
     }
 
-    // 2) OpenAI Vision
+    // 2) OpenAI Responses API — folosim text_format (nu response_format)
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    // Schema JSON pe care o vrem în răspuns
     const schema = {
       name: "RecipeExtraction",
       schema: {
@@ -57,7 +59,8 @@ export default async function (context, req) {
 
     const resp = await client.responses.create({
       model: MODEL,
-      response_format: { type: "json_schema", json_schema: schema },
+      // IMPORTANT: în SDK-urile noi, formatul pentru JSON e sub text_format
+      text_format: { type: "json_schema", json_schema: schema },
       input: [
         {
           role: "user",
@@ -80,8 +83,7 @@ export default async function (context, req) {
     try {
       parsed = JSON.parse(text);
     } catch {
-      // fallback: când modelul nu respectă 100% schema,
-      // încercăm să „mirosim” JSON-ul din text
+      // fallback când modelul nu respectă 100% schema
       const m = text.match(/\{[\s\S]*\}$/);
       parsed = m ? JSON.parse(m[0]) : null;
     }
@@ -91,7 +93,7 @@ export default async function (context, req) {
       return;
     }
 
-    // 4) Normalizează ușor câmpurile
+    // 4) Normalizează câmpurile
     const out = {
       name: (parsed.name || "").trim(),
       category: (parsed.category || "").trim() || null,
@@ -101,7 +103,6 @@ export default async function (context, req) {
       instructions: (parsed.instructions || "").trim()
     };
 
-    // validare minimă
     if (!out.name && out.ingredients.length === 0 && !out.instructions) {
       context.res = json(422, { error: "Image did not contain a readable recipe" });
       return;
@@ -125,9 +126,14 @@ async function readBody(req) {
   return req.body;
 }
 
-// extrage primul text din Responses API
+// extrage textul din Responses API (compatibil cu mai multe versiuni de SDK)
 function pickFirstText(resp) {
-  // forma tipică: resp.output[0].content[0].text
+  try {
+    if (typeof resp?.output_text === "string" && resp.output_text.trim()) {
+      return resp.output_text;
+    }
+  } catch {}
+
   try {
     const blocks = resp?.output ?? [];
     for (const b of blocks) {
@@ -138,10 +144,11 @@ function pickFirstText(resp) {
       }
     }
   } catch {}
-  // fallback: multe SDK-uri expun și choices/messages
+
   try {
     const t = resp?.choices?.[0]?.message?.content;
     if (typeof t === "string") return t;
   } catch {}
+
   return null;
 }
