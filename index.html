@@ -25,7 +25,7 @@
     .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
     .right{display:flex;gap:6px;align-items:center}
     .hidden{display:none}
-    dialog{border:none;border-radius:16px;padding:0;max-width:760px;width:calc(100% - 24px)}
+    dialog{border:none;border-radius:16px;padding:0;max-width:900px;width:calc(100% - 24px)}
     .dlg{padding:16px}
     .dlg h3{margin:0 0 8px}
     .hr{height:1px;background:var(--border);margin:12px 0}
@@ -68,6 +68,13 @@
     .checklist .qty{font-size:12px;color:#64748b;white-space:nowrap;margin-left:6px}
     .checklist label.item.done .name{text-decoration:line-through;color:#94a3b8}
 
+    /* Manual select dialog */
+    .pickRow{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fff}
+    .pickList{display:grid;gap:8px;max-height:420px;overflow:auto}
+    .pickHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .help{font-size:12px;color:var(--muted)}
+    .selCount{font-size:12px}
+    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;color:var(--muted)}
     /* section layout */
     .section{display:none}
     .section.active{display:block}
@@ -116,7 +123,10 @@
       <section class="card grid">
         <div class="row" style="align-items:center;justify-content:space-between">
           <h2 style="margin:0">Planner</h2>
-          <button id="btnPlan" class="btn">Generate weekly plan</button>
+          <div class="row">
+            <button id="btnPlan" class="btn">Generate weekly plan</button>
+            <button id="btnManual" class="btn">Select recipes manually</button>
+          </div>
         </div>
       </section>
     </section>
@@ -326,6 +336,23 @@
     </div>
   </div></dialog>
 
+  <!-- Manual select dialog -->
+  <dialog id="dlgPick"><div class="dlg">
+    <div class="pickHeader">
+      <h3 style="margin:0">Pick up to 7 recipes</h3>
+      <div class="badge"><span id="selCount">0</span> selected / 7 max</div>
+    </div>
+    <div class="row" style="margin:8px 0 6px">
+      <input id="pickQuery" placeholder="Filter by name/category/ingredient…"/>
+      <span class="help">Only active (not paused) recipes are listed.</span>
+    </div>
+    <div id="pickList" class="pickList"></div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end">
+      <button id="btnPickCancel" class="btn" type="button">Cancel</button>
+      <button id="btnPickConfirm" class="btn primary" type="button" disabled>Build plan</button>
+    </div>
+  </div></dialog>
+
   <!-- Auth dialogs -->
   <dialog id="dlgSignin"><div class="dlg">
     <h3>Sign in</h3>
@@ -369,10 +396,15 @@ const tabButtons = document.querySelectorAll('.tabBtn');
 
 // lists, dialogs
 const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count'), btnMore = $('#btnMore');
-const btnPlan = $('#btnPlan');
+const btnPlan = $('#btnPlan'), btnManual = $('#btnManual');
 const dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
 const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
 const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
+
+// manual pick dialog
+const dlgPick = $('#dlgPick'), pickQuery = $('#pickQuery'),
+      pickList = $('#pickList'), btnPickCancel = $('#btnPickCancel'),
+      btnPickConfirm = $('#btnPickConfirm'), selCountEl = $('#selCount');
 
 // add form & upload
 const fFile = $('#fFile'), btnChoose = $('#btnChoose'), btnCamera = $('#btnCamera');
@@ -409,6 +441,10 @@ const imageUrlCache = new Map();
 let recipesAll = [];
 let showCount = 0;
 const firstPage = 10, stepPage = 5;
+
+// manual select state
+const manualSelected = new Map(); // id -> timestamp (pentru ordinea selectării)
+const MAX_SEL = 7;
 
 async function api(path, opts={}) {
   const res = await fetch(path, { credentials:'include', ...opts });
@@ -702,7 +738,7 @@ btnSaveParsed.onclick = async ()=>{
   }
 };
 
-/* ---------- Planner ---------- */
+/* ---------- Planner: auto ---------- */
 tabPlan.onclick = ()=> setPlanTab(true);
 tabShop.onclick = ()=> setPlanTab(false);
 function setPlanTab(showPlan){
@@ -711,6 +747,8 @@ function setPlanTab(showPlan){
   viewPlan.classList.toggle('hidden', !showPlan);
   viewShop.classList.toggle('hidden', showPlan);
 }
+
+btnPlan.onclick = generatePlan;
 
 async function generatePlan() {
   if (!requireLogin()) return;
@@ -757,7 +795,129 @@ async function generatePlan() {
   dlgPlan.showModal();
 }
 
-// Shopping list cu păstrare bife
+/* ---------- Planner: manual select ---------- */
+btnManual.onclick = ()=>{
+  if (!requireLogin()) return;
+  manualSelected.clear();
+  selCountEl.textContent = "0";
+  pickQuery.value = "";
+  renderPickList();
+  dlgPick.showModal();
+};
+
+pickQuery.addEventListener('input', renderPickList);
+btnPickCancel.onclick = ()=> dlgPick.close();
+
+btnPickConfirm.onclick = ()=>{
+  // transformă selecția într-un plan local (1..7 zile, date consecutive de azi)
+  const ids = [...manualSelected.entries()]
+                .sort((a,b)=> a[1]-b[1]) // după timestamp de selectare
+                .map(([id])=>id);
+  const byId = new Map(recipesAll.map(x=>[x.id,x]));
+  const today = new Date();
+  const plan = ids.map((id, idx)=>{
+    const d = new Date(today); d.setDate(today.getDate()+idx);
+    const rec = byId.get(id);
+    return {
+      date: d.toISOString().slice(0,10),
+      recipeId: id,
+      name: rec?.name || '(deleted)',
+      category: rec?.category || null
+    };
+  });
+
+  // randare tabel
+  const tbody = document.querySelector('#planTable tbody');
+  tbody.innerHTML = plan.map(p => `
+    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
+  `).join('');
+  $('#planErr').textContent = '';
+
+  // agregă shopping list din rețetele selectate
+  const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
+  const counts = new Map();
+  for (const id of ids){
+    const rec = byId.get(id);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr){
+      const key = norm(String(raw));
+      if (!key) continue;
+      counts.set(key, (counts.get(key)||0) + 1);
+    }
+  }
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+                 .map(([key,count]) => ({ key, name:key, qty:count }));
+  renderShoppingList(items);
+
+  // show dialog
+  setPlanTab(true);
+  dlgPick.close();
+  dlgPlan.showModal();
+};
+
+function renderPickList(){
+  // filtrează active (not paused)
+  const q = pickQuery.value.trim().toLowerCase();
+  let arr = recipesAll.filter(r=>!r.paused);
+  if (q.length>=2){
+    arr = arr.filter(r=>{
+      const hay = [
+        r.name||'', r.category||'',
+        ...(Array.isArray(r.ingredients)? r.ingredients : [])
+      ].join(' \n ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  // render
+  pickList.innerHTML = arr.map(r=>{
+    const checked = manualSelected.has(r.id);
+    return `
+      <div class="pickRow">
+        <input type="checkbox" data-id="${r.id}" ${checked?'checked':''}/>
+        <div class="titleline" style="min-width:0">
+          <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+          <div>
+            <div class="name">${esc(r.name)}</div>
+            <div class="muted">${esc(r.category||'No category')} • ${r.ingredients?.length||0} ingredients</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // lazy load thumbs
+  pickList.querySelectorAll('img[data-blob]').forEach(async img=>{
+    const blob = img.getAttribute('data-blob');
+    if (!blob) return;
+    const url = await getImageUrl(blob);
+    if (url){ img.src = url; img.classList.remove('hidden'); }
+  });
+
+  // bind checkbox
+  pickList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change',(e)=>{
+      const id = e.target.getAttribute('data-id');
+      if (e.target.checked){
+        if (manualSelected.size >= MAX_SEL){
+          e.target.checked = false;
+          alert('You can select up to 7 recipes.');
+          return;
+        }
+        manualSelected.set(id, Date.now()+Math.random()); // timestamp pt ordine stabilă
+      }else{
+        manualSelected.delete(id);
+      }
+      selCountEl.textContent = String(manualSelected.size);
+      btnPickConfirm.disabled = manualSelected.size === 0;
+    });
+  });
+
+  // init counter + confirm state
+  selCountEl.textContent = String(manualSelected.size);
+  btnPickConfirm.disabled = manualSelected.size === 0;
+}
+
+/* ---------- Shopping list with persistence ---------- */
 function renderShoppingList(agg){
   const list = $('#shopList');
   const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
@@ -1004,11 +1164,34 @@ btnLogout.onclick = async ()=>{
   await loadMe();
 };
 
-/* ---------- Menu routing ---------- */
-btnPlan.onclick = generatePlan;
-
 /* ---------- Init ---------- */
 loadMe();
+
+/* ===== utilities ===== */
+function renderShoppingList(agg){
+  const list = $('#shopList');
+  const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
+
+  list.innerHTML = agg.map(it => `
+    <li>
+      <label class="item ${saved[it.key] ? 'done' : ''}">
+        <input type="checkbox" data-key="${it.key}" ${saved[it.key] ? 'checked' : ''}/>
+        <span class="name">${esc(it.name)}</span>
+        ${it.qty>1?`<span class="qty">×${it.qty}</span>`:''}
+      </label>
+    </li>
+  `).join('');
+
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const key = e.target.getAttribute('data-key');
+      const label = e.target.closest('label.item');
+      if (e.target.checked){ saved[key]=true; label.classList.add('done'); }
+      else { delete saved[key]; label.classList.remove('done'); }
+      localStorage.setItem('shopping_checked', JSON.stringify(saved));
+    });
+  });
+}
 </script>
 </body>
 </html>
