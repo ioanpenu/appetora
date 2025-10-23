@@ -20,11 +20,8 @@
     th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
     th{color:var(--muted);font-weight:600}
     .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
-    .ok{color:#10b981}
-    .warn{color:#f59e0b}
-    .err{color:#ef4444}
     .badge{font-size:12px;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--border)}
-    .right{display:flex;gap:6px;align-items:center}
+    .ok{color:#10b981}.warn{color:#f59e0b}.err{color:#ef4444}
     .grid{display:grid;gap:10px}
   </style>
 </head>
@@ -33,11 +30,10 @@
     <h1>Appetora — Admin</h1>
 
     <section class="card grid">
-      <!-- auth row -->
       <div class="row">
-        <div class="row" style="align-items:center;gap:6px">
+        <div class="row" style="gap:6px">
           <input id="adminKey" type="password" placeholder="Admin password" style="width:260px"/>
-          <button id="togglePw" class="btn" title="Show/Hide password" type="button">👁️</button>
+          <button id="togglePw" class="btn" type="button">👁️</button>
           <button id="btnLogin" class="btn primary" type="button">Sign in</button>
         </div>
         <span id="authState" class="badge">Not signed in</span>
@@ -86,57 +82,37 @@ const day = $('#day'), btnDay = $('#btnDay'), dayInfo = $('#dayInfo'), dayOut = 
 
 function getKey(){ return sessionStorage.getItem('adminKey') || ''; }
 function setKey(v){ sessionStorage.setItem('adminKey', v); }
-function signedInUI(on){
-  authState.textContent = on ? 'Signed in' : 'Not signed in';
-  authState.className = 'badge ' + (on ? 'ok' : '');
-}
+function signedInUI(on){ authState.textContent = on ? 'Signed in' : 'Not signed in'; authState.className = 'badge ' + (on ? 'ok' : ''); }
 
-async function adminGet(path){
+async function aget(path){
   const res = await fetch(path, { headers: { 'x-admin-key': getKey() }, credentials: 'omit' });
-  const ct = res.headers.get('content-type')||'';
-  const body = ct.includes('application/json') ? await res.json() : await res.text();
+  const ct = res.headers.get('content-type')||''; const body = ct.includes('application/json') ? await res.json() : await res.text();
   return { status: res.status, body };
 }
-async function adminPost(path, data){
-  const res = await fetch(path, {
-    method: 'POST',
-    headers: { 'x-admin-key': getKey(), 'content-type':'application/json' },
-    body: JSON.stringify(data),
-    credentials: 'omit'
-  });
-  const ct = res.headers.get('content-type')||'';
-  const body = ct.includes('application/json') ? await res.json() : await res.text();
+async function apost(path, data){
+  const res = await fetch(path, { method:'POST', headers: { 'x-admin-key': getKey(), 'content-type':'application/json' }, body: JSON.stringify(data), credentials:'omit' });
+  const ct = res.headers.get('content-type')||''; const body = ct.includes('application/json') ? await res.json() : await res.text();
   return { status: res.status, body };
 }
 
-togglePw.onclick = ()=>{
-  adminKeyInp.type = adminKeyInp.type === 'password' ? 'text' : 'password';
-  adminKeyInp.focus();
-};
+togglePw.onclick = ()=>{ adminKeyInp.type = adminKeyInp.type === 'password' ? 'text' : 'password'; adminKeyInp.focus(); };
 
 btnLogin.onclick = async ()=>{
-  const key = adminKeyInp.value.trim();
-  if (!key){ authState.textContent = 'Enter password'; authState.className='badge err'; return; }
-  setKey(key);
-  authState.textContent = 'Checking…'; authState.className='badge';
-  const r = await adminGet('/api/admin/users');
-  if (r.status === 200){
-    signedInUI(true);
-    renderUsers(r.body);
-  }else{
-    signedInUI(false);
-    authState.textContent = r.body?.error || 'Wrong password';
-    authState.className = 'badge err';
-    setKey('');
-  }
+  const key = adminKeyInp.value.trim(); if (!key){ authState.textContent='Enter password'; authState.className='badge err'; return; }
+  setKey(key); authState.textContent='Checking…'; authState.className='badge';
+  const r = await aget('/api/adm/ping');
+  if (r.status === 200){ signedInUI(true); loadUsers(); }
+  else { signedInUI(false); authState.textContent = r.body?.error || 'Wrong password'; authState.className='badge err'; setKey(''); }
 };
 
-btnRefresh.onclick = async ()=>{
+btnRefresh.onclick = ()=> loadUsers();
+
+async function loadUsers(){
   if (!getKey()){ authState.textContent='Please sign in'; authState.className='badge err'; return; }
-  const r = await adminGet('/api/admin/users');
+  const r = await aget('/api/adm/users');
   if (r.status !== 200){ authState.textContent = r.body?.error || 'Auth failed'; authState.className='badge err'; return; }
   renderUsers(r.body);
-};
+}
 
 function renderUsers(data){
   const rows = (data.users||[]).map(u=>{
@@ -154,16 +130,14 @@ function renderUsers(data){
   }).join('');
   tblBody.innerHTML = rows;
   meta.textContent = `${data.users?.length||0} users`;
-  sum.textContent = `Totals — imports today: ${data.totals?.today||0}, all-time imports: ${data.totals?.all||0}`;
+  sum.textContent  = `Totals — imports today: ${data.totals?.today||0}, all-time imports: ${data.totals?.all||0}`;
 
   tblBody.querySelectorAll('.toggleBtn').forEach(btn=>{
     btn.onclick = async ()=>{
-      const tr = btn.closest('tr');
-      const uid = tr.getAttribute('data-uid');
-      const current = tr.getAttribute('data-nolimit') === '1';
-      const next = !current;
+      const tr = btn.closest('tr'); const uid = tr.getAttribute('data-uid');
+      const current = tr.getAttribute('data-nolimit') === '1'; const next = !current;
       btn.disabled = true; btn.textContent = 'Saving…';
-      const r2 = await adminPost('/api/admin/limit', { uid, noLimit: next });
+      const r2 = await apost('/api/adm/limit', { uid, noLimit: next });
       if (r2.status === 200){
         tr.setAttribute('data-nolimit', next?'1':'0');
         tr.querySelector('.limitCell').innerHTML = next ? '<span class="ok">no limit</span>' : '<span class="warn">5/day</span>';
@@ -179,25 +153,19 @@ function renderUsers(data){
 
 btnDay.onclick = async ()=>{
   if (!getKey()){ authState.textContent='Please sign in'; authState.className='badge err'; return; }
-  const d = day.value.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)){ dayInfo.textContent='Use YYYY-MM-DD'; return; }
-  const r = await adminGet('/api/admin/usage?date='+encodeURIComponent(d));
+  const d = day.value.trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)){ dayInfo.textContent='Use YYYY-MM-DD'; return; }
+  const r = await aget('/api/adm/usage?date='+encodeURIComponent(d));
   if (r.status !== 200){ dayInfo.textContent = r.body?.error || 'Error'; return; }
   dayInfo.textContent = `Total imports on ${d}: ${r.body.total||0}`;
-  const list = (r.body.items||[]).map(x=>{
-    return `<div class="card">
-      <div class="right"><b>${esc(x.email||x.uid)}</b> <span class="pill">${x.imports} imports</span></div>
+  dayOut.innerHTML = (r.body.items||[]).map(x=>`
+    <div class="card">
+      <div class="row"><b>${esc(x.email||x.uid)}</b> <span class="pill">${x.imports} imports</span></div>
       <div class="muted">uid: ${esc(x.uid)}</div>
-    </div>`;
-  }).join('');
-  dayOut.innerHTML = list || '<div class="muted">No records.</div>';
+    </div>`).join('') || '<div class="muted">No records.</div>';
 };
 
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
-
-// init: prefill from session, but don’t auto-login
-adminKeyInp.value = getKey();
-signedInUI(!!getKey());
+adminKeyInp.value = getKey(); signedInUI(!!getKey());
 </script>
 </body>
 </html>
