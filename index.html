@@ -50,7 +50,7 @@
     .uploader .preview{display:flex;align-items:center;gap:10px}
     .uploader .preview img{width:96px;height:96px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
     .uploader .actions{display:flex;gap:8px;flex-wrap:wrap}
-    video#cam{width:240px;border-radius:12px;border:1px solid var(--border)}
+    video.preview{width:240px;border-radius:12px;border:1px solid var(--border)}
     /* paused look */
     .item.paused{opacity:.65}
     /* plan tabs */
@@ -58,14 +58,14 @@
     .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
     .tab.active{background:var(--accent);color:#fff;border-color:transparent}
 
-    /* ===== shopping list curată, aliniere checkbox + text ===== */
+    /* shopping list curată */
     .checklist{margin:0;padding:0;list-style:none}
     .checklist li{margin:4px 0;padding:6px 0;border-bottom:1px dashed var(--border)}
     .checklist li:last-child{border-bottom:none}
     .checklist label.item{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
     .checklist input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin-top:2px}
     .checklist .name{flex:1;line-height:1.45}
-    .checklist .qty{font-size:12px;color:var(--muted);white-space:nowrap;margin-left:6px}
+    .checklist .qty{font-size:12px;color:#64748b;white-space:nowrap;margin-left:6px}
     .checklist label.item.done .name{text-decoration:line-through;color:#94a3b8}
 
     /* section layout */
@@ -135,15 +135,44 @@
 
     <section id="sec-read" class="section">
       <section class="card grid">
-        <h2 style="margin:0">Read Recipe (URL or .txt)</h2>
+        <h2 style="margin:0">Read Recipe (URL, .txt, or Photo)</h2>
+
+        <!-- URL -->
         <div class="row">
           <input id="readUrl" placeholder="Paste a URL to a recipe page"/>
           <button id="btnReadUrl" class="btn">Read from URL</button>
         </div>
+
+        <!-- .txt -->
         <div class="row">
           <input id="readFile" type="file" accept=".txt" />
           <button id="btnReadFile" class="btn">Read from file</button>
         </div>
+
+        <!-- IMAGE (upload / camera) -->
+        <div class="row">
+          <div class="uploader" style="flex:1;min-width:280px">
+            <div class="preview">
+              <img id="readImgPreview" alt="" class="hidden"/>
+              <span id="readImgLabel" class="muted">No image selected</span>
+            </div>
+            <div class="actions" style="margin-top:8px">
+              <input id="readImgFile" type="file" accept="image/*" class="hidden"/>
+              <button id="btnReadChoose" class="btn" type="button">Choose image</button>
+              <button id="btnReadCamera" class="btn" type="button">Take photo</button>
+              <button id="btnReadRemoveImg" class="btn" type="button">Remove</button>
+              <button id="btnReadImage" class="btn primary" type="button">Read from image</button>
+            </div>
+            <div id="readCamWrap" class="hidden" style="margin-top:10px">
+              <video id="readCam" class="preview" autoplay playsinline></video>
+              <div class="actions" style="margin-top:8px">
+                <button id="btnReadSnap" class="btn primary" type="button">Capture</button>
+                <button id="btnReadCloseCam" class="btn" type="button">Close camera</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <span id="readInfo" class="muted"></span>
 
         <div id="readPreview" class="card hidden" style="margin-top:10px">
@@ -209,7 +238,7 @@
                 <button id="btnRemoveImg" class="btn" type="button">Remove</button>
               </div>
               <div id="camWrap" class="hidden" style="margin-top:10px">
-                <video id="cam" autoplay playsinline></video>
+                <video id="cam" class="preview" autoplay playsinline></video>
                 <div class="actions" style="margin-top:8px">
                   <button id="btnSnap" class="btn primary" type="button">Capture</button>
                   <button id="btnCloseCam" class="btn" type="button">Close camera</button>
@@ -358,6 +387,17 @@ const readUrl = $('#readUrl'), readFile = $('#readFile'), btnReadUrl = $('#btnRe
       readInfo = $('#readInfo'), readPreview = $('#readPreview'),
       rName = $('#rName'), rCat = $('#rCat'), rIngr = $('#rIngr'), rInstr = $('#rInstr'),
       btnLoadToForm = $('#btnLoadToForm'), btnSaveParsed = $('#btnSaveParsed');
+
+// read: image & camera
+const readImgPreview = $('#readImgPreview'), readImgLabel = $('#readImgLabel'),
+      readImgFile = $('#readImgFile'), btnReadChoose = $('#btnReadChoose'),
+      btnReadCamera = $('#btnReadCamera'), btnReadRemoveImg = $('#btnReadRemoveImg'),
+      btnReadImage = $('#btnReadImage'),
+      readCamWrap = $('#readCamWrap'), readCam = $('#readCam'),
+      btnReadSnap = $('#btnReadSnap'), btnReadCloseCam = $('#btnReadCloseCam');
+
+let readImageDataURL = null;    // imaginea pentru parsare (data URL)
+let readMediaStream = null;     // camera (read)
 
 // state
 let currentUser = null;
@@ -519,7 +559,7 @@ $('#btnSearch').onclick = ()=>{
   });
 };
 
-/* ---------- Read Recipe (URL / .txt) ---------- */
+/* ---------- Read Recipe (URL / .txt / Image) ---------- */
 btnReadUrl.onclick = async ()=>{
   if (!requireLogin()) return;
   const url = readUrl.value.trim();
@@ -548,6 +588,76 @@ btnReadFile.onclick = async ()=>{
   if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to parse'; readPreview.classList.add('hidden'); return; }
   applyParsedToPreview(r.body);
 };
+
+// ---- IMAGE: upload or camera ----
+btnReadChoose.onclick = ()=> readImgFile.click();
+readImgFile.onchange = async (e)=>{
+  const file = e.target.files?.[0];
+  if (!file) return;
+  readImageDataURL = await fileToDataURL(file);
+  updateReadImagePreview();
+};
+btnReadRemoveImg.onclick = ()=>{
+  readImageDataURL = null;
+  updateReadImagePreview();
+};
+
+btnReadCamera.onclick = async ()=>{
+  try{
+    readMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }, audio:false });
+    readCam.srcObject = readMediaStream;
+    readCamWrap.classList.remove('hidden');
+  }catch(e){ alert('Camera not available: '+e.message); }
+};
+btnReadCloseCam.onclick = ()=>{
+  if (readMediaStream) readMediaStream.getTracks().forEach(t=>t.stop());
+  readMediaStream = null;
+  readCamWrap.classList.add('hidden');
+};
+btnReadSnap.onclick = async ()=>{
+  if (!readMediaStream) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = readCam.videoWidth; canvas.height = readCam.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(readCam, 0, 0);
+  readImageDataURL = canvas.toDataURL('image/jpeg', 0.9);
+  updateReadImagePreview();
+  btnReadCloseCam.click();
+};
+
+btnReadImage.onclick = async ()=>{
+  if (!requireLogin()) return;
+  if (!readImageDataURL){ readInfo.textContent = 'Select or take a photo first.'; return; }
+  readInfo.textContent='Reading image…';
+  const r = await api('/api/import-image', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ imageData: readImageDataURL })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read image'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+
+function updateReadImagePreview(){
+  if (readImageDataURL){
+    readImgPreview.src = readImageDataURL;
+    readImgPreview.classList.remove('hidden');
+    readImgLabel.textContent = 'Image selected';
+  }else{
+    readImgPreview.removeAttribute('src');
+    readImgPreview.classList.add('hidden');
+    readImgLabel.textContent = 'No image selected';
+  }
+}
+
+async function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const fr = new FileReader();
+    fr.onload = ()=> resolve(fr.result);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
 
 function applyParsedToPreview(obj){
   rName.value = obj.name || '';
@@ -619,12 +729,10 @@ async function generatePlan() {
   errEl.textContent = '';
   const plan = out.body.plan;
 
-  // tabelul
   tbody.innerHTML = plan.map(p => `
     <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
   `).join('');
 
-  // agregare ingrediente + păstrare checkbox-uri
   const r = await api('/api/recipes');
   const all = Array.isArray(r.body) ? r.body : [];
   const byId = new Map(all.map(x=>[x.id, x]));
@@ -778,7 +886,7 @@ async function viewRecipe(id) {
   dlgView.showModal();
 }
 
-/* ---------- Upload logic ---------- */
+/* ---------- Add: upload logic ---------- */
 $('#btnSave').onclick = saveRecipe;
 $('#btnClear').onclick = clearForm;
 
