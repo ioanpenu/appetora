@@ -32,25 +32,32 @@
     table{width:100%;border-collapse:collapse}
     th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
     th{color:var(--muted);font-weight:600}
+    /* hero */
     .hero{display:grid;gap:14px;place-items:start;background:linear-gradient(180deg,#fff,#f6f7fb);border:1px solid var(--border);border-radius:18px;padding:24px}
     .hero h2{font-size:28px;margin:0}
     .hero p{margin:0;color:var(--muted)}
     .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
+    /* meniu */
     .menubar{display:flex;gap:8px;margin:16px 0 12px}
     .tabBtn{padding:.45rem .7rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
     .tabBtn.active{background:var(--accent);color:#fff;border-color:transparent}
+    /* thumb */
     .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
     .titleline{display:flex;align-items:center;gap:12px;min-width:0}
     .titleline .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+    /* uploader */
     .uploader{border:1px dashed var(--border);border-radius:12px;padding:10px;background:#fff}
     .uploader .preview{display:flex;align-items:center;gap:10px}
     .uploader .preview img{width:96px;height:96px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
     .uploader .actions{display:flex;gap:8px;flex-wrap:wrap}
     video.preview{width:240px;border-radius:12px;border:1px solid var(--border)}
+    /* paused look */
     .item.paused{opacity:.65}
+    /* plan tabs */
     .tabs{display:flex;gap:6px;margin-bottom:8px}
     .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
     .tab.active{background:var(--accent);color:#fff;border-color:transparent}
+    /* shopping list curată */
     .checklist{margin:0;padding:0;list-style:none}
     .checklist li{margin:4px 0;padding:6px 0;border-bottom:1px dashed var(--border)}
     .checklist li:last-child{border-bottom:none}
@@ -59,12 +66,13 @@
     .checklist .name{flex:1;line-height:1.45}
     .checklist .qty{font-size:12px;color:#64748b;white-space:nowrap;margin-left:6px}
     .checklist label.item.done .name{text-decoration:line-through;color:#94a3b8}
+    /* select manual */
     .pickRow{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fff}
     .pickList{display:grid;gap:8px;max-height:420px;overflow:auto}
     .pickHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
     .help{font-size:12px;color:var(--muted)}
-    .selCount{font-size:12px}
-    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;color:#var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;color:var(--muted)}
+    /* secțiuni */
     .section{display:none}
     .section.active{display:block}
   </style>
@@ -83,6 +91,7 @@
       </div>
     </header>
 
+    <!-- HERO (nelogat) -->
     <section id="hero" class="hero">
       <h2>Your weekly peek. Your daily pick.</h2>
       <p>Plan your week in seconds, avoid repeats, and keep your favorite recipes in one place.</p>
@@ -97,6 +106,7 @@
       </div>
     </section>
 
+    <!-- MENIU (logat) -->
     <div id="menu" class="menubar hidden">
       <button class="tabBtn" data-tab="planner">Planner</button>
       <button class="tabBtn" data-tab="search">Search Recipe</button>
@@ -105,6 +115,7 @@
       <button class="tabBtn" data-tab="my">My Recipes</button>
     </div>
 
+    <!-- PLANNER -->
     <section id="sec-planner" class="section">
       <section class="card grid">
         <div class="row" style="align-items:center;justify-content:space-between">
@@ -117,6 +128,7 @@
       </section>
     </section>
 
+    <!-- SEARCH -->
     <section id="sec-search" class="section">
       <section class="card grid">
         <h2 style="margin:0">Search Recipe</h2>
@@ -129,20 +141,24 @@
       </section>
     </section>
 
+    <!-- READ (URL, .txt, Photo) -->
     <section id="sec-read" class="section">
       <section class="card grid">
         <h2 style="margin:0">Read Recipe (URL, .txt, or Photo)</h2>
 
+        <!-- URL -->
         <div class="row">
           <input id="readUrl" placeholder="Paste a URL to a recipe page"/>
           <button id="btnReadUrl" class="btn">Read from URL</button>
         </div>
 
+        <!-- .txt -->
         <div class="row">
           <input id="readFile" type="file" accept=".txt" />
           <button id="btnReadFile" class="btn">Read from file</button>
         </div>
 
+        <!-- IMAGE (upload / camera) -->
         <div class="row">
           <div class="uploader" style="flex:1;min-width:280px">
             <div class="preview">
@@ -198,6 +214,7 @@
       </section>
     </section>
 
+    <!-- ADD RECIPE -->
     <section id="sec-add" class="section">
       <section class="card grid">
         <h2 style="margin:0">Add Recipe</h2>
@@ -254,6 +271,7 @@
       </section>
     </section>
 
+    <!-- MY RECIPES -->
     <section id="sec-my" class="section">
       <section class="card grid">
         <div class="row" style="align-items:center;justify-content:space-between">
@@ -269,6 +287,7 @@
     </section>
   </div>
 
+  <!-- View dialog -->
   <dialog id="dlgView"><div class="dlg">
     <div class="titleline">
       <img id="vwImg" class="thumb" alt="" onerror="this.style.display='none'"/>
@@ -292,6 +311,7 @@
     </div>
   </div></dialog>
 
+  <!-- Weekly plan dialog -->
   <dialog id="dlgPlan"><div class="dlg">
     <h3 style="margin:0 0 8px">Weekly plan</h3>
     <div class="tabs">
@@ -317,6 +337,7 @@
     </div>
   </div></dialog>
 
+  <!-- Manual select dialog -->
   <dialog id="dlgPick"><div class="dlg">
     <div class="pickHeader">
       <h3 style="margin:0">Pick up to 7 recipes</h3>
@@ -333,6 +354,7 @@
     </div>
   </div></dialog>
 
+  <!-- Auth dialogs -->
   <dialog id="dlgSignin"><div class="dlg">
     <h3>Sign in</h3>
     <div class="grid">
@@ -360,8 +382,17 @@
   </div></dialog>
 
 <script>
+/* ===== helpers ===== */
 const $ = (s)=>document.querySelector(s);
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
+async function api(path, opts={}) {
+  const res = await fetch(path, { credentials:'include', ...opts });
+  const ct = res.headers.get('content-type') || '';
+  const body = ct.includes('application/json') ? await res.json() : await res.text();
+  return { status: res.status, body };
+}
 
+/* ===== DOM refs ===== */
 const hero = $('#hero'), heroCtas = $('#heroCtas');
 const menu = $('#menu');
 const hello = $('#hello'), helloName = $('#helloName');
@@ -400,6 +431,7 @@ const readImgPreview = $('#readImgPreview'), readImgLabel = $('#readImgLabel'),
       readCamWrap = $('#readCamWrap'), readCam = $('#readCam'),
       btnReadSnap = $('#btnReadSnap'), btnReadCloseCam = $('#btnReadCloseCam');
 
+/* ===== State ===== */
 let readImageDataURL = null;
 let readMediaStream = null;
 
@@ -415,13 +447,7 @@ const firstPage = 10, stepPage = 5;
 const manualSelected = new Map();
 const MAX_SEL = 7;
 
-async function api(path, opts={}) {
-  const res = await fetch(path, { credentials:'include', ...opts });
-  const ct = res.headers.get('content-type') || '';
-  const body = ct.includes('application/json') ? await res.json() : await res.text();
-  return { status: res.status, body };
-}
-
+/* ===== Auth UI ===== */
 function showLoggedInUI(on){
   if (on){
     hero.classList.add('hidden');
@@ -444,7 +470,6 @@ function showLoggedInUI(on){
     document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
   }
 }
-
 function activateTab(name){
   if (!currentUser){ dlgSignin.showModal(); return; }
   const map = { planner:secPlanner, search:secSearch, read:secRead, add:secAdd, my:secMy };
@@ -453,7 +478,6 @@ function activateTab(name){
   map[name].classList.add('active');
   document.querySelector(`.tabBtn[data-tab="${name}"]`).classList.add('active');
 }
-
 function requireLogin(){
   if (!currentUser){ dlgSignin.showModal(); return false; }
   return true;
@@ -462,6 +486,7 @@ tabButtons.forEach(b=>{
   b.onclick = ()=>{ if (!requireLogin()) return; activateTab(b.getAttribute('data-tab')); };
 });
 
+/* ===== Init Me & Recipes ===== */
 async function loadMe() {
   const r = await api('/api/auth/me');
   if (r.status === 200 && r.body && r.body.user) {
@@ -474,13 +499,13 @@ async function loadMe() {
     showLoggedInUI(false);
   }
 }
-
 async function loadRecipes() {
   const r = await api('/api/recipes');
   recipesAll = (r.status === 200 && Array.isArray(r.body)) ? r.body : [];
   renderRecipesPaged(true);
 }
 
+/* ===== Listare rețete ===== */
 function renderRecipesPaged(reset){
   if (reset){ showCount = Math.min(recipesAll.length, firstPage); }
   countEl.textContent = `${recipesAll.length} recipe${recipesAll.length===1?'':'s'}`;
@@ -513,25 +538,27 @@ function renderRecipesPaged(reset){
   const imgs = listEl.querySelectorAll('img[data-blob]');
   imgs.forEach(async img=>{
     const blob = img.getAttribute('data-blob');
-    const url = blob ? await getImageUrl(blob) : null;
+    if (!blob) return;
+    const url = await getImageUrl(blob);
     if (url) { img.src = url; img.classList.remove('hidden'); }
   });
 
   if (showCount < recipesAll.length) btnMore.classList.remove('hidden');
   else btnMore.classList.add('hidden');
 }
-
 btnMore.onclick = ()=>{ showCount = Math.min(recipesAll.length, showCount + stepPage); renderRecipesPaged(false); };
 
-function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
-
+/* ===== Search ===== */
 $('#btnSearch').onclick = ()=>{
   if (!requireLogin()) return;
   const q = qSearch.value.trim().toLowerCase();
   if (q.length < 2){ searchResults.innerHTML=''; searchInfo.textContent='Type at least 2 characters.'; return; }
   const hit = recipesAll.filter(r=>{
-    const hay = [ r.name||'', r.category||'', ...(Array.isArray(r.ingredients)? r.ingredients : []) ]
-      .join(' \n ').toLowerCase();
+    const hay = [
+      r.name||'',
+      r.category||'',
+      ...(Array.isArray(r.ingredients)? r.ingredients : [])
+    ].join(' \n ').toLowerCase();
     return hay.includes(q);
   });
   searchInfo.textContent = `${hit.length} result${hit.length===1?'':'s'}`;
@@ -558,8 +585,8 @@ $('#btnSearch').onclick = ()=>{
   });
 };
 
-/* ---------- Read Recipe (URL / .txt / Image) ---------- */
-btnReadUrl.onclick = async ()=>{
+/* ===== Read Recipe (URL / .txt / Image) ===== */
+$('#btnReadUrl').onclick = async ()=>{
   if (!requireLogin()) return;
   const url = readUrl.value.trim();
   if (!url){ readInfo.textContent='Please paste a URL.'; return; }
@@ -571,8 +598,7 @@ btnReadUrl.onclick = async ()=>{
   if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read URL'; readPreview.classList.add('hidden'); return; }
   applyParsedToPreview(r.body);
 };
-
-btnReadFile.onclick = async ()=>{
+$('#btnReadFile').onclick = async ()=>{
   if (!requireLogin()) return;
   const f = readFile.files?.[0];
   if (!f){ readInfo.textContent='Choose a .txt file first.'; return; }
@@ -586,42 +612,31 @@ btnReadFile.onclick = async ()=>{
   applyParsedToPreview(r.body);
 };
 
-const readImgPreview = $('#readImgPreview');
-const readImgLabel = $('#readImgLabel');
-const readImgFile = $('#readImgFile');
-const btnReadChoose = $('#btnReadChoose');
-const btnReadCamera = $('#btnReadCamera');
-const btnReadRemoveImg = $('#btnReadRemoveImg');
-const btnReadImage = $('#btnReadImage');
-const readCamWrap = $('#readCamWrap');
-const readCam = $('#readCam');
-const btnReadSnap = $('#btnReadSnap');
-const btnReadCloseCam = $('#btnReadCloseCam');
-
-btnReadChoose.onclick = ()=> readImgFile.click();
+/* Image upload/camera pentru READ */
+$('#btnReadChoose').onclick = ()=> readImgFile.click();
 readImgFile.onchange = async (e)=>{
   const file = e.target.files?.[0];
   if (!file) return;
   readImageDataURL = await fileToDataURL(file);
   updateReadImagePreview();
 };
-btnReadRemoveImg.onclick = ()=>{
+$('#btnReadRemoveImg').onclick = ()=>{
   readImageDataURL = null;
   updateReadImagePreview();
 };
-btnReadCamera.onclick = async ()=>{
+$('#btnReadCamera').onclick = async ()=>{
   try{
     readMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }, audio:false });
     readCam.srcObject = readMediaStream;
     readCamWrap.classList.remove('hidden');
   }catch(e){ alert('Camera not available: '+e.message); }
 };
-btnReadCloseCam.onclick = ()=>{
+$('#btnReadCloseCam').onclick = ()=>{
   if (readMediaStream) readMediaStream.getTracks().forEach(t=>t.stop());
   readMediaStream = null;
   readCamWrap.classList.add('hidden');
 };
-btnReadSnap.onclick = async ()=>{
+$('#btnReadSnap').onclick = async ()=>{
   if (!readMediaStream) return;
   const canvas = document.createElement('canvas');
   canvas.width = readCam.videoWidth; canvas.height = readCam.videoHeight;
@@ -629,9 +644,9 @@ btnReadSnap.onclick = async ()=>{
   ctx.drawImage(readCam, 0, 0);
   readImageDataURL = canvas.toDataURL('image/jpeg', 0.9);
   updateReadImagePreview();
-  btnReadCloseCam.click();
+  $('#btnReadCloseCam').click();
 };
-btnReadImage.onclick = async ()=>{
+$('#btnReadImage').onclick = async ()=>{
   if (!requireLogin()) return;
   if (!readImageDataURL){ readInfo.textContent = 'Select or take a photo first.'; return; }
   readInfo.textContent='Reading image…';
@@ -655,7 +670,6 @@ function updateReadImagePreview(){
     readImgLabel.textContent = 'No image selected';
   }
 }
-
 async function fileToDataURL(file){
   return new Promise((resolve,reject)=>{
     const fr = new FileReader();
@@ -673,8 +687,7 @@ function applyParsedToPreview(obj){
   readInfo.textContent = 'Parsed. You can edit before saving.';
   readPreview.classList.remove('hidden');
 }
-
-btnLoadToForm.onclick = ()=>{
+$('#btnLoadToForm').onclick = ()=>{
   if (!requireLogin()) return;
   $('#fName').value = rName.value;
   $('#fCat').value  = rCat.value;
@@ -682,8 +695,7 @@ btnLoadToForm.onclick = ()=>{
   $('#fInstr').value= rInstr.value;
   activateTab('add');
 };
-
-btnSaveParsed.onclick = async ()=>{
+$('#btnSaveParsed').onclick = async ()=>{
   if (!requireLogin()) return;
   const payload = {
     name: rName.value.trim(),
@@ -708,6 +720,7 @@ btnSaveParsed.onclick = async ()=>{
   }
 };
 
+/* ===== Planner Tabs ===== */
 tabPlan.onclick = ()=> setPlanTab(true);
 tabShop.onclick = ()=> setPlanTab(false);
 function setPlanTab(showPlan){
@@ -717,8 +730,8 @@ function setPlanTab(showPlan){
   viewShop.classList.toggle('hidden', showPlan);
 }
 
+/* ===== Generate plan (auto) ===== */
 btnPlan.onclick = generatePlan;
-
 async function generatePlan() {
   if (!requireLogin()) return;
   const out = await api('/api/plan');
@@ -757,14 +770,13 @@ async function generatePlan() {
   }
   const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
                  .map(([key,count]) => ({ key, name:key, qty:count }));
-
   renderShoppingList(items);
 
   setPlanTab(true);
   dlgPlan.showModal();
 }
 
-/* ---------- Manual select & SAVE ---------- */
+/* ===== Manual select (și SAVE) ===== */
 btnManual.onclick = ()=>{
   if (!requireLogin()) return;
   manualSelected.clear();
@@ -773,7 +785,6 @@ btnManual.onclick = ()=>{
   renderPickList();
   dlgPick.showModal();
 };
-
 pickQuery.addEventListener('input', renderPickList);
 btnPickCancel.onclick = ()=> dlgPick.close();
 
@@ -794,13 +805,14 @@ btnPickConfirm.onclick = async ()=>{
     };
   });
 
-  // Render plan + shopping list
+  // Randare tabel
   const tbody = document.querySelector('#planTable tbody');
   tbody.innerHTML = plan.map(p => `
     <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
   `).join('');
   $('#planErr').textContent = '';
 
+  // Shopping list
   const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
   const counts = new Map();
   for (const id of ids){
@@ -816,7 +828,7 @@ btnPickConfirm.onclick = async ()=>{
                  .map(([key,count]) => ({ key, name:key, qty:count }));
   renderShoppingList(items);
 
-  // **SALVEAZĂ** în backend
+  // SAVE în backend
   const saveRes = await api('/api/plan-save', {
     method: 'POST',
     headers: { 'Content-Type':'application/json' },
@@ -830,7 +842,6 @@ btnPickConfirm.onclick = async ()=>{
   dlgPick.close();
   dlgPlan.showModal();
 };
-
 function renderPickList(){
   const q = pickQuery.value.trim().toLowerCase();
   let arr = recipesAll.filter(r=>!r.paused);
@@ -885,7 +896,7 @@ function renderPickList(){
   btnPickConfirm.disabled = manualSelected.size === 0;
 }
 
-/* ---------- Shopping list ---------- */
+/* ===== Shopping list (persist check în localStorage) ===== */
 function renderShoppingList(agg){
   const list = $('#shopList');
   const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
@@ -911,7 +922,7 @@ function renderShoppingList(agg){
   });
 }
 
-/* ---------- Add / Edit / Delete / Pause ---------- */
+/* ===== CRUD rețete ===== */
 async function getImageUrl(blobPath){
   if (!blobPath) return null;
   if (imageUrlCache.has(blobPath)) return imageUrlCache.get(blobPath);
@@ -920,7 +931,6 @@ async function getImageUrl(blobPath){
   imageUrlCache.set(blobPath, url);
   return url;
 }
-
 async function saveRecipe() {
   if (!requireLogin()) return;
   const name = $('#fName').value.trim();
@@ -947,14 +957,12 @@ async function saveRecipe() {
     info(r.body?.error || 'Error');
   }
 }
-
 async function delRecipe(id) {
   if (!requireLogin()) return;
   if (!confirm('Delete recipe?')) return;
   const r = await api('/api/recipes?id='+encodeURIComponent(id), { method:'DELETE' });
   if (r.status===200) { await loadRecipes(); activateTab('my'); }
 }
-
 async function togglePause(id) {
   if (!requireLogin()) return;
   const r = await api('/api/recipes');
@@ -968,7 +976,6 @@ async function togglePause(id) {
   });
   if (upd.status === 200) { await loadRecipes(); }
 }
-
 async function editRecipe(id) {
   if (!requireLogin()) return;
   const r = await api('/api/recipes');
@@ -984,7 +991,6 @@ async function editRecipe(id) {
   await updatePreviewFromBlob(currentBlobPath);
   info('Editing… Save to apply or Clear to cancel.');
 }
-
 async function viewRecipe(id) {
   if (!requireLogin()) return;
   const r = await api('/api/recipes');
@@ -1014,6 +1020,7 @@ async function viewRecipe(id) {
   dlgView.showModal();
 }
 
+/* ===== Add: upload logic ===== */
 $('#btnSave').onclick = saveRecipe;
 $('#btnClear').onclick = clearForm;
 
@@ -1028,7 +1035,6 @@ $('#btnRemoveImg').onclick = ()=>{
   imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
   imgLabel.textContent = 'No image selected';
 };
-
 let mediaStream = null;
 $('#btnCamera').onclick = async ()=>{
   try{
@@ -1055,7 +1061,6 @@ $('#btnSnap').onclick = async ()=>{
     $('#btnCloseCam').click();
   }, 'image/jpeg', 0.9);
 };
-
 async function uploadSelectedFile(file){
   if (!requireLogin()) return;
   info('Uploading image...');
@@ -1065,19 +1070,16 @@ async function uploadSelectedFile(file){
     body: JSON.stringify({ filename: file.name || 'image.jpg', contentType: file.type || 'image/jpeg' })
   });
   if (up.status !== 200 || !up.body?.uploadUrl) { info('Could not get upload URL'); return; }
-
   const putRes = await fetch(up.body.uploadUrl, {
     method:'PUT',
     headers:{ 'x-ms-blob-type': 'BlockBlob', 'Content-Type': file.type || 'application/octet-stream' },
     body: file
   });
   if (!putRes.ok) { info('Upload failed'); return; }
-
   currentBlobPath = up.body.blobPath;
   await updatePreviewFromBlob(currentBlobPath);
   info('Image uploaded.');
 }
-
 async function updatePreviewFromBlob(blobPath){
   if (!blobPath) {
     imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
@@ -1092,7 +1094,6 @@ async function updatePreviewFromBlob(blobPath){
     imgPreview.classList.add('hidden'); imgLabel.textContent='No image selected';
   }
 }
-
 function clearForm(){
   editId = null;
   $('#fName').value=''; $('#fCat').value='';
@@ -1104,6 +1105,7 @@ function clearForm(){
 }
 function info(t){ $('#formInfo').textContent = t; }
 
+/* ===== Auth ===== */
 btnSignin.onclick = ()=> dlgSignin.showModal();
 btnRegister.onclick = ()=> dlgRegister.showModal();
 ctaRegister.onclick = ()=> dlgRegister.showModal();
@@ -1116,7 +1118,6 @@ $('#doSignin').onclick = async ()=>{
   if (r.status===200) { dlgSignin.close(); await loadMe(); }
   else $('#siErr').textContent = r.body?.error || 'Sign in failed';
 };
-
 $('#doRegister').onclick = async ()=>{
   $('#reErr').textContent='';
   const email = $('#reEmail').value.trim(), password = $('#rePass').value;
@@ -1124,38 +1125,13 @@ $('#doRegister').onclick = async ()=>{
   if (r.status===200) { dlgRegister.close(); await loadMe(); }
   else $('#reErr').textContent = r.body?.error || 'Register failed';
 };
-
 btnLogout.onclick = async ()=>{
   await api('/api/auth/logout', { method:'POST' });
   await loadMe();
 };
 
+/* ===== Start ===== */
 loadMe();
-
-function renderShoppingList(agg){
-  const list = $('#shopList');
-  const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
-
-  list.innerHTML = agg.map(it => `
-    <li>
-      <label class="item ${saved[it.key] ? 'done' : ''}">
-        <input type="checkbox" data-key="${it.key}" ${saved[it.key] ? 'checked' : ''}/>
-        <span class="name">${esc(it.name)}</span>
-        ${it.qty>1?`<span class="qty">×${it.qty}</span>`:''}
-      </label>
-    </li>
-  `).join('');
-
-  list.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    cb.addEventListener('change', e=>{
-      const key = e.target.getAttribute('data-key');
-      const label = e.target.closest('label.item');
-      if (e.target.checked){ saved[key]=true; label.classList.add('done'); }
-      else { delete saved[key]; label.classList.remove('done'); }
-      localStorage.setItem('shopping_checked', JSON.stringify(saved));
-    });
-  });
-}
 </script>
 </body>
 </html>
