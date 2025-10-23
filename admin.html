@@ -17,12 +17,14 @@
     input{padding:.55rem .7rem;border:1px solid var(--border);border-radius:10px}
     .muted{color:var(--muted)}
     table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
+    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
     th{color:var(--muted);font-weight:600}
     .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
     .badge{font-size:12px;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--border)}
     .ok{color:#10b981}.warn{color:#f59e0b}.err{color:#ef4444}
     .grid{display:grid;gap:10px}
+    .stack{display:grid;gap:6px}
+    .danger{background:#fee2e2;border-color:#fecaca}
   </style>
 </head>
 <body>
@@ -50,13 +52,14 @@
         <table id="tbl">
           <thead>
             <tr>
-              <th>User</th>
+              <th style="min-width:220px">User</th>
               <th>Created</th>
               <th>Total imports</th>
               <th>Today</th>
               <th>Last import</th>
               <th>Limit</th>
-              <th>Action</th>
+              <th>Toggle limit</th>
+              <th>Admin actions</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -94,6 +97,11 @@ async function apost(path, data){
   const ct = res.headers.get('content-type')||''; const body = ct.includes('application/json') ? await res.json() : await res.text();
   return { status: res.status, body };
 }
+async function adel(path){
+  const res = await fetch(path, { method:'DELETE', headers: { 'x-admin-key': getKey() }, credentials:'omit' });
+  const ct = res.headers.get('content-type')||''; const body = ct.includes('application/json') ? await res.json() : await res.text();
+  return { status: res.status, body };
+}
 
 togglePw.onclick = ()=>{ adminKeyInp.type = adminKeyInp.type === 'password' ? 'text' : 'password'; adminKeyInp.focus(); };
 
@@ -126,12 +134,17 @@ function renderUsers(data){
       <td>${u.lastImportAt||''}</td>
       <td class="limitCell">${limitTxt}</td>
       <td><button class="btn toggleBtn" type="button">${btnTxt}</button></td>
+      <td class="stack">
+        <button class="btn resetBtn"  type="button">Reset password</button>
+        <button class="btn danger delBtn" type="button">Delete user</button>
+      </td>
     </tr>`;
   }).join('');
   tblBody.innerHTML = rows;
   meta.textContent = `${data.users?.length||0} users`;
   sum.textContent  = `Totals — imports today: ${data.totals?.today||0}, all-time imports: ${data.totals?.all||0}`;
 
+  // Toggle limit
   tblBody.querySelectorAll('.toggleBtn').forEach(btn=>{
     btn.onclick = async ()=>{
       const tr = btn.closest('tr'); const uid = tr.getAttribute('data-uid');
@@ -146,6 +159,33 @@ function renderUsers(data){
         alert(r2.body?.error || 'Error updating limit');
         btn.textContent = current ? 'Disable no-limit' : 'Enable no-limit';
       }
+      btn.disabled = false;
+    };
+  });
+
+  // Reset password
+  tblBody.querySelectorAll('.resetBtn').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const tr = btn.closest('tr'); const uid = tr.getAttribute('data-uid');
+      const pass = prompt('New password (min 6 chars):'); if (!pass) return;
+      if (pass.length < 6){ alert('Password too short'); return; }
+      btn.disabled = true; btn.textContent = 'Resetting…';
+      const r = await apost('/api/adm/reset', { uid, newPassword: pass });
+      if (r.status === 200) alert('Password reset.');
+      else alert(r.body?.error || 'Reset failed');
+      btn.disabled = false;
+    };
+  });
+
+  // Delete user
+  tblBody.querySelectorAll('.delBtn').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const tr = btn.closest('tr'); const uid = tr.getAttribute('data-uid');
+      if (!confirm('Delete this user and ALL their data (usage, recipes, history)? This cannot be undone.')) return;
+      btn.disabled = true; btn.textContent = 'Deleting…';
+      const r = await adel('/api/adm/user?uid='+encodeURIComponent(uid));
+      if (r.status === 200){ alert('User deleted.'); loadUsers(); }
+      else alert(r.body?.error || 'Delete failed');
       btn.disabled = false;
     };
   });
