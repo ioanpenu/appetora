@@ -1,255 +1,867 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Appetora — Weekly meal planner</title>
+  <meta charset="utf-8"/>
+  <title>Appetora</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <style>
-    :root{
-      /* Paletă pastel – inspirată din referință */
-      --bg:#f7f7fb;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --border:#e6e8ee;
-
-      --coral:   #ff7a7a;  /* coral */
-      --orange:  #ff9a5c;  /* apricot */
-      --sun:     #ffd166;  /* sunny */
-      --mint:    #6ee7c8;  /* mint */
-      --teal:    #4cc9b3;  /* teal */
-      --indigo:  #6c7cff;  /* indigo */
-      --plum:    #c086ff;  /* plum */
-
-      --tile-fg:#0b1220;
-    }
+    :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;--accent:#ff7a17;}
     *{box-sizing:border-box}
-    body{
-      margin:0; background:var(--bg); color:var(--text);
-      font:15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    .wrap{max-width:1100px;margin:24px auto; padding:0 18px}
-
-    /* Header */
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding:8px 0;
-    }
-    .brand{font-weight:800; font-size:28px; letter-spacing:.2px}
-    .right{display:flex; align-items:center; gap:8px}
-    .pill{
-      font-size:12px; color:var(--muted); border:1px solid var(--border);
-      padding:.2rem .5rem; border-radius:999px; background:#fff7; backdrop-filter: blur(2px);
-    }
-
-    .btn{
-      appearance:none; border:1px solid var(--border); background:#fff; color:#0f172a;
-      padding:.55rem .9rem; border-radius:12px; cursor:pointer;
-      transition:transform .04s ease, box-shadow .12s ease;
-      box-shadow:0 1px 0 rgba(10,10,20,.06);
-    }
-    .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.06) }
-    .btn.primary{ background:var(--indigo); color:#fff; border-color:transparent }
-    .btn.ghost{ background:transparent }
-
-    /* Hero */
-    .hero{
-      display:grid; gap:12px; padding:18px;
-      background:linear-gradient(135deg, #fff, #f1f4ff);
-      border:1px solid var(--border); border-radius:22px;
-      box-shadow:0 4px 20px rgba(0,0,0,.04);
-    }
-    .hero h2{ margin:.2rem 0 .4rem; font-size:22px }
-    .hero p{ margin:0; color:var(--muted) }
-
-    /* Tile menu */
-    .menu{
-      display:grid; grid-template-columns:repeat(5,minmax(0,1fr));
-      gap:14px; margin-top:18px;
-    }
-    @media (max-width:980px){ .menu{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
-    @media (max-width:600px){ .menu{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
-
-    .tile{
-      position:relative; display:grid; place-items:center; gap:8px;
-      height:124px; border-radius:24px; padding:10px;
-      color:var(--tile-fg); text-align:center; font-weight:650;
-      border:1px solid rgba(12,18,32,.06);
-      box-shadow:0 8px 24px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.6);
-      transition:transform .06s ease, box-shadow .12s ease; cursor:pointer;
-      user-select:none;
-    }
-    .tile span{ font-size:13px; font-weight:700 }
-    .tile .emoji{ font-size:34px; filter: drop-shadow(0 1px 0 rgba(255,255,255,.6)); }
-    .tile:hover{ transform:translateY(-2px); box-shadow:0 16px 36px rgba(0,0,0,.10) }
-
-    .t-planner{  background:linear-gradient(145deg, var(--mint),   #8ef0d6); }
-    .t-search{   background:linear-gradient(145deg, var(--teal),   #78e1cf); }
-    .t-read{     background:linear-gradient(145deg, var(--sun),    #ffe190); }
-    .t-add{      background:linear-gradient(145deg, var(--coral),  #ff9aa1); }
-    .t-my{       background:linear-gradient(145deg, var(--indigo), #95a2ff); color:#fff; }
-
-    /* Cards (conținut) */
-    .card{
-      background:var(--card); border:1px solid var(--border); border-radius:18px;
-      box-shadow:0 4px 16px rgba(0,0,0,.04); padding:16px;
-    }
-    .hidden{ display:none !important }
-    .muted{ color:var(--muted) }
-
-    /* Link stil pentru „ghost tiles” când userul nu e logat */
-    .tile.locked{ filter:grayscale(.35) brightness(.95); opacity:.65; pointer-events:none }
-    .tile.locked::after{
-      content:"Sign in first"; position:absolute; bottom:10px; left:0; right:0;
-      font-size:11px; color:#0f172a; opacity:.75;
-    }
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    h1{font-size:24px;margin:0}
+    .btn{padding:.55rem .9rem;border:1px solid var(--border);border-radius:10px;background:#f8fafc;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+    .btn.ghost{background:transparent}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    input,textarea{width:100%;padding:.6rem .7rem;border:1px solid var(--border);border-radius:12px;background:#fff}
+    label{font-size:12px;color:var(--muted)}
+    .grid{display:grid;gap:10px}
+    .recipes{display:grid;gap:8px}
+    .item{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px}
+    .muted{color:var(--muted);font-size:12px}
+    .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
+    .right{display:flex;gap:6px;align-items:center}
+    .hidden{display:none}
+    dialog{border:none;border-radius:16px;padding:0;max-width:760px;width:calc(100% - 24px)}
+    .dlg{padding:16px}
+    .dlg h3{margin:0 0 8px}
+    .hr{height:1px;background:var(--border);margin:12px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
+    th{color:var(--muted);font-weight:600}
+    /* hero */
+    .hero{display:grid;gap:14px;place-items:start;background:linear-gradient(180deg,#fff,#f6f7fb);border:1px solid var(--border);border-radius:18px;padding:24px}
+    .hero h2{font-size:28px;margin:0}
+    .hero p{margin:0;color:var(--muted)}
+    .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
+    /* tabs (meniu) */
+    .menubar{display:flex;gap:8px;margin:16px 0 12px}
+    .tabBtn{padding:.45rem .7rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
+    .tabBtn.active{background:var(--accent);color:#fff;border-color:transparent}
+    /* thumbnails */
+    .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
+    .titleline{display:flex;align-items:center;gap:12px;min-width:0}
+    .titleline .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+    /* uploader */
+    .uploader{border:1px dashed var(--border);border-radius:12px;padding:10px;background:#fff}
+    .uploader .preview{display:flex;align-items:center;gap:10px}
+    .uploader .preview img{width:96px;height:96px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
+    .uploader .actions{display:flex;gap:8px;flex-wrap:wrap}
+    video#cam{width:240px;border-radius:12px;border:1px solid var(--border)}
+    /* paused look */
+    .item.paused{opacity:.65}
+    /* plan tabs */
+    .tabs{display:flex;gap:6px;margin-bottom:8px}
+    .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
+    .tab.active{background:var(--accent);color:#fff;border-color:transparent}
+    .checklist li{list-style:none;margin:4px 0;display:flex;align-items:center;gap:8px}
+    /* section layout */
+    .section{display:none}
+    .section.active{display:block}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- Header -->
-    <header class="topbar">
-      <div class="brand">Appetora</div>
-      <div class="right">
-        <span id="lblUser" class="pill hidden"></span>
-        <span id="lblUsage" class="pill hidden"></span>
-        <button id="btnSignIn"  class="btn">Sign in</button>
-        <button id="btnRegister" class="btn ghost">Register</button>
-        <button id="btnSignOut" class="btn hidden">Sign out</button>
+    <header>
+      <h1>Appetora</h1>
+      <div class="row" style="gap:10px">
+        <div id="authBox" class="row">
+          <span id="hello" class="muted hidden">Hi, <b id="helloName"></b></span>
+          <button id="btnSignin" class="btn">Sign in</button>
+          <button id="btnRegister" class="btn">Register</button>
+          <button id="btnLogout" class="btn hidden">Sign out</button>
+        </div>
       </div>
     </header>
 
-    <!-- Hero -->
-    <section class="hero">
-      <div>
-        <h2>Your weekly peek, without the hassle ✨</h2>
-        <p class="muted">Add your recipes, then let Appetora pick a balanced plan and auto-build a shopping list.</p>
-      </div>
-      <div class="right" id="heroCta">
+    <!-- HERO (vizibil numai nelogat) -->
+    <section id="hero" class="hero">
+      <h2>Your weekly peek. Your daily pick.</h2>
+      <p>Plan your week in seconds, avoid repeats, and keep your favorite recipes in one place.</p>
+      <ul>
+        <li>Add recipes (now with photos)</li>
+        <li>Generate a 7-day plan from active recipes</li>
+        <li>Pause recipes you don’t want this week</li>
+      </ul>
+      <div id="heroCtas" class="row" style="margin-top:6px">
         <button id="ctaRegister" class="btn primary">Create a free account</button>
-        <button id="ctaLogin" class="btn">I already have an account</button>
+        <button id="ctaSignin" class="btn">I already have an account</button>
       </div>
     </section>
 
-    <!-- iOS-like tiles -->
-    <nav id="tileMenu" class="menu">
-      <div class="tile t-planner locked"  data-view="planner"><div class="emoji">🗓️</div><span>Planner</span></div>
-      <div class="tile t-search  locked"  data-view="search"><div class="emoji">🔎</div><span>Search recipe</span></div>
-      <div class="tile t-read    locked"  data-view="read"><div class="emoji">📖</div><span>Read recipe</span></div>
-      <div class="tile t-add     locked"  data-view="add"><div class="emoji">➕</div><span>Add recipe</span></div>
-      <div class="tile t-my      locked"  data-view="my"><div class="emoji">🍽️</div><span>My recipes</span></div>
-    </nav>
+    <!-- MENIU (vizibil doar logat) -->
+    <div id="menu" class="menubar hidden">
+      <button class="tabBtn" data-tab="planner">Planner</button>
+      <button class="tabBtn" data-tab="search">Search Recipe</button>
+      <button class="tabBtn" data-tab="read">Read Recipe</button>
+      <button class="tabBtn" data-tab="add">Add Recipe</button>
+      <button class="tabBtn" data-tab="my">My Recipes</button>
+    </div>
 
-    <!-- Conținutul secțiunilor (păstrează-ți componentele aici) -->
-    <section id="view-planner" class="card hidden"></section>
-    <section id="view-search"  class="card hidden"></section>
-    <section id="view-read"    class="card hidden"></section>
-    <section id="view-add"     class="card hidden"></section>
-    <section id="view-my"      class="card hidden"></section>
+    <!-- SECTIUNI APP (vizibile doar după login) -->
+    <section id="sec-planner" class="section">
+      <section class="card grid">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <h2 style="margin:0">Planner</h2>
+          <button id="btnPlan" class="btn">Generate weekly plan</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="sec-search" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Search Recipe</h2>
+        <div class="row">
+          <input id="qSearch" placeholder="Search by name, category or ingredient… (min 2 chars)" />
+          <button id="btnSearch" class="btn">Search</button>
+          <span id="searchInfo" class="muted"></span>
+        </div>
+        <div id="searchResults" class="recipes"></div>
+      </section>
+    </section>
+
+    <section id="sec-read" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Read Recipe (URL or .txt)</h2>
+        <div class="row">
+          <input id="readUrl" placeholder="Paste a URL to a recipe page"/>
+          <button id="btnReadUrl" class="btn">Read from URL</button>
+        </div>
+        <div class="row">
+          <input id="readFile" type="file" accept=".txt" />
+          <button id="btnReadFile" class="btn">Read from file</button>
+        </div>
+        <span id="readInfo" class="muted"></span>
+
+        <div id="readPreview" class="card hidden" style="margin-top:10px">
+          <h3 style="margin:0 0 8px">Preview (not saved yet)</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label>Name</label>
+              <input id="rName"/>
+            </div>
+            <div style="width:280px;max-width:100%">
+              <label>Category</label>
+              <input id="rCat"/>
+            </div>
+          </div>
+          <div class="row">
+            <div style="flex:1">
+              <label>Ingredients (one per line)</label>
+              <textarea id="rIngr" rows="6"></textarea>
+            </div>
+            <div style="flex:1">
+              <label>Instructions</label>
+              <textarea id="rInstr" rows="6"></textarea>
+            </div>
+          </div>
+          <div class="row">
+            <button id="btnLoadToForm" class="btn" type="button">Load into Add Recipe</button>
+            <button id="btnSaveParsed" class="btn primary" type="button">Save as new recipe</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="sec-add" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Add Recipe</h2>
+        <div class="row">
+          <div style="flex:1">
+            <label>Name</label>
+            <input id="fName" placeholder="e.g. Pasta Carbonara"/>
+          </div>
+          <div style="width:280px;max-width:100%">
+            <label>Category</label>
+            <input id="fCat" placeholder="optional"/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div style="flex:1">
+            <label>Ingredients (one per line)</label>
+            <textarea id="fIngr" rows="6" placeholder="spaghetti&#10;eggs&#10;bacon&#10;parmesan"></textarea>
+          </div>
+          <div style="width:360px;max-width:100%">
+            <label>Photo</label>
+            <div class="uploader">
+              <div class="preview">
+                <img id="imgPreview" alt="" class="hidden"/>
+                <span id="imgLabel" class="muted">No image selected</span>
+              </div>
+              <div class="actions" style="margin-top:8px">
+                <input id="fFile" type="file" accept="image/*" class="hidden"/>
+                <button id="btnChoose" class="btn" type="button">Choose image</button>
+                <button id="btnCamera" class="btn" type="button">Take photo</button>
+                <button id="btnRemoveImg" class="btn" type="button">Remove</button>
+              </div>
+              <div id="camWrap" class="hidden" style="margin-top:10px">
+                <video id="cam" autoplay playsinline></video>
+                <div class="actions" style="margin-top:8px">
+                  <button id="btnSnap" class="btn primary" type="button">Capture</button>
+                  <button id="btnCloseCam" class="btn" type="button">Close camera</button>
+                </div>
+              </div>
+            </div>
+            <div class="muted">Images are stored securely in the cloud.</div>
+          </div>
+        </div>
+
+        <div>
+          <label>Instructions</label>
+          <textarea id="fInstr" rows="6" placeholder="Steps..."></textarea>
+        </div>
+        <div class="row">
+          <button id="btnSave" class="btn primary" type="button">Save to list</button>
+          <button id="btnClear" class="btn" type="button">Clear</button>
+          <span id="formInfo" class="muted"></span>
+        </div>
+      </section>
+    </section>
+
+    <section id="sec-my" class="section">
+      <section class="card grid">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <h2 style="margin:0">My Recipes</h2>
+          <span id="count" class="pill">0 recipes</span>
+        </div>
+        <div id="empty" class="muted">No recipes yet. Add one above.</div>
+        <div id="list" class="recipes"></div>
+        <div class="row" style="justify-content:center;margin-top:8px">
+          <button id="btnMore" class="btn hidden" type="button">Show more (+5)</button>
+        </div>
+      </section>
+    </section>
   </div>
 
-  <script>
-    // -------------- helpers --------------
-    const $  = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
-    const state = { user:null };
+  <!-- View dialog -->
+  <dialog id="dlgView"><div class="dlg">
+    <div class="titleline">
+      <img id="vwImg" class="thumb" alt="" onerror="this.style.display='none'"/>
+      <div>
+        <h3 id="vwTitle" style="margin:0 0 4px"></h3>
+        <div id="vwCat" class="muted"></div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div>
+      <h4 style="margin:.2rem 0">Ingredients</h4>
+      <ul id="vwIngr" style="margin:.2rem 0 .6rem 1.2rem"></ul>
+    </div>
+    <div class="hr"></div>
+    <div>
+      <h4 style="margin:.2rem 0">Instructions</h4>
+      <pre id="vwInstr" style="white-space:pre-wrap;margin:0"></pre>
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end">
+      <button class="btn" onclick="dlgView.close()">Close</button>
+    </div>
+  </div></dialog>
 
-    function show(el){ el.classList.remove('hidden'); }
-    function hide(el){ el.classList.add('hidden'); }
+  <!-- Weekly plan dialog -->
+  <dialog id="dlgPlan"><div class="dlg">
+    <h3 style="margin:0 0 8px">Weekly plan</h3>
+    <div class="tabs">
+      <button id="tabPlan" class="tab active" type="button">Plan</button>
+      <button id="tabShop" class="tab" type="button">Shopping list</button>
+    </div>
+    <div id="planErr" class="muted"></div>
+    <div class="hr"></div>
 
-    function setTilesLocked(locked){
-      $$('#tileMenu .tile').forEach(t => t.classList.toggle('locked', locked));
+    <div id="viewPlan">
+      <div style="overflow:auto">
+        <table id="planTable">
+          <thead><tr><th style="width:140px">Date</th><th>Recipe</th><th style="width:160px">Category</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="viewShop" class="hidden">
+      <ul id="shopList" class="checklist"></ul>
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end">
+      <button class="btn" onclick="dlgPlan.close()">Close</button>
+    </div>
+  </div></dialog>
+
+  <!-- Auth dialogs -->
+  <dialog id="dlgSignin"><div class="dlg">
+    <h3>Sign in</h3>
+    <div class="grid">
+      <input id="siEmail" placeholder="email"/>
+      <input id="siPass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doSignin" class="btn primary" type="button">Sign in</button>
+        <button class="btn" type="button" onclick="dlgSignin.close()">Cancel</button>
+      </div>
+      <div id="siErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
+  <dialog id="dlgRegister"><div class="dlg">
+    <h3>Register</h3>
+    <div class="grid">
+      <input id="reEmail" placeholder="email"/>
+      <input id="rePass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doRegister" class="btn primary" type="button">Create account</button>
+        <button class="btn" type="button" onclick="dlgRegister.close()">Cancel</button>
+      </div>
+      <div id="reErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+
+// hero & auth UI
+const hero = $('#hero'), heroCtas = $('#heroCtas');
+const menu = $('#menu');
+const hello = $('#hello'), helloName = $('#helloName');
+const btnSignin = $('#btnSignin'), btnRegister = $('#btnRegister'), btnLogout = $('#btnLogout');
+const ctaRegister = $('#ctaRegister'), ctaSignin = $('#ctaSignin');
+
+const secPlanner = $('#sec-planner'), secSearch = $('#sec-search'), secRead = $('#sec-read'),
+      secAdd = $('#sec-add'), secMy = $('#sec-my');
+const tabButtons = document.querySelectorAll('.tabBtn');
+
+// lists, dialogs
+const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count'), btnMore = $('#btnMore');
+const btnPlan = $('#btnPlan');
+const dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
+const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
+const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
+
+// add form & upload
+const fFile = $('#fFile'), btnChoose = $('#btnChoose'), btnCamera = $('#btnCamera');
+const imgPreview = $('#imgPreview'), imgLabel = $('#imgLabel'), btnRemoveImg = $('#btnRemoveImg');
+const camWrap = $('#camWrap'), cam = $('#cam'), btnSnap = $('#btnSnap'), btnCloseCam = $('#btnCloseCam');
+
+// search
+const qSearch = $('#qSearch'), btnSearch = $('#btnSearch'), searchInfo = $('#searchInfo'), searchResults = $('#searchResults');
+
+// read (import)
+const readUrl = $('#readUrl'), readFile = $('#readFile'), btnReadUrl = $('#btnReadUrl'), btnReadFile = $('#btnReadFile'),
+      readInfo = $('#readInfo'), readPreview = $('#readPreview'),
+      rName = $('#rName'), rCat = $('#rCat'), rIngr = $('#rIngr'), rInstr = $('#rInstr'),
+      btnLoadToForm = $('#btnLoadToForm'), btnSaveParsed = $('#btnSaveParsed');
+
+// state
+let currentUser = null;
+let editId = null;
+let currentBlobPath = null;
+const imageUrlCache = new Map();
+
+// pagination
+let recipesAll = [];
+let showCount = 0;
+const firstPage = 10, stepPage = 5;
+
+async function api(path, opts={}) {
+  const res = await fetch(path, { credentials:'include', ...opts });
+  const ct = res.headers.get('content-type') || '';
+  const body = ct.includes('application/json') ? await res.json() : await res.text();
+  return { status: res.status, body };
+}
+
+function showLoggedInUI(on){
+  if (on){
+    hero.classList.add('hidden');
+    heroCtas.classList.add('hidden');
+    menu.classList.remove('hidden');
+    hello.classList.remove('hidden');
+    btnLogout.classList.remove('hidden');
+    btnSignin.classList.add('hidden'); 
+    btnRegister.classList.add('hidden');
+    if (!document.querySelector('.section.active')) activateTab('planner');
+  }else{
+    menu.classList.add('hidden');
+    hello.classList.add('hidden');
+    btnLogout.classList.add('hidden');
+    btnSignin.classList.remove('hidden'); 
+    btnRegister.classList.remove('hidden');
+    hero.classList.remove('hidden');
+    heroCtas.classList.remove('hidden');
+    document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
+  }
+}
+
+function activateTab(name){
+  if (!currentUser){ dlgSignin.showModal(); return; }
+  const map = { planner:secPlanner, search:secSearch, read:secRead, add:secAdd, my:secMy };
+  Object.values(map).forEach(el=>el.classList.remove('active'));
+  tabButtons.forEach(b=>b.classList.remove('active'));
+  map[name].classList.add('active');
+  document.querySelector(`.tabBtn[data-tab="${name}"]`).classList.add('active');
+}
+
+function requireLogin(){
+  if (!currentUser){ dlgSignin.showModal(); return false; }
+  return true;
+}
+tabButtons.forEach(b=>{
+  b.onclick = ()=>{ if (!requireLogin()) return; activateTab(b.getAttribute('data-tab')); };
+});
+
+async function loadMe() {
+  const r = await api('/api/auth/me');
+  if (r.status === 200 && r.body && r.body.user) {
+    currentUser = r.body.user;
+    helloName.textContent = currentUser.name || currentUser.email;
+    showLoggedInUI(true);
+    await loadRecipes();
+  } else {
+    currentUser = null;
+    showLoggedInUI(false);
+  }
+}
+
+async function loadRecipes() {
+  const r = await api('/api/recipes');
+  recipesAll = (r.status === 200 && Array.isArray(r.body)) ? r.body : [];
+  renderRecipesPaged(true);
+}
+
+function renderRecipesPaged(reset){
+  if (reset){ showCount = Math.min(recipesAll.length, firstPage); }
+  countEl.textContent = `${recipesAll.length} recipe${recipesAll.length===1?'':'s'}`;
+  if (!recipesAll.length){ emptyEl.style.display='block'; listEl.innerHTML=''; btnMore.classList.add('hidden'); return; }
+  emptyEl.style.display='none';
+
+  const items = recipesAll.slice(0, showCount);
+  listEl.innerHTML = items.map(r=>{
+    const label = r.paused ? 'Resume' : 'Pause';
+    const pausedCls = r.paused ? 'paused' : '';
+    return `
+      <div class="item ${pausedCls}" data-id="${r.id}">
+        <div class="titleline" style="min-width:0">
+          <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+          <div>
+            <div class="name">${esc(r.name)}</div>
+            <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients${r.paused ? ' • ⏸ paused' : ''}</div>
+          </div>
+        </div>
+        <div class="right">
+          <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
+          <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
+          <button class="btn" onclick="togglePause('${r.id}')">${label}</button>
+          <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const imgs = listEl.querySelectorAll('img[data-blob]');
+  imgs.forEach(async img=>{
+    const blob = img.getAttribute('data-blob');
+    if (!blob) return;
+    const url = await getImageUrl(blob);
+    if (url) { img.src = url; img.classList.remove('hidden'); }
+  });
+
+  if (showCount < recipesAll.length) btnMore.classList.remove('hidden');
+  else btnMore.classList.add('hidden');
+}
+
+btnMore.onclick = ()=>{ showCount = Math.min(recipesAll.length, showCount + stepPage); renderRecipesPaged(false); };
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
+
+/* ---------- Search ---------- */
+$('#btnSearch').onclick = ()=>{
+  if (!requireLogin()) return;
+  const q = qSearch.value.trim().toLowerCase();
+  if (q.length < 2){ searchResults.innerHTML=''; searchInfo.textContent='Type at least 2 characters.'; return; }
+  const hit = recipesAll.filter(r=>{
+    const hay = [
+      r.name||'',
+      r.category||'',
+      ...(Array.isArray(r.ingredients)? r.ingredients : [])
+    ].join(' \n ').toLowerCase();
+    return hay.includes(q);
+  });
+  searchInfo.textContent = `${hit.length} result${hit.length===1?'':'s'}`;
+  searchResults.innerHTML = hit.map(r => `
+    <div class="item" data-id="${r.id}">
+      <div class="titleline" style="min-width:0">
+        <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+        <div>
+          <div class="name">${esc(r.name)}</div>
+          <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
+        <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
+      </div>
+    </div>
+  `).join('');
+  const imgs = searchResults.querySelectorAll('img[data-blob]');
+  imgs.forEach(async img=>{
+    const blob = img.getAttribute('data-blob');
+    if (!blob) return;
+    const url = await getImageUrl(blob);
+    if (url) { img.src = url; img.classList.remove('hidden'); }
+  });
+};
+
+/* ---------- Read Recipe (URL / .txt) ---------- */
+btnReadUrl.onclick = async ()=>{
+  if (!requireLogin()) return;
+  const url = readUrl.value.trim();
+  if (!url){ readInfo.textContent='Please paste a URL.'; return; }
+  readInfo.textContent='Reading…';
+  const r = await api('/api/import', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ url })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read URL'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+
+btnReadFile.onclick = async ()=>{
+  if (!requireLogin()) return;
+  const f = readFile.files?.[0];
+  if (!f){ readInfo.textContent='Choose a .txt file first.'; return; }
+  const text = await f.text();
+  readInfo.textContent='Parsing…';
+  const r = await api('/api/import', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ text })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to parse'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+
+function applyParsedToPreview(obj){
+  rName.value = obj.name || '';
+  rCat.value = obj.category || '';
+  rIngr.value = (obj.ingredients||[]).join('\n');
+  rInstr.value = obj.instructions || '';
+  readInfo.textContent = 'Parsed. You can edit before saving.';
+  readPreview.classList.remove('hidden');
+}
+
+btnLoadToForm.onclick = ()=>{
+  if (!requireLogin()) return;
+  $('#fName').value = rName.value;
+  $('#fCat').value  = rCat.value;
+  $('#fIngr').value = rIngr.value;
+  $('#fInstr').value= rInstr.value;
+  activateTab('add');
+};
+
+btnSaveParsed.onclick = async ()=>{
+  if (!requireLogin()) return;
+  const payload = {
+    name: rName.value.trim(),
+    category: rCat.value.trim(),
+    ingredients: rIngr.value.split('\n').map(s=>s.trim()).filter(Boolean),
+    instructions: rInstr.value
+  };
+  if (!payload.name){ readInfo.textContent = 'Name required'; return; }
+  const res = await api('/api/recipes', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.status===201 || res.status===200){
+    readInfo.textContent='Saved.';
+    await loadRecipes();
+    activateTab('my');
+  }else if (res.status===401){
+    readInfo.textContent='Please sign in to save.'; dlgSignin.showModal();
+  }else{
+    readInfo.textContent = res.body?.error || 'Save failed';
+  }
+};
+
+/* ---------- Planner ---------- */
+tabPlan.onclick = ()=> setPlanTab(true);
+tabShop.onclick = ()=> setPlanTab(false);
+function setPlanTab(showPlan){
+  tabPlan.classList.toggle('active', showPlan);
+  tabShop.classList.toggle('active', !showPlan);
+  viewPlan.classList.toggle('hidden', !showPlan);
+  viewShop.classList.toggle('hidden', showPlan);
+}
+
+async function generatePlan() {
+  if (!requireLogin()) return;
+  const out = await api('/api/plan');
+  const errEl = $('#planErr');
+  const tbody = document.querySelector('#planTable tbody');
+
+  if (out.status !== 200 || !out.body?.plan) {
+    errEl.textContent = out.body?.error || 'Could not generate plan';
+    tbody.innerHTML = '';
+    $('#shopList').innerHTML = '';
+    setPlanTab(true);
+    dlgPlan.showModal();
+    return;
+  }
+  errEl.textContent = '';
+  const plan = out.body.plan;
+
+  tbody.innerHTML = plan.map(p => `
+    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
+  `).join('');
+
+  const r = await api('/api/recipes');
+  const all = Array.isArray(r.body) ? r.body : [];
+  const byId = new Map(all.map(x=>[x.id, x]));
+  const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
+  const counts = new Map();
+  for (const day of plan) {
+    const rec = byId.get(day.recipeId);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr) {
+      const key = norm(String(raw));
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
     }
+  }
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  $('#shopList').innerHTML = items.map(([name,count])=>`
+    <li><input type="checkbox"> <span>${esc(name)}</span>${count>1?` <span class="muted">×${count}</span>`:''}</li>
+  `).join('');
 
-    function openView(name){
-      ['planner','search','read','add','my'].forEach(v=>{
-        const el = $('#view-'+v);
-        if (!el) return;
-        if (v === name) show(el); else hide(el);
-      });
-      // aici doar mutăm focusul UI; componenta ta existentă își poate face populate/render
-      // (dacă ai funcții existente, le poți chema în switch)
-    }
+  setPlanTab(true);
+  dlgPlan.showModal();
+}
 
-    // -------------- auth --------------
-    async function fetchJSON(url, opt={}){
-      const res = await fetch(url, opt);
-      const ct = res.headers.get('content-type') || '';
-      const body = ct.includes('application/json') ? await res.json() : await res.text();
-      return { status: res.status, body };
-    }
+/* ---------- Add / Edit / Delete / Pause ---------- */
+async function getImageUrl(blobPath){
+  if (!blobPath) return null;
+  if (imageUrlCache.has(blobPath)) return imageUrlCache.get(blobPath);
+  const r = await api('/api/view-url?blob='+encodeURIComponent(blobPath));
+  const url = (r.status===200 && r.body?.url) ? r.body.url : null;
+  imageUrlCache.set(blobPath, url);
+  return url;
+}
 
-    async function refreshMe(){
-      const r = await fetchJSON('/api/auth/me', { credentials:'include' });
-      if (r.status === 200){
-        state.user = r.body.user;
-        $('#lblUser').textContent = r.body.user.email;
-        show($('#lblUser')); show($('#lblUsage')); // usage poate fi setat de tine
-        hide($('#btnSignIn')); hide($('#btnRegister'));
-        hide($('#ctaRegister')); hide($('#ctaLogin'));
-        show($('#btnSignOut'));
-        setTilesLocked(false);
-      }else{
-        state.user = null;
-        hide($('#lblUser')); hide($('#lblUsage'));
-        show($('#btnSignIn')); show($('#btnRegister'));
-        show($('#ctaRegister')); show($('#ctaLogin'));
-        hide($('#btnSignOut'));
-        setTilesLocked(true);
-      }
-    }
+async function saveRecipe() {
+  if (!requireLogin()) return;
+  const name = $('#fName').value.trim();
+  if (!name) { info('Name required'); return; }
+  const payload = {
+    id: editId || undefined,
+    name,
+    category: $('#fCat').value.trim(),
+    imageBlob: currentBlobPath || null,
+    ingredients: $('#fIngr').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    instructions: $('#fInstr').value
+  };
+  const method = editId ? 'PUT' : 'POST';
+  const r = await api('/api/recipes', {
+    method, headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (r.status===401){ info('Please sign in to save.'); dlgSignin.showModal(); return; }
+  if (r.status===200 || r.status===201) {
+    clearForm(); info(editId?'Updated.':'Saved.');
+    await loadRecipes();
+    activateTab('my');
+  } else {
+    info(r.body?.error || 'Error');
+  }
+}
 
-    // -------------- events --------------
-    // „Iconițele” – deschid secțiuni
-    $$('#tileMenu .tile').forEach(t=>{
-      t.addEventListener('click', ()=>{
-        if (!state.user) return;
-        openView(t.getAttribute('data-view'));
-      });
-    });
+async function delRecipe(id) {
+  if (!requireLogin()) return;
+  if (!confirm('Delete recipe?')) return;
+  const r = await api('/api/recipes?id='+encodeURIComponent(id), { method:'DELETE' });
+  if (r.status===200) { await loadRecipes(); activateTab('my'); }
+}
 
-    // CTA din hero = același lucru cu butoanele din header
-    $('#ctaRegister').onclick = () => $('#btnRegister').click();
-    $('#ctaLogin').onclick    = () => $('#btnSignIn').click();
+async function togglePause(id) {
+  if (!requireLogin()) return;
+  const r = await api('/api/recipes');
+  if (r.status !== 200 || !Array.isArray(r.body)) return;
+  const rec = r.body.find(x => x.id === id);
+  if (!rec) return;
+  const upd = await api('/api/recipes', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ id, paused: !rec.paused })
+  });
+  if (upd.status === 200) { await loadRecipes(); }
+}
 
-    // Simplu flow de demo pentru Sign in / Register (poți păstra loginul tău existent)
-    $('#btnSignIn').onclick = async ()=>{
-      const email = prompt('Email:'); if(!email) return;
-      const password = prompt('Password:'); if(!password) return;
-      const r = await fetchJSON('/api/auth/login', {
-        method:'POST',
-        headers:{ 'content-type':'application/json' },
-        body:JSON.stringify({ email, password }),
-        credentials:'include'
-      });
-      if (r.status === 200){ await refreshMe(); openView('planner'); }
-      else alert(r.body?.error || 'Login failed');
-    };
+async function editRecipe(id) {
+  if (!requireLogin()) return;
+  const r = await api('/api/recipes');
+  if (r.status!==200) return;
+  const rec = (r.body||[]).find(x=>x.id===id);
+  if (!rec) return;
+  editId = rec.id;
+  $('#fName').value = rec.name || '';
+  $('#fCat').value = rec.category || '';
+  $('#fIngr').value = (rec.ingredients||[]).join('\n');
+  $('#fInstr').value = rec.instructions || '';
+  currentBlobPath = rec.imageBlob || null;
+  await updatePreviewFromBlob(currentBlobPath);
+  info('Editing… Save to apply or Clear to cancel.');
+}
 
-    $('#btnRegister').onclick = async ()=>{
-      const email = prompt('Email to register:'); if(!email) return;
-      const password = prompt('Password:'); if(!password) return;
-      const name = email.split('@')[0];
-      const r = await fetchJSON('/api/auth/register', {
-        method:'POST',
-        headers:{ 'content-type':'application/json' },
-        body:JSON.stringify({ email, password, name }),
-        credentials:'include'
-      });
-      if (r.status === 200){ await refreshMe(); openView('planner'); }
-      else alert(r.body?.error || 'Register failed');
-    };
+async function viewRecipe(id) {
+  if (!requireLogin()) return;
+  const r = await api('/api/recipes');
+  if (r.status !== 200) return;
+  const rec = (r.body || []).find(x => x.id === id);
+  if (!rec) return;
 
-    $('#btnSignOut').onclick = async ()=>{
-      await fetchJSON('/api/auth/logout', { method:'POST', credentials:'include' });
-      await refreshMe();
-      // închide toate panourile după logout
-      ['planner','search','read','add','my'].forEach(v=> hide($('#view-'+v)));
-    };
+  const img = document.getElementById('vwImg');
+  if (rec.imageBlob) {
+    const url = await getImageUrl(rec.imageBlob);
+    if (url) { img.src = url; img.style.display='block'; } else { img.removeAttribute('src'); img.style.display='none'; }
+  } else { img.removeAttribute('src'); img.style.display='none'; }
 
-    // -------------- init --------------
-    refreshMe();
-  </script>
+  $('#vwTitle').textContent = rec.name || '';
+  $('#vwCat').textContent = rec.category ? `Category: ${rec.category}` : 'No category';
+
+  const ul = document.getElementById('vwIngr');
+  ul.innerHTML = '';
+  (rec.ingredients || []).forEach(it => {
+    const li = document.createElement('li');
+    li.textContent = String(it);
+    ul.appendChild(li);
+  });
+
+  document.getElementById('vwInstr').textContent = rec.instructions || '';
+
+  dlgView.showModal();
+}
+
+/* ---------- Upload logic ---------- */
+$('#btnSave').onclick = saveRecipe;
+$('#btnClear').onclick = clearForm;
+
+$('#btnChoose').onclick = ()=> fFile.click();
+fFile.onchange = async (e)=>{
+  const file = e.target.files?.[0];
+  if (!file) return;
+  await uploadSelectedFile(file);
+};
+$('#btnRemoveImg').onclick = ()=>{
+  currentBlobPath = null;
+  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
+  imgLabel.textContent = 'No image selected';
+};
+
+let mediaStream = null;
+$('#btnCamera').onclick = async ()=>{
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio:false });
+    cam.srcObject = mediaStream;
+    camWrap.classList.remove('hidden');
+  }catch(e){ alert('Camera not available: ' + e.message); }
+};
+$('#btnCloseCam').onclick = ()=>{
+  if (mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+  mediaStream = null;
+  camWrap.classList.add('hidden');
+};
+$('#btnSnap').onclick = async ()=>{
+  if (!mediaStream) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = cam.videoWidth; canvas.height = cam.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(cam, 0, 0);
+  canvas.toBlob(async (blob)=>{
+    if (!blob) return;
+    const file = new File([blob], 'photo.jpg', { type: blob.type || 'image/jpeg' });
+    await uploadSelectedFile(file);
+    $('#btnCloseCam').click();
+  }, 'image/jpeg', 0.9);
+};
+
+async function uploadSelectedFile(file){
+  if (!requireLogin()) return;
+  info('Uploading image...');
+  const up = await api('/api/upload-url', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ filename: file.name || 'image.jpg', contentType: file.type || 'image/jpeg' })
+  });
+  if (up.status !== 200 || !up.body?.uploadUrl) { info('Could not get upload URL'); return; }
+
+  const putRes = await fetch(up.body.uploadUrl, {
+    method:'PUT',
+    headers:{ 'x-ms-blob-type': 'BlockBlob', 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
+  });
+  if (!putRes.ok) { info('Upload failed'); return; }
+
+  currentBlobPath = up.body.blobPath;
+  await updatePreviewFromBlob(currentBlobPath);
+  info('Image uploaded.');
+}
+
+async function updatePreviewFromBlob(blobPath){
+  if (!blobPath) {
+    imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
+    imgLabel.textContent = 'No image selected';
+    return;
+  }
+  const url = await getImageUrl(blobPath);
+  if (url){
+    imgPreview.src = url; imgPreview.classList.remove('hidden');
+    imgLabel.textContent = blobPath.split('/').slice(-1)[0];
+  }else{
+    imgPreview.classList.add('hidden'); imgLabel.textContent='No image selected';
+  }
+}
+
+function clearForm(){
+  editId = null;
+  $('#fName').value=''; $('#fCat').value='';
+  $('#fIngr').value=''; $('#fInstr').value='';
+  currentBlobPath = null;
+  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
+  imgLabel.textContent = 'No image selected';
+  info('');
+}
+function info(t){ $('#formInfo').textContent = t; }
+
+/* ---------- Auth ---------- */
+btnSignin.onclick = ()=> dlgSignin.showModal();
+btnRegister.onclick = ()=> dlgRegister.showModal();
+ctaRegister.onclick = ()=> dlgRegister.showModal();
+ctaSignin .onclick = ()=> dlgSignin.showModal();
+
+$('#doSignin').onclick = async ()=>{
+  $('#siErr').textContent='';
+  const email = $('#siEmail').value.trim(), password = $('#siPass').value;
+  const r = await api('/api/auth/login',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
+  if (r.status===200) { dlgSignin.close(); await loadMe(); }
+  else $('#siErr').textContent = r.body?.error || 'Sign in failed';
+};
+
+$('#doRegister').onclick = async ()=>{
+  $('#reErr').textContent='';
+  const email = $('#reEmail').value.trim(), password = $('#rePass').value;
+  const r = await api('/api/auth/register',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
+  if (r.status===200) { dlgRegister.close(); await loadMe(); }
+  else $('#reErr').textContent = r.body?.error || 'Register failed';
+};
+
+btnLogout.onclick = async ()=>{
+  await api('/api/auth/logout', { method:'POST' });
+  await loadMe();
+};
+
+/* ---------- Menu routing ---------- */
+btnPlan.onclick = generatePlan;
+
+/* ---------- Init ---------- */
+loadMe();
+</script>
 </body>
 </html>
