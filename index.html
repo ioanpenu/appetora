@@ -398,6 +398,48 @@ async function api(path, opts={}) {
   return { status: res.status, body };
 }
 
+/*=== exclude-ingredients===*/
+const DEFAULT_EXCLUDE_ING = [
+  'salt', 'sea salt', 'himalayan salt', 'sare',
+  'pepper', 'black pepper', 'white pepper', 'piper',
+  'water', 'apa'
+];
+
+/*=== normalizează ingredientul pentru comparare ===*/
+function normIngrLine(s){
+  return String(s||'')
+    .toLowerCase()
+    .replace(/\([^)]*\)/g,' ')
+    .replace(/[.,:;•\-–]/g,' ')
+    .replace(/\b\d+([.,]\d+)?\b/g,' ')
+    .replace(/\b(g|kg|ml|l|tbsp|tsp|linguri|lingura|lingurite|lingurita)\b/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+/*=== obține setul de excluderi: default + localStorage ===*/
+function getExcludeSet(){
+  let custom = [];
+  try{
+    custom = JSON.parse(localStorage.getItem('exclude_ingredients')||'[]');
+    if (!Array.isArray(custom)) custom = [];
+  }catch{}
+  const all = new Set([...DEFAULT_EXCLUDE_ING, ...custom.map(x=>String(x).toLowerCase().trim()).filter(Boolean)]);
+  return all;
+}
+
+/*=== verifică dacă un ingredient trebuie exclus ===*/
+function shouldSkipIngr(normLine){
+  const EX = getExcludeSet();
+  if (!normLine) return true;
+  if (EX.has(normLine)) return true;
+  for (const k of EX){
+    if (normLine.startsWith(k+' ') || normLine.endsWith(' '+k) || normLine.includes(' '+k+' ')) return true;
+  }
+  return false;
+}
+
+
 /* ===== DOM refs ===== */
 const hero = $('#hero'), heroCtas = $('#heroCtas');
 const menu = $('#menu');
@@ -797,6 +839,7 @@ async function generatePlan() {
     for (const raw of ingr) {
       const key = norm(String(raw));
       if (!key) continue;
+      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
       counts.set(key, (counts.get(key) || 0) + 1);
     }
   }
@@ -831,7 +874,7 @@ btnPlanLatest.onclick = async ()=>{
   `).join('');
 
   // Shopping list
-  const r = await api('/api/recipes');
+  const r = await api('/api/recipes']);
   const all = Array.isArray(r.body) ? r.body : [];
   const byId = new Map(all.map(x=>[x.id, x]));
   const norm = s => String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
@@ -843,6 +886,7 @@ btnPlanLatest.onclick = async ()=>{
     for (const raw of ingr) {
       const key = norm(raw);
       if (!key) continue;
+      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
       counts.set(key, (counts.get(key) || 0) + 1);
     }
   }
@@ -891,7 +935,7 @@ btnPickConfirm.onclick = async ()=>{
   `).join('');
   $('#planErr').textContent = '';
 
-  // Shopping list
+  // Shopping list (cu filtrare)
   const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
   const counts = new Map();
   for (const id of ids){
@@ -900,6 +944,7 @@ btnPickConfirm.onclick = async ()=>{
     for (const raw of ingr){
       const key = norm(String(raw));
       if (!key) continue;
+      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
       counts.set(key, (counts.get(key)||0) + 1);
     }
   }
