@@ -105,7 +105,13 @@
     #readCamWrap.overlay .btn{
       padding:.7rem 1rem; font-size:16px; border-radius:12px;
     }
+    /* menubar ascuns by default; vizibil doar când userul este autentificat */
+    .menubar{ display:none; }
+    body.auth .menubar{ display:flex; }
 
+    /* (opțional) dacă vrei să fii extra-sigur că nici secțiunile nu apar accidental */
+    .section{ display:none; }
+    body.auth .section.active{ display:block; }
   </style>
 </head>
 <body>
@@ -529,15 +535,17 @@ const MAX_SEL = 7;
 /* ===== Auth UI ===== */
 function showLoggedInUI(on){
   if (on){
+    document.body.classList.add('auth');        // ←<<< controlează menubar-ul
     hero.classList.add('hidden');
     heroCtas.classList.add('hidden');
-    menu.classList.remove('hidden');
+    menu.classList.remove('hidden');            // ok să rămână; CSS îl guvernează
     hello.classList.remove('hidden');
     btnLogout.classList.remove('hidden');
     btnSignin.classList.add('hidden'); 
     btnRegister.classList.add('hidden');
     if (!document.querySelector('.section.active')) activateTab('planner');
   }else{
+    document.body.classList.remove('auth');     // ←<<< ascunde menubar-ul
     menu.classList.add('hidden');
     hello.classList.add('hidden');
     btnLogout.classList.add('hidden');
@@ -549,6 +557,7 @@ function showLoggedInUI(on){
     document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
   }
 }
+
 function activateTab(name){
   if (!currentUser){ dlgSignin.showModal(); return; }
   const map = { planner:secPlanner, search:secSearch, read:secRead, add:secAdd, my:secMy };
