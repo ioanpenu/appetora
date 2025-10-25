@@ -80,6 +80,32 @@
     /* secțiuni */
     .section{display:none}
     .section.active{display:block}
+    /* camera fullscreen (READ) */
+    body.noscroll{overflow:hidden}
+
+    #readCamWrap.overlay{
+      position:fixed; inset:0; z-index:9999;
+      background:rgba(15,23,42,.92); /* slate-900 ~transparent */
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+
+    #readCamWrap.overlay video.preview{
+      width:100%; height:auto; max-height:calc(100vh - 160px);
+      max-width:1000px; border:none; border-radius:16px; object-fit:contain;
+      box-shadow:0 10px 40px rgba(0,0,0,.35);
+    }
+
+    #readCamWrap.overlay .actions{
+      position:fixed; bottom:20px; left:0; right:0;
+      display:flex; gap:10px; justify-content:center;
+    }
+
+    #readCamWrap.overlay .btn{
+      padding:.7rem 1rem; font-size:16px; border-radius:12px;
+    }
+
   </style>
 </head>
 <body>
@@ -683,13 +709,32 @@ $('#btnReadCamera').onclick = async ()=>{
   try{
     readMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }, audio:false });
     readCam.srcObject = readMediaStream;
+
+    // fullscreen overlay
     readCamWrap.classList.remove('hidden');
-  }catch(e){ alert('Camera not available: '+e.message); }
+    readCamWrap.classList.add('overlay');
+    document.body.classList.add('noscroll');
+
+    // încearcă și Fullscreen API (opțional, dacă e permis de browser)
+    if (readCamWrap.requestFullscreen) {
+      try { await readCamWrap.requestFullscreen(); } catch {}
+    }
+  }catch(e){
+    alert('Camera not available: '+e.message);
+  }
 };
-$('#btnReadCloseCam').onclick = ()=>{
+$('#btnReadCloseCam').onclick = async ()=>{
   if (readMediaStream) readMediaStream.getTracks().forEach(t=>t.stop());
   readMediaStream = null;
+
+  // ieșire din fullscreen dacă e cazul
+  if (document.fullscreenElement) {
+    try { await document.exitFullscreen(); } catch {}
+  }
+
   readCamWrap.classList.add('hidden');
+  readCamWrap.classList.remove('overlay');
+  document.body.classList.remove('noscroll');
 };
 $('#btnReadSnap').onclick = async ()=>{
   if (!readMediaStream) return;
