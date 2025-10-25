@@ -128,6 +128,7 @@
           <div class="row">
             <button id="btnPlan" class="btn">Generate weekly plan</button>
             <button id="btnManual" class="btn">Select recipes manually</button>
+            <button id="btnPlanLatest" class="btn">Open last saved plan</button>
           </div>
         </div>
       </section>
@@ -410,6 +411,7 @@ const tabButtons = document.querySelectorAll('.tabBtn');
 
 const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count'), btnMore = $('#btnMore');
 const btnPlan = $('#btnPlan'), btnManual = $('#btnManual');
+const btnPlanLatest = document.getElementById('btnPlanLatest');
 const dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
 const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
 const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
@@ -780,6 +782,53 @@ async function generatePlan() {
   setPlanTab(true);
   dlgPlan.showModal();
 }
+
+btnPlanLatest.onclick = async ()=>{
+  if (!requireLogin()) return;
+
+  const out = await api('/api/plan-latest');
+  const errEl = document.getElementById('planErr');
+  const tbody = document.querySelector('#planTable tbody');
+
+  if (out.status !== 200 || !out.body?.plan) {
+    errEl.textContent = out.body?.error || 'No saved plan found.';
+    tbody.innerHTML = '';
+    setPlanTab(true);
+    dlgPlan.showModal();
+    return;
+  }
+
+  // Tabel plan
+  const plan = out.body.plan;
+  errEl.textContent = '';
+  tbody.innerHTML = plan.map(p => `
+    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
+  `).join('');
+
+  // Shopping list
+  const r = await api('/api/recipes');
+  const all = Array.isArray(r.body) ? r.body : [];
+  const byId = new Map(all.map(x=>[x.id, x]));
+  const norm = s => String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+
+  const counts = new Map();
+  for (const day of plan) {
+    const rec = byId.get(day.recipeId);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr) {
+      const key = norm(raw);
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+                 .map(([key,count]) => ({ key, name:key, qty:count }));
+  renderShoppingList(items);
+
+  setPlanTab(true);
+  dlgPlan.showModal();
+};
+
 
 /* ===== Manual select (și SAVE) ===== */
 btnManual.onclick = ()=>{
