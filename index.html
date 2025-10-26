@@ -37,6 +37,20 @@
     .hero h2{font-size:28px;margin:0}
     .hero p{margin:0;color:var(--muted)}
     .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
+    /*logo  */
+    h1.brand a {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    h1.brand img {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+    @media (min-width: 768px){
+      h1.brand img { height: 40px; }
+    }
     /* meniu */
     .menubar{display:flex;gap:8px;margin:16px 0 12px}
     .tabBtn{padding:.45rem .7rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
@@ -117,7 +131,11 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>Appetora</h1>
+      <h1 class="brand">
+        <a href="/" title="Appetora - Home">
+          <img src="images/logo-appetora.png" alt="Appetora"/>
+        </a>
+      </h1>
       <div class="row" style="gap:10px">
         <div id="authBox" class="row">
           <span id="hello" class="muted hidden">Hi, <b id="helloName"></b></span>
