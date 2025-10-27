@@ -460,14 +460,20 @@ async function api(path, opts={}) {
 
 /*=== exclude-ingredients===*/
 const DEFAULT_EXCLUDE_ING = [
-  'salt', 'sea salt', 'himalayan salt', 'sare', 
-  'pepper', 'black pepper', 'white pepper', 'piper',
-  'water', 'apa',
-  'chilli','boia',
+  'salt', 'sea salt', 'himalayan salt', 'sare', 'salz',
+  'pepper', 'black pepper', 'white pepper', 'piper','pfeffer',
+  'sugar','zahar','zucker',
+  'praf de usturoi',
+  'water', 'apa', 'apă',
+  'chilli','boia','paprikapulver',
   'thymian','cimbru',
   'busuioc',
-  'ulei',
-  'mirodenii'
+  'bulion','tomatenmark',
+  'oil','ulei', 'öl',
+  'vinegar','otet',
+  'mirodenii',
+  'sos soia',
+  'foi de dafin', 'lorbeerblätter'
 ];
 
 /*=== normalizează ingredientul pentru comparare ===*/
