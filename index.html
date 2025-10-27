@@ -567,7 +567,8 @@ function showLoggedInUI(on){
     btnLogout.classList.remove('hidden');
     btnSignin.classList.add('hidden'); 
     btnRegister.classList.add('hidden');
-    if (!document.querySelector('.section.active')) activateTab('planner');
+    activateTab('planner');
+    window.scrollTo(0,0);
   }else{
     document.body.classList.remove('auth');     // ←<<< ascunde menubar-ul
     menu.classList.add('hidden');
@@ -1315,15 +1316,28 @@ $('#doSignin').onclick = async ()=>{
   $('#siErr').textContent='';
   const email = $('#siEmail').value.trim(), password = $('#siPass').value;
   const r = await api('/api/auth/login',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
-  if (r.status===200) { dlgSignin.close(); await loadMe(); }
-  else $('#siErr').textContent = r.body?.error || 'Sign in failed';
+  if (r.status===200) {
+    dlgSignin.close();
+    await loadMe();            // setează currentUser și ascunde hero
+    activateTab('planner');    // ← mergi direct pe Planner
+    window.scrollTo(0,0);      // ← opțional, sus de tot
+  } else {
+    $('#siErr').textContent = r.body?.error || 'Sign in failed';
+  }
 };
+
 $('#doRegister').onclick = async ()=>{
   $('#reErr').textContent='';
   const email = $('#reEmail').value.trim(), password = $('#rePass').value;
   const r = await api('/api/auth/register',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
-  if (r.status===200) { dlgRegister.close(); await loadMe(); }
-  else $('#reErr').textContent = r.body?.error || 'Register failed';
+  if (r.status===200) {
+    dlgRegister.close();
+    await loadMe();
+    activateTab('planner');    // ← sari direct în Planner
+    window.scrollTo(0,0);
+  } else {
+    $('#reErr').textContent = r.body?.error || 'Register failed';
+  }
 };
 btnLogout.onclick = async ()=>{
   await api('/api/auth/logout', { method:'POST' });
