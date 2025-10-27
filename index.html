@@ -130,6 +130,10 @@
 
     /* ascunde hero dupa login*/
     body.auth #hero { display: none !important; }
+
+    /*  visual feedback */
+    .titleline.clickable { cursor:pointer; }
+    .titleline.clickable:hover { background:#f9fafb; border-radius:8px; }
   </style>
 </head>
 <body>
@@ -634,7 +638,7 @@ function renderRecipesPaged(reset){
     const pausedCls = r.paused ? 'paused' : '';
     return `
       <div class="item ${pausedCls}" data-id="${r.id}">
-        <div class="titleline" style="min-width:0">
+        <div class="titleline clickable" style="min-width:0" onclick="viewRecipe('${r.id}')">
           <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
           <div>
             <div class="name">${esc(r.name)}</div>
@@ -642,7 +646,6 @@ function renderRecipesPaged(reset){
           </div>
         </div>
         <div class="right">
-          <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
           <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
           <button class="btn" onclick="togglePause('${r.id}')">${label}</button>
           <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
@@ -680,7 +683,7 @@ $('#btnSearch').onclick = ()=>{
   searchInfo.textContent = `${hit.length} result${hit.length===1?'':'s'}`;
   searchResults.innerHTML = hit.map(r => `
     <div class="item" data-id="${r.id}">
-      <div class="titleline" style="min-width:0">
+      <div class="titleline clickable" style="min-width:0" onclick="viewRecipe('${r.id}')">
         <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
         <div>
           <div class="name">${esc(r.name)}</div>
@@ -688,11 +691,11 @@ $('#btnSearch').onclick = ()=>{
         </div>
       </div>
       <div class="right">
-        <button class="btn" onclick="viewRecipe('${r.id}')">View</button>
         <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
       </div>
     </div>
   `).join('');
+
   const imgs = searchResults.querySelectorAll('img[data-blob]');
   imgs.forEach(async img=>{
     const blob = img.getAttribute('data-blob');
