@@ -134,6 +134,10 @@
     /*  visual feedback */
     .titleline.clickable { cursor:pointer; }
     .titleline.clickable:hover { background:#f9fafb; border-radius:8px; }
+
+    #dlgView .previewWrap{width:100%;text-align:center;margin-bottom:12px;}
+    #dlgView .previewImg{width:100%;max-width:480px;border-radius:18px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+
   </style>
 </head>
 <body>
@@ -353,13 +357,11 @@
 
   <!-- View dialog -->
   <dialog id="dlgView"><div class="dlg">
-    <div class="titleline">
-      <img id="vwImg" class="thumb" alt="" onerror="this.style.display='none'"/>
-      <div>
-        <h3 id="vwTitle" style="margin:0 0 4px"></h3>
-        <div id="vwCat" class="muted"></div>
-      </div>
+    <div class="previewWrap">
+      <img id="vwImg" class="previewImg" alt="" onerror="this.style.display='none'"/>
     </div>
+    <h3 id="vwTitle" style="margin:12px 0 4px"></h3>
+    <div id="vwCat" class="muted" style="margin-bottom:8px"></div>
     <div class="hr"></div>
     <div>
       <h4 style="margin:.2rem 0">Ingredients</h4>
