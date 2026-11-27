@@ -267,6 +267,15 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .install .acts{display:flex;gap:4px;align-items:center;flex:none}
 .offline{background:var(--gold-soft);color:var(--ink);text-align:center;font-size:14px;font-weight:600;padding:6px 12px}
 
+/* Bring! */
+.btn.bring{background:#E8484C;border-color:#E8484C;color:#fff}
+.btn.bring:hover{background:#D23B3F;border-color:#D23B3F}
+.bring-list{list-style:none;margin:0;padding:0;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
+.bring-list label{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-bottom:1px dashed var(--line);cursor:pointer}
+.bring-list input{width:20px;height:20px;accent-color:#E8484C;margin:2px 0 0;flex:none}
+.bring-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.bring-bar .n{margin-left:auto;font-size:14px;color:var(--muted)}
+
 /* toast */
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:max-content;background:var(--ink);color:#fff;padding:12px 20px;border-radius:16px;text-align:center;font-weight:600;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:calc(100% - 32px)}
 .toast.err{background:var(--danger)}
@@ -361,6 +370,7 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
   <symbol id="i-pot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M2 10h2M20 10h2M9 6c0-1 1-1 1-2M13 6c0-1 1-1 1-2"/></symbol>
   <symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 10.5a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2"/><circle cx="9.5" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7M8 20v-6h8v6"/></symbol>
 </svg>
 
@@ -450,6 +460,7 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
         <div class="panel-head">
           <h2>Lista de cumpărături</h2>
           <div class="actions">
+            <button class="btn bring" type="button" id="btnBring"><svg><use href="#i-cart"/></svg>Trimite în Bring!</button>
             <button class="btn quiet" type="button" id="btnShopCopy">Copiază lista</button>
             <button class="btn quiet" type="button" id="btnShopReset">Debifează tot</button>
           </div>
@@ -614,6 +625,26 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
       <button class="btn" type="button" id="cookPrev">Înapoi</button>
       <span class="wake-note" id="cookWake"></span>
       <button class="btn primary" type="button" id="cookNextBtn">Pasul următor</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- trimite în Bring! -->
+<dialog id="dlgBring" style="max-width:560px">
+  <button class="btn icon-btn dlg-close" type="button" data-close aria-label="Închide"><svg><use href="#i-x"/></svg></button>
+  <div class="dlg-in">
+    <h2 style="font-size:28px">Trimite în Bring!</h2>
+    <p class="muted" style="margin:0">Alege ce vrei pe lista din Bring!. Se deschide aplicația Bring!, unde alegi lista și confirmi.</p>
+    <div class="bring-bar">
+      <button class="btn quiet small" type="button" id="bringAll">Toate</button>
+      <button class="btn quiet small" type="button" id="bringNone">Niciunul</button>
+      <span class="n" id="bringN"></span>
+    </div>
+    <ul class="bring-list" id="bringList"></ul>
+    <div id="bringDesk" class="inote" hidden></div>
+    <div class="actions" style="justify-content:flex-end">
+      <button class="btn quiet" type="button" data-close>Renunță</button>
+      <button class="btn bring" type="button" id="bringGo"><svg><use href="#i-cart"/></svg>Deschide în Bring!</button>
     </div>
   </div>
 </dialog>
@@ -1329,6 +1360,7 @@ function renderShop(){
   const checked = getChecked();
   S.shopKeys = new Set(agg.keys());
   const items = [...agg.entries()].sort((a,b) => a[0].localeCompare(b[0],'ro'));
+  S.shopItems = items.map(([k,a]) => ({ k, label: a.n>1 ? stripQty(a.raw) : a.raw }));
   $('#shopPanel').hidden = !items.length;
   $('#shop').innerHTML = items.map(([k,a]) => `<li><label class="${checked[k]?'done':''}" title="${esc([...a.from].join(', '))}">
     <input type="checkbox" data-k="${esc(k)}" ${checked[k]?'checked':''}/><span>${esc(a.n>1 ? stripQty(a.raw) : a.raw)}</span>${a.n>1?`<span class="qty">×${a.n}</span>`:''}</label></li>`).join('');
@@ -1348,6 +1380,36 @@ $('#btnShopCopy').onclick = async () => {
   const lines = $$('#shop [data-k]').filter(cb => !c[cb.dataset.k]).map(cb => '• ' + cb.closest('label').innerText.replace(/\s+/g,' ').trim());
   try{ await navigator.clipboard.writeText(lines.join('\n')); toast('Lista a fost copiată. O poți lipi în WhatsApp sau Notițe.'); }
   catch{ toast('Nu am putut copia lista.', true); }
+};
+
+/* ================= Bring! =================
+   Bring! importă doar dintr-o pagină publică cu o rețetă (schema.org).
+   Serverul salvează lista aleasă sub un link temporar, iar Bring! o citește de acolo. */
+const isPhone = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function bringCount(){ const n = $$('#bringList input:checked').length; $('#bringN').textContent = `${n} din ${$$('#bringList input').length} alese`; $('#bringGo').disabled = !n; }
+$('#btnBring').onclick = () => {
+  const c = getChecked();
+  // implicit: ce n-ai bifat încă în lista de cumpărături
+  $('#bringList').innerHTML = (S.shopItems||[]).map((it,i) => `<li><label><input type="checkbox" data-bi="${i}" ${c[it.k]?'':'checked'}/><span>${esc(it.label)}</span></label></li>`).join('');
+  $('#bringDesk').hidden = isPhone();
+  $('#bringDesk').textContent = 'Pe calculator, Bring! deschide pagina lui web. Ca să ajungă direct în aplicație, apasă butonul de pe telefonul pe care ai Bring!.';
+  bringCount(); $('#dlgBring').showModal();
+};
+$('#bringList').addEventListener('change', bringCount);
+$('#bringAll').onclick = () => { $$('#bringList input').forEach(x => x.checked = true); bringCount(); };
+$('#bringNone').onclick = () => { $$('#bringList input').forEach(x => x.checked = false); bringCount(); };
+$('#bringGo').onclick = async () => {
+  const items = $$('#bringList input:checked').map(x => S.shopItems[+x.dataset.bi]?.label).filter(Boolean);
+  if (!items.length) return;
+  const d = new Date();
+  const btn = $('#bringGo'); btn.disabled = true;
+  // pe calculator deschidem fila acum, cât timp apăsarea e „proaspătă”, altfel browserul o blochează
+  const tab = isPhone() ? null : window.open('', '_blank');
+  const r = await api('/api/bring-list', { json:{ items, title: `Appetora, ${d.getDate()} ${MONTHS[d.getMonth()]}`, origin: location.origin } });
+  btn.disabled = false;
+  if (!r.ok || !r.body?.deeplink){ tab?.close(); return toast(errMsg(r, 'Nu am putut pregăti lista pentru Bring!.'), true); }
+  $('#dlgBring').close();
+  if (tab) tab.location = r.body.deeplink; else location.href = r.body.deeplink;
 };
 
 /* ingrediente excluse */
