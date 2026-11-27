@@ -1405,7 +1405,7 @@ $('#bringGo').onclick = async () => {
   const btn = $('#bringGo'); btn.disabled = true;
   // pe calculator deschidem fila acum, cât timp apăsarea e „proaspătă”, altfel browserul o blochează
   const tab = isPhone() ? null : window.open('', '_blank');
-  const r = await api('/api/bring-list', { json:{ items, title: `Appetora, ${d.getDate()} ${MONTHS[d.getMonth()]}` } });
+  const r = await api('/api/bring-list', { json:{ items, title: `Appetora, ${d.getDate()} ${MONTHS[d.getMonth()]}`, origin: location.origin } });
   btn.disabled = false;
   if (!r.ok || !r.body?.deeplink){ tab?.close(); return toast(errMsg(r, 'Nu am putut pregăti lista pentru Bring!.'), true); }
   $('#dlgBring').close();

@@ -8,6 +8,15 @@ import { verifyFromRequest } from "../shared/jwt.js";
 import { colHistory } from "../shared/cosmos.js";
 
 const TTL_SEC = 2 * 24 * 3600;
+// adresa publică a site-ului: vine din browser (location.origin), verificată;
+// antetul host poate fi o adresă internă Azure, la care Bring! nu ajunge
+const ORIGIN_RE = /^https:\/\/([a-z0-9-]+\.)*(appetora\.com|azurestaticapps\.net)$/i;
+function publicOrigin(req, fromBody) {
+  if (typeof fromBody === "string" && ORIGIN_RE.test(fromBody)) return fromBody.toLowerCase();
+  const h = String(req.headers["x-forwarded-host"] || req.headers.host || "").split(",")[0].trim();
+  return "https://" + h;
+}
+const DEMO = { title: "Lista Appetora (demo)", items: ["500 g carne tocată", "2 cepe", "1 kg cartofi", "200 ml smântână"] };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const json = (status, body) => ({ status, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
@@ -26,25 +35,26 @@ export default async function (context, req) {
 
       const id = randomBytes(18).toString("base64url");
       const now = Date.now();
+      const origin = publicOrigin(req, b.origin);
       await colHistory.items.create({
         id, pk: `bring#${id}`, kind: "bring_export", userId: me.uid,
-        title, items,
+        title, items, origin,
         createdAt: new Date(now).toISOString(),
         expiresAt: new Date(now + TTL_SEC * 1000).toISOString(),
         ttl: TTL_SEC   // folosit doar dacă containerul are TTL activat
       });
 
-      const host = req.headers["x-forwarded-host"] || req.headers.host;
-      const url = `https://${host}/api/bring-list?id=${id}`;
+      const url = `${origin}/api/bring-list?id=${id}`;
       const deeplink = `https://api.getbring.com/rest/bringrecipes/deeplink?url=${encodeURIComponent(url)}&source=web&baseQuantity=4&requestedQuantity=4`;
       return (context.res = json(200, { id, url, deeplink }));
     }
 
     // GET public
     const id = String((req.query && req.query.id) || "").trim();
-    if (!/^[A-Za-z0-9_-]{20,40}$/.test(id)) return (context.res = { status: 404, body: "Not found" });
     let doc = null;
-    try {
+    if (id === "demo") doc = { ...DEMO, kind: "bring_export", expiresAt: "2999-01-01" };   // pentru verificarea formatului
+    else if (!/^[A-Za-z0-9_-]{20,40}$/.test(id)) return (context.res = { status: 404, body: "Not found" });
+    else try {
       ({ resource: doc } = await colHistory.item(id, `bring#${id}`).read());
     } catch (e) {
       if (e.code !== 404) throw e;
@@ -53,28 +63,29 @@ export default async function (context, req) {
       return (context.res = { status: 404, headers: { "content-type": "text/plain; charset=utf-8" }, body: "Lista a expirat." });
     }
 
+    const origin = doc.origin || publicOrigin(req);
     const ld = {
       "@context": "https://schema.org",
       "@type": "Recipe",
       name: doc.title,
+      image: `${origin}/images/icons/icon-512.png`,
+      author: { "@type": "Organization", name: "Appetora" },
+      description: "Lista de cumpărături din Appetora",
       recipeYield: "4",
-      recipeIngredient: doc.items
+      recipeIngredient: doc.items,
+      recipeInstructions: [{ "@type": "HowToStep", text: "Cumpără ingredientele." }]
     };
     const html = `<!doctype html>
 <html lang="ro"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>${esc(doc.title)}</title>
-<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\u003c")}</script>
+<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>
 </head><body style="font-family:system-ui,sans-serif;max-width:640px;margin:24px auto;padding:0 16px;color:#12382C">
-<div itemscope itemtype="http://schema.org/Recipe">
-<h1 itemprop="name">${esc(doc.title)}</h1>
-<meta itemprop="recipeYield" content="4"/>
-<img itemprop="image" src="https://${esc(req.headers["x-forwarded-host"] || req.headers.host)}/images/icons/icon-512.png" alt="" width="96" height="96"/>
+<h1>${esc(doc.title)}</h1>
 <ul>
-${doc.items.map((x) => `<li itemprop="recipeIngredient">${esc(x)}</li>`).join("\n")}
+${doc.items.map((x) => `<li>${esc(x)}</li>`).join("\n")}
 </ul>
-</div>
 </body></html>`;
     context.res = { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }, body: html };
   } catch (e) {
