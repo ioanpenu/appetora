@@ -254,7 +254,16 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .install img{width:44px;height:44px;border-radius:10px;flex:none}
 .install p{margin:0;font-size:14px;line-height:1.45;flex:1}
 .install b{display:block;font-size:15px}
-.install .ios-share{display:inline-block;width:17px;height:17px;vertical-align:-3px;color:#0A7AFF}
+.install .ios-share,.isteps .ios-share{display:inline-block;width:18px;height:18px;vertical-align:-3px;color:#0A7AFF}
+@media (max-width:760px){
+  .install{flex-wrap:wrap;position:relative;padding-right:48px}
+  .install p{flex:1 1 calc(100% - 60px)}
+  .install .acts{width:100%;padding-left:58px}
+  .install #installX{position:absolute;right:6px;top:6px}
+}
+.isteps{margin:0;padding-left:1.4em;display:grid;gap:12px;line-height:1.55}
+.isteps li::marker{color:var(--gold);font-weight:700}
+.inote{background:var(--sage);border-radius:var(--r-sm);padding:10px 12px;font-size:14px;margin:0}
 .install .acts{display:flex;gap:4px;align-items:center;flex:none}
 .offline{background:var(--gold-soft);color:var(--ink);text-align:center;font-size:14px;font-weight:600;padding:6px 12px}
 
@@ -606,6 +615,15 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
       <span class="wake-note" id="cookWake"></span>
       <button class="btn primary" type="button" id="cookNextBtn">Pasul următor</button>
     </div>
+  </div>
+</dialog>
+
+<!-- instalare pe iPhone -->
+<dialog id="dlgInstall" style="max-width:520px">
+  <button class="btn icon-btn dlg-close" type="button" data-close aria-label="Închide"><svg><use href="#i-x"/></svg></button>
+  <div class="dlg-in">
+    <h2 style="font-size:28px">Appetora pe ecranul principal</h2>
+    <div id="iosSteps"></div>
   </div>
 </dialog>
 
@@ -1450,17 +1468,47 @@ $('#cookStep').addEventListener('touchend', e => {
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 let installEvt = null;
+// pe iPhone nu există buton de instalare automat: pașii depind de browserul folosit
+function iosBrowser(){
+  const ua = navigator.userAgent;
+  if (/FBAN|FBAV|Instagram|Line\/|GSA\/|LinkedInApp|Snapchat|TikTok|Twitter|Pinterest/i.test(ua)) return 'inapp';
+  if (/CriOS/i.test(ua)) return 'chrome';
+  if (/FxiOS|EdgiOS|OPiOS|OPT\//i.test(ua)) return 'other';
+  return 'safari';
+}
+const SHARE_ICO = '<svg class="ios-share" aria-hidden="true"><use href="#i-share"/></svg>';
+function iosStepsHtml(){
+  const b = iosBrowser();
+  const fromApp = '<p class="inote">Dacă ai deschis linkul din WhatsApp, Mail sau altă aplicație, deschide-l întâi în Safari: în colțul de jos apasă iconița cu busola sau „Deschide în Safari”.</p>';
+  if (b === 'inapp') return `<p>Pagina e deschisă în browserul unei alte aplicații, de unde nu se poate instala.</p>
+    <ol class="isteps"><li>Apasă meniul <b>⋯</b> sau <b>⋮</b> din colț și alege <b>Deschide în Safari</b> (sau „Open in browser”).</li>
+    <li>În Safari, urmează pașii de mai jos.</li></ol>`;
+  if (b === 'chrome') return `<ol class="isteps">
+    <li>Apasă ${SHARE_ICO} <b>Partajează</b>, în bara de adresă, sus în dreapta.</li>
+    <li>Derulează și alege <b>Adaugă pe ecranul principal</b>. Dacă nu apare, apasă <b>Editează acțiunile</b> sau „Mai mult”.</li>
+    <li>Apasă <b>Adaugă</b>. Iconița Appetora apare lângă celelalte aplicații.</li></ol>` + fromApp;
+  if (b === 'other') return `<ol class="isteps">
+    <li>Deschide meniul browserului și alege ${SHARE_ICO} <b>Partajează</b>.</li>
+    <li>Alege <b>Adaugă pe ecranul principal</b>, apoi <b>Adaugă</b>.</li></ol>
+    <p class="inote">Dacă opțiunea lipsește, deschide www.appetora.com în Safari: acolo merge sigur.</p>`;
+  return `<ol class="isteps">
+    <li>Apasă ${SHARE_ICO} <b>Partajează</b>. E în bara de jos sau, pe iOS nou, în meniul <b>⋯</b> de lângă adresă.</li>
+    <li>În lista care se deschide, derulează în jos și alege <b>Adaugă pe ecranul principal</b>.</li>
+    <li>Lasă bifat <b>Deschide ca aplicație web</b>, dacă apare, și apasă <b>Adaugă</b>.</li></ol>` + fromApp;
+}
+function openIosHelp(){ userMenu.hidden = true; $('#iosSteps').innerHTML = iosStepsHtml(); $('#dlgInstall').showModal(); }
 function showInstall(force){
   if (!S.user || isStandalone()) { $('#installBar').hidden = true; return; }
   const dismissed = LS.get('appetora_install_dismissed', 0);
   if (!force && Date.now() - dismissed < 30*864e5) return;           // „nu acum” = o lună liniște
   if (installEvt){
     $('#installTxt').innerHTML = '<b>Appetora ca aplicație</b>Pornește de pe ecranul principal, fără bara browserului.';
-    $('#installGo').hidden = false;
+    $('#installGo').textContent = 'Instalează';
   } else if (isIOS()){
-    $('#installTxt').innerHTML = '<b>Pune Appetora pe ecranul principal</b>În Safari apasă <svg class="ios-share"><use href="#i-share"/></svg> Partajează, apoi „Adaugă pe ecranul principal”.';
-    $('#installGo').hidden = true;
+    $('#installTxt').innerHTML = '<b>Appetora ca aplicație pe iPhone</b>O pui pe ecranul principal în 3 pași, din meniul Partajează.';
+    $('#installGo').textContent = 'Arată pașii';
   } else return;
+  $('#installGo').hidden = false;
   $('#installBar').hidden = false;
 }
 window.addEventListener('beforeinstallprompt', e => {
@@ -1468,13 +1516,13 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 window.addEventListener('appinstalled', () => { installEvt = null; $('#installBar').hidden = true; $('#btnInstall').hidden = true; toast('Appetora e instalată. O găsești pe ecranul principal.'); });
 $('#installGo').onclick = async () => {
-  if (!installEvt) return;
+  if (!installEvt){ if (isIOS()) openIosHelp(); return; }
   installEvt.prompt(); const r = await installEvt.userChoice.catch(() => null);
   if (r?.outcome !== 'accepted') LS.set('appetora_install_dismissed', Date.now());
   installEvt = null; $('#installBar').hidden = true;
 };
 $('#installX').onclick = () => { LS.set('appetora_install_dismissed', Date.now()); $('#installBar').hidden = true; };
-$('#btnInstall').onclick = () => { userMenu.hidden = true; showInstall(true); window.scrollTo(0,0); };
+$('#btnInstall').onclick = () => { if (!installEvt && isIOS()) return openIosHelp(); userMenu.hidden = true; showInstall(true); window.scrollTo(0,0); };
 if (isIOS() && !isStandalone()) $('#btnInstall').hidden = false;
 
 /* fără internet */
