@@ -623,6 +623,7 @@ async function boot(){
     await loadWeek();
   }
   route();
+  if (S.loadedNote){ toast(S.loadedNote); S.loadedNote = null; }
 }
 
 /* ================= rețete ================= */
@@ -835,27 +836,53 @@ function freshWeek(start){
   const s = start || new Date();
   return Array.from({length:7}, (_,i) => { const d = new Date(s); d.setDate(s.getDate()+i); return { date: iso(d), recipeId:null, locked:false }; });
 }
+// Ciorna locală și ultimul plan de pe server: câștigă cel mai recent.
+// Altfel, un plan salvat pe telefon nu apărea pe calculatorul care avea deja o ciornă mai veche.
+const ts = s => { const t = Date.parse(s || ''); return isNaN(t) ? 0 : t; };
+function weekFromServer(body){
+  const plan = body.plan;
+  const prevLocks = new Map((S.week || []).filter(d => d.locked).map(d => [d.date + '|' + d.recipeId, true]));
+  S.week = freshWeek(parseIso(plan[0].date));
+  plan.forEach(p => { const d = S.week.find(x => x.date === p.date); if (d && S.byId.has(p.recipeId)){ d.recipeId = p.recipeId; d.locked = prevLocks.has(d.date + '|' + p.recipeId); } });
+  S.savedAt = body.createdAt; S.savedId = body.id || null; S.editedAt = null; S.dirty = false;
+}
+async function fetchServerPlan(){
+  const r = await api('/api/plan-latest');
+  const plan = r.ok && Array.isArray(r.body?.plan) ? r.body.plan.filter(p => p.date) : null;
+  if (!plan || !plan.length) return null;
+  plan.sort((a,b) => a.date.localeCompare(b.date));
+  return { plan, createdAt: r.body.createdAt, id: r.body.id };
+}
 async function loadWeek(){
   const local = LS.get(WEEK_KEY(), null);
   const today = iso(new Date());
-  if (local && Array.isArray(local.week) && local.week.length === 7 && local.week[6].date >= today){
-    S.week = local.week; S.dirty = !!local.dirty; S.savedAt = local.savedAt || null;
-  } else {
-    // ultimul plan salvat pe server
-    const r = await api('/api/plan-latest');
-    const plan = r.ok && Array.isArray(r.body?.plan) ? r.body.plan : null;
-    if (plan && plan.length && plan[plan.length-1].date >= today){
-      const start = parseIso(plan[0].date);
-      S.week = freshWeek(start);
-      plan.forEach(p => { const d = S.week.find(x => x.date === p.date); if (d) d.recipeId = S.byId.has(p.recipeId) ? p.recipeId : null; });
-      S.savedAt = r.body.createdAt; S.dirty = false;
-    } else { S.week = freshWeek(); S.dirty = false; S.savedAt = null; }
-  }
+  const localOk = local && Array.isArray(local.week) && local.week.length === 7 && local.week[6].date >= today;
+  const server = await fetchServerPlan();
+  const serverOk = server && server.plan[server.plan.length-1].date >= today;
+  // momentul ultimei schimbări locale: editarea nesalvată sau ultima salvare de pe acest dispozitiv
+  const localTime = localOk ? Math.max(ts(local.savedAt), local.dirty ? ts(local.editedAt) : 0) : -1;
+  if (localOk){ S.week = local.week; S.dirty = !!local.dirty; S.savedAt = local.savedAt || null; S.savedId = local.savedId || null; S.editedAt = local.editedAt || null; }
+  // același plan pe care l-a salvat chiar acest dispozitiv nu e „mai nou”
+  const sameSave = localOk && server && server.id && server.id === local.savedId;
+  if (serverOk && !sameSave && ts(server.createdAt) > localTime){
+    const fromOther = localOk;
+    weekFromServer(server); persistWeek();
+    if (fromOther) S.loadedNote = 'Am încărcat planul salvat mai recent pe alt dispozitiv.';
+  } else if (!localOk){ S.week = freshWeek(); S.dirty = false; S.savedAt = null; S.editedAt = null; }
   S.week.forEach(d => { if (d.recipeId && !S.byId.has(d.recipeId)){ d.recipeId = null; d.locked = false; } });
 }
+// când revii în aplicație (alt tab, telefonul scos din buzunar), verifică dacă s-a salvat ceva mai nou
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !S.user || !S.week || S.dirty) return;
+  const server = await fetchServerPlan();
+  if (!server || (server.id && server.id === S.savedId) || ts(server.createdAt) <= ts(S.savedAt) || server.plan[server.plan.length-1].date < iso(new Date())) return;
+  weekFromServer(server); persistWeek(); renderPlan(true);
+  toast('Am încărcat planul salvat mai recent pe alt dispozitiv.');
+});
 function persistWeek(dirty){
   if (dirty !== undefined) S.dirty = dirty;
-  LS.set(WEEK_KEY(), { week:S.week, dirty:S.dirty, savedAt:S.savedAt });
+  if (dirty === true) S.editedAt = new Date().toISOString();
+  LS.set(WEEK_KEY(), { week:S.week, dirty:S.dirty, savedAt:S.savedAt, savedId:S.savedId || null, editedAt:S.editedAt || null });
 }
 function lastPlanIds(){ return new Set(LS.get('appetora_prev_' + (S.user?.email||''), [])); }
 
@@ -953,7 +980,7 @@ $('#btnSavePlan').onclick = async () => {
   const r = await api('/api/plan-save', { json:{ plan } });
   if (!r.ok) return toast(errMsg(r, 'Nu am putut salva planul.'), true);
   LS.set('appetora_prev_' + (S.user?.email||''), plan.map(p => p.recipeId));
-  S.savedAt = new Date().toISOString(); persistWeek(false); renderPlan();
+  S.savedAt = new Date().toISOString(); S.savedId = r.body?.id || null; persistWeek(false); renderPlan();
   toast('Planul a fost salvat.');
 };
 
