@@ -1,6 +1,8 @@
 import { colRecipes } from "../shared/cosmos.js";
 import { verify } from "../shared/jwt.js";
 
+const DIETS = ["vegan", "vegetarian", "omnivor"];
+
 export default async function (context, req) {
   try {
     // --- Auth din cookie ---
@@ -46,6 +48,8 @@ export default async function (context, req) {
             ? b.imageBlob.trim() || null
             : null,
         paused: !!b.paused,
+        // regim ales de user; null = detectat automat din ingrediente (în interfață)
+        diet: DIETS.includes(b.diet) ? b.diet : null,
         createdAt: new Date().toISOString(),
       };
 
@@ -74,6 +78,7 @@ export default async function (context, req) {
       if (typeof b.instructions === "string")
         rec.instructions = b.instructions;
       if (typeof b.paused === "boolean") rec.paused = b.paused;
+      if (DIETS.includes(b.diet) || b.diet === null) rec.diet = b.diet;
       if (typeof b.imageBlob === "string")
         rec.imageBlob = b.imageBlob.trim() || null;
 

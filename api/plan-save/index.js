@@ -48,7 +48,8 @@ export default async function (context, req) {
         date: String(p.date || "").slice(0, 10),
         recipeId: String(p.recipeId || ""),
         name: String(p.name || ""),
-        category: p.category ? String(p.category) : null
+        category: p.category ? String(p.category) : null,
+        locked: !!p.locked
       }))
       .filter((p) => p.date && p.recipeId);
 

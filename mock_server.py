@@ -24,6 +24,7 @@ recipes = [
     R('9', 'Clătite cu brânză', 'Desert', ['2 ouă', '250 ml lapte', '150 g făină', '250 g brânză dulce', 'zahăr'], 6),
     R('10', 'Mici la grătar', 'Grătar', ['1 kg carne mixtă', 'usturoi', 'cimbru', 'bicarbonat'], 7),
 ]
+settings = {}  # documentul de setări al userului
 plans = []  # planurile salvate, ca pe server (history/manual_plan)
 IMPORTED = {'name': 'Zacuscă de casă', 'category': 'Conserve',
             'ingredients': ['2 kg vinete', '2 kg ardei kapia', '1 kg ceapă', '500 ml ulei'],
@@ -79,6 +80,13 @@ class H(BaseHTTPRequestHandler):
                 b = self.body(); now = time.time()
                 doc = {'id': f'plan_{int(now*1000)}', 'createdAt': time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(now)) + f'.{int(now*1000)%1000:03d}Z', 'plan': b.get('plan', [])}
                 plans.append(doc); return self.send(200, {'ok': True, 'id': doc['id']})
+            if p == '/api/settings':
+                if m == 'PUT':
+                    b = self.body()
+                    for k in ('excl', 'vegDays', 'veganDays', 'shopChecked'):
+                        if k in b: settings[k] = b[k]
+                    settings['updatedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()) + str(time.time())
+                return self.send(200, {'settings': settings or None})
             if p == '/api/usage/today': return self.send(200, {'calls': 2})
             if p in ('/api/import-image', '/api/import'):
                 self.body(); time.sleep(0.6); return self.send(200, IMPORTED)
