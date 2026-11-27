@@ -101,7 +101,7 @@ class H(BaseHTTPRequestHandler):
         except Exception:
             self.send_response(404); self.end_headers(); return
         ext = os.path.splitext(f)[1].lower()
-        ct = {'.html': 'text/html; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg'}.get(ext) or mimetypes.guess_type(f)[0] or 'application/octet-stream'
+        ct = {'.html': 'text/html; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8'}.get(ext) or mimetypes.guess_type(f)[0] or 'application/octet-stream'
         self.send_response(200); self.send_header('content-type', ct); self.send_header('content-length', str(len(data))); self.end_headers(); self.wfile.write(data)
 
     do_GET = do_POST = do_PUT = do_DELETE = handle_any

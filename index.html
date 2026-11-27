@@ -6,7 +6,13 @@
 <title>Appetora — rețetele tale, meniul săptămânii</title>
 <meta name="description" content="Caietul tău de rețete și planul de meniu pentru toată săptămâna."/>
 <meta name="theme-color" content="#12382C"/>
-<link rel="icon" href="images/logo-appetora.png"/>
+<link rel="icon" href="images/icons/favicon-32.png" sizes="32x32"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Appetora"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Gloock&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -243,6 +249,15 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .tag button{border:0;background:none;cursor:pointer;width:24px;height:24px;border-radius:50%;line-height:1}
 .tag button:hover{background:var(--line)}
 
+/* instalare ca aplicație */
+.install{display:flex;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin-bottom:18px}
+.install img{width:44px;height:44px;border-radius:10px;flex:none}
+.install p{margin:0;font-size:14px;line-height:1.45;flex:1}
+.install b{display:block;font-size:15px}
+.install .ios-share{display:inline-block;width:17px;height:17px;vertical-align:-3px;color:#0A7AFF}
+.install .acts{display:flex;gap:4px;align-items:center;flex:none}
+.offline{background:var(--gold-soft);color:var(--ink);text-align:center;font-size:14px;font-weight:600;padding:6px 12px}
+
 /* toast */
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:max-content;background:var(--ink);color:#fff;padding:12px 20px;border-radius:16px;text-align:center;font-weight:600;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:calc(100% - 32px)}
 .toast.err{background:var(--danger)}
@@ -336,6 +351,7 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
   <symbol id="i-leaf2" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z" fill="currentColor"/><path d="M5 19 13 11" stroke="#fff"/></symbol>
   <symbol id="i-pot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M2 10h2M20 10h2M9 6c0-1 1-1 1-2M13 6c0-1 1-1 1-2"/></symbol>
   <symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7M8 20v-6h8v6"/></symbol>
 </svg>
 
@@ -353,12 +369,22 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
   </div>
   <div class="menu-pop" id="userMenu" hidden>
     <div class="who"><b id="whoName"></b><div class="muted" id="whoEmail"></div></div>
+    <button type="button" id="btnInstall" hidden>Instalează aplicația pe telefon</button>
     <button type="button" id="btnExcl">Ingrediente pe care le ai mereu</button>
     <button type="button" id="btnLogout">Ieși din cont</button>
   </div>
 </header>
 
+<div class="offline" id="offlineBar" hidden>Ești fără internet. Vezi ultimele date salvate; modificările nu se pot salva acum.</div>
 <main id="main">
+  <div class="install" id="installBar" hidden>
+    <img src="images/icons/icon-192.png" alt=""/>
+    <p id="installTxt"></p>
+    <div class="acts">
+      <button class="btn primary" type="button" id="installGo" hidden>Instalează</button>
+      <button class="btn icon-btn quiet" type="button" id="installX" aria-label="Nu acum"><svg><use href="#i-x"/></svg></button>
+    </div>
+  </div>
   <div class="loading-page" id="boot"><div class="spinner"></div></div>
 
   <!-- ============ LANDING ============ -->
@@ -713,7 +739,11 @@ $('#fUp').onsubmit = async e => {
 const userMenu = $('#userMenu');
 $('#avatarBtn').onclick = e => { e.stopPropagation(); userMenu.hidden = !userMenu.hidden; $('#avatarBtn').setAttribute('aria-expanded', !userMenu.hidden); };
 document.addEventListener('click', e => { if (!userMenu.hidden && !userMenu.contains(e.target)) userMenu.hidden = true; });
-$('#btnLogout').onclick = async () => { await api('/api/auth/logout', { method:'POST' }); location.hash = ''; location.reload(); };
+$('#btnLogout').onclick = async () => {
+  await api('/api/auth/logout', { method:'POST' });
+  try{ navigator.serviceWorker?.controller?.postMessage('logout'); await caches.delete('appetora-data'); }catch{}
+  location.hash = ''; location.reload();
+};
 
 async function boot(){
   const r = await api('/api/auth/me');
@@ -1416,7 +1446,62 @@ $('#cookStep').addEventListener('touchend', e => {
   if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) cookGo(dx < 0 ? 1 : -1);
 });
 
-boot();
+/* ================= aplicație instalabilă (PWA) ================= */
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let installEvt = null;
+function showInstall(force){
+  if (!S.user || isStandalone()) { $('#installBar').hidden = true; return; }
+  const dismissed = LS.get('appetora_install_dismissed', 0);
+  if (!force && Date.now() - dismissed < 30*864e5) return;           // „nu acum” = o lună liniște
+  if (installEvt){
+    $('#installTxt').innerHTML = '<b>Appetora ca aplicație</b>Pornește de pe ecranul principal, fără bara browserului.';
+    $('#installGo').hidden = false;
+  } else if (isIOS()){
+    $('#installTxt').innerHTML = '<b>Pune Appetora pe ecranul principal</b>În Safari apasă <svg class="ios-share"><use href="#i-share"/></svg> Partajează, apoi „Adaugă pe ecranul principal”.';
+    $('#installGo').hidden = true;
+  } else return;
+  $('#installBar').hidden = false;
+}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installEvt = e; $('#btnInstall').hidden = false; showInstall();
+});
+window.addEventListener('appinstalled', () => { installEvt = null; $('#installBar').hidden = true; $('#btnInstall').hidden = true; toast('Appetora e instalată. O găsești pe ecranul principal.'); });
+$('#installGo').onclick = async () => {
+  if (!installEvt) return;
+  installEvt.prompt(); const r = await installEvt.userChoice.catch(() => null);
+  if (r?.outcome !== 'accepted') LS.set('appetora_install_dismissed', Date.now());
+  installEvt = null; $('#installBar').hidden = true;
+};
+$('#installX').onclick = () => { LS.set('appetora_install_dismissed', Date.now()); $('#installBar').hidden = true; };
+$('#btnInstall').onclick = () => { userMenu.hidden = true; showInstall(true); window.scrollTo(0,0); };
+if (isIOS() && !isStandalone()) $('#btnInstall').hidden = false;
+
+/* fără internet */
+const netState = () => { $('#offlineBar').hidden = navigator.onLine; };
+window.addEventListener('online', netState); window.addEventListener('offline', netState); netState();
+
+/* „Partajează → Appetora” de pe Android: linkul ajunge în importul din link */
+function takeShare(){
+  const q = new URLSearchParams(location.search);
+  if (!q.has('url') && !q.has('text') && !q.has('title')) return;
+  history.replaceState(null, '', location.pathname + '#add');
+  if (!S.user) return;
+  const all = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' ');
+  const link = (all.match(/https?:\/\/\S+/) || [])[0];
+  resetForm(); show('add');
+  if (link){
+    $('#impLink').hidden = false; $('#impText').hidden = true; $('#impUrl').value = link;
+    $('#impUrlGo').click();
+  } else {
+    $('#impText').hidden = false; $('#impLink').hidden = true; $('#impTxt').value = all;
+    toast('Am pus textul primit. Apasă „Citește textul”.');
+  }
+}
+
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+
+boot().then(() => { takeShare(); showInstall(); });
 </script>
 </body>
 </html>
