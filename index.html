@@ -1,1365 +1,1046 @@
 <!doctype html>
-<html>
+<html lang="ro">
 <head>
-  <meta charset="utf-8"/>
-  <title>Appetora</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <style>
-    :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;--accent:#ff7a17;}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    h1{font-size:24px;margin:0}
-    .btn{padding:.55rem .9rem;border:1px solid var(--border);border-radius:10px;background:#f8fafc;cursor:pointer}
-    .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
-    .btn.ghost{background:transparent}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-    .row{display:flex;gap:8px;flex-wrap:wrap}
-    input,textarea{width:100%;padding:.6rem .7rem;border:1px solid var(--border);border-radius:12px;background:#fff}
-    label{font-size:12px;color:var(--muted)}
-    .grid{display:grid;gap:10px}
-    .recipes{display:grid;gap:8px}
-    .item{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px}
-    .muted{color:var(--muted);font-size:12px}
-    .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
-    .right{display:flex;gap:6px;align-items:center}
-    .hidden{display:none}
-    dialog{border:none;border-radius:16px;padding:0;max-width:900px;width:calc(100% - 24px)}
-    .dlg{padding:16px}
-    .dlg h3{margin:0 0 8px}
-    .hr{height:1px;background:var(--border);margin:12px 0}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
-    th{color:var(--muted);font-weight:600}
-    /* hero */
-    .hero{display:grid;gap:14px;place-items:start;background:linear-gradient(180deg,#fff,#f6f7fb);border:1px solid var(--border);border-radius:18px;padding:24px}
-    .hero h2{font-size:28px;margin:0}
-    .hero p{margin:0;color:var(--muted)}
-    .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
-    /*logo  */
-    h1.brand a {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-    }
-    h1.brand img {
-      height: 130px;
-      width: auto;
-      display: block;
-      border-radius: 8px;
-    }
-    @media (min-width: 768px){
-      h1.brand img { height: 150px; }
-    }
-    /* meniu */
-    .menubar{display:flex;gap:8px;margin:16px 0 12px}
-    .tabBtn{padding:.45rem .7rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
-    .tabBtn.active{background:var(--accent);color:#fff;border-color:transparent}
-    /* thumb */
-    .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
-    .titleline{display:flex;align-items:center;gap:12px;min-width:0}
-    .titleline .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
-    /* uploader */
-    .uploader{border:1px dashed var(--border);border-radius:12px;padding:10px;background:#fff}
-    .uploader .preview{display:flex;align-items:center;gap:10px}
-    .uploader .preview img{width:96px;height:96px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
-    .uploader .actions{display:flex;gap:8px;flex-wrap:wrap}
-    video.preview{width:240px;border-radius:12px;border:1px solid var(--border)}
-    /* paused look */
-    .item.paused{opacity:.65}
-    /* plan tabs */
-    .tabs{display:flex;gap:6px;margin-bottom:8px}
-    .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
-    .tab.active{background:var(--accent);color:#fff;border-color:transparent}
-    /* shopping list curată */
-    .checklist{margin:0;padding:0;list-style:none}
-    .checklist li{margin:4px 0;padding:6px 0;border-bottom:1px dashed var(--border)}
-    .checklist li:last-child{border-bottom:none}
-    .checklist label.item{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
-    .checklist input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin-top:2px}
-    .checklist .name{flex:1;line-height:1.45}
-    .checklist .qty{font-size:12px;color:#64748b;white-space:nowrap;margin-left:6px}
-    .checklist label.item.done .name{text-decoration:line-through;color:#94a3b8}
-    /* select manual */
-    .pickRow{display:flex;align-items:center;justify-content:flex-start;gap:10px;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fff}
-    .pickRow input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin:0}
-    .pickRow .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
-    .pickRow .titleline{flex:1;min-width:0}
-    .pickRow .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pickRow .muted{font-size:12px;color:var(--muted)}
-    .pickList{display:grid;gap:8px;max-height:420px;overflow:auto}
-    .pickHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
-    .help{font-size:12px;color:var(--muted)}
-    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;color:var(--muted)}
-    /* secțiuni */
-    .section{display:none}
-    .section.active{display:block}
-    /* camera fullscreen (READ) */
-    body.noscroll{overflow:hidden}
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Appetora — rețetele tale, meniul săptămânii</title>
+<meta name="description" content="Caietul tău de rețete și planul de meniu pentru toată săptămâna."/>
+<meta name="theme-color" content="#12382C"/>
+<link rel="icon" href="images/logo-appetora.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --sage:#EDF0EA;      /* fundal */
+  --paper:#FFFFFF;     /* suprafețe */
+  --ink:#12382C;       /* verde sticlă, din logo */
+  --ink-2:#2B5446;
+  --gold:#B8862F;      /* auriul din logo */
+  --gold-soft:#F3E8D2;
+  --muted:#5E6B63;
+  --line:#D6DCD4;
+  --danger:#A63A2B;
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  --display:"Gloock", Georgia, serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nav-h:64px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--sage);color:var(--ink);font:16px/1.55 var(--body)}
+img{max-width:100%;display:block}
+button,input,textarea,select{font:inherit;color:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:-.01em;line-height:1.1;margin:0}
+.muted{color:var(--muted)}
+.small{font-size:14px}
 
-    #readCamWrap.overlay{
-      position:fixed; inset:0; z-index:9999;
-      background:rgba(15,23,42,.92); /* slate-900 ~transparent */
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      padding:16px;
-    }
+/* ---------- butoane ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--paper);cursor:pointer;font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:var(--ink-2)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+.btn.quiet{background:transparent;border-color:transparent}
+.btn.quiet:hover{background:rgba(18,56,44,.06)}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.icon-btn{width:40px;height:40px;min-height:40px;padding:0;border-radius:50%}
+.icon-btn svg,.btn svg{width:20px;height:20px;flex:none}
 
-    #readCamWrap.overlay video.preview{
-      width:100%; height:auto; max-height:calc(100vh - 160px);
-      max-width:1000px; border:none; border-radius:16px; object-fit:contain;
-      box-shadow:0 10px 40px rgba(0,0,0,.35);
-    }
+/* ---------- câmpuri ---------- */
+.field{display:grid;gap:6px}
+.field label{font-size:14px;font-weight:600}
+.input{width:100%;min-height:46px;padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r-sm);background:var(--paper)}
+.input:focus{outline:none;border-color:var(--ink)}
+textarea.input{min-height:160px;resize:vertical;line-height:1.6}
+.hint{font-size:13px;color:var(--muted)}
 
-    #readCamWrap.overlay .actions{
-      position:fixed; bottom:20px; left:0; right:0;
-      display:flex; gap:10px; justify-content:center;
-    }
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(237,240,234,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .in{max-width:1180px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand img{width:40px;height:40px;object-fit:cover;object-position:50% 40%}
+.brand span{font-family:var(--display);font-size:26px}
+.nav{display:flex;gap:4px;margin-left:12px}
+.nav a{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px}
+.nav a:hover{background:rgba(18,56,44,.06)}
+.nav a[aria-current="page"]{background:var(--ink);color:#fff}
+.nav svg{width:19px;height:19px}
+.user{margin-left:auto;display:flex;align-items:center;gap:8px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--gold-soft);color:var(--ink);display:grid;place-items:center;font-weight:700;border:0;cursor:pointer}
+.menu-pop{position:absolute;right:20px;top:58px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 12px 32px rgba(18,56,44,.14);padding:8px;min-width:220px}
+.menu-pop .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px;font-size:14px}
+.menu-pop button{display:block;width:100%;text-align:left;padding:10px;border:0;background:none;border-radius:8px;cursor:pointer}
+.menu-pop button:hover{background:var(--sage)}
 
-    #readCamWrap.overlay .btn{
-      padding:.7rem 1rem; font-size:16px; border-radius:12px;
-    }
-    /* menubar ascuns by default; vizibil doar când userul este autentificat */
-    .menubar{ display:none; }
-    body.auth .menubar{ display:flex; }
+/* bottom nav (mobil) */
+.bottom-nav{display:none}
+@media (max-width:760px){
+  .nav{display:none}
+  .topbar .in{padding:10px 16px}
+  .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .bottom-nav a{flex:1;display:grid;place-items:center;gap:2px;height:var(--nav-h);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600}
+  .bottom-nav a svg{width:22px;height:22px}
+  .bottom-nav a[aria-current="page"]{color:var(--ink)}
+  .bottom-nav a[aria-current="page"] svg{color:var(--gold)}
+  body.authed main{padding-bottom:calc(var(--nav-h) + 24px)}
+}
 
-    /* (opțional) dacă vrei să fii extra-sigur că nici secțiunile nu apar accidental */
-    .section{ display:none; }
-    body.auth .section.active{ display:block; }
+main{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+@media (max-width:760px){main{padding:20px 16px 40px}}
 
-    /* ascunde hero dupa login*/
-    body.auth #hero { display: none !important; }
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.view-head h1{font-size:clamp(32px,5vw,46px)}
+.view-head p{margin:6px 0 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
 
-    /*  visual feedback */
-    .titleline.clickable { cursor:pointer; }
-    .titleline.clickable:hover { background:#f9fafb; border-radius:8px; }
+/* ---------- landing ---------- */
+.landing{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;min-height:calc(100vh - 140px)}
+.landing h1{font-size:clamp(42px,6.4vw,76px);line-height:1.02}
+.landing .lead{font-size:19px;max-width:30em;margin:20px 0 28px;color:var(--ink-2)}
+.feat{list-style:none;padding:0;margin:0;display:grid;gap:14px;max-width:32em}
+.feat li{display:flex;gap:12px;align-items:flex-start}
+.feat svg{flex:none;width:22px;height:22px;color:var(--gold);margin-top:2px}
+.auth-card{background:var(--paper);border-radius:var(--r-lg);padding:28px;border:1px solid var(--line)}
+.auth-card .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--sage);border-radius:999px;padding:4px;margin-bottom:22px}
+.auth-card .seg button{border:0;background:none;padding:10px;border-radius:999px;font-weight:600;cursor:pointer}
+.auth-card .seg button[aria-selected="true"]{background:var(--paper);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.auth-card form{display:grid;gap:14px}
+.auth-err{color:var(--danger);font-size:14px;min-height:1.2em;margin:0}
+.landing-logo{width:120px;margin:-10px 0 10px -8px}
+@media (max-width:900px){.landing{grid-template-columns:1fr;gap:32px;min-height:0}}
 
-    #dlgView .previewWrap{width:100%;text-align:center;margin-bottom:12px;overflow:hidden;border-radius:18px;}
-    #dlgView .previewImg{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;}
+/* ---------- săptămâna (elementul principal) ---------- */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px}
+.day{background:var(--paper);border-radius:var(--r-md);border:1.5px solid transparent;display:flex;flex-direction:column;overflow:hidden;min-height:300px;position:relative}
+.day.today{border-color:var(--gold)}
+.day.locked{border-color:var(--ink)}
+.day-head{padding:12px 12px 10px;display:flex;flex-direction:column;gap:0}
+.day-name{font-family:var(--display);font-size:22px}
+.day-date{font-size:13px;color:var(--muted);line-height:1.3}
+.day-photo{aspect-ratio:4/3;background:var(--sage) center/cover no-repeat;position:relative;cursor:pointer;border:0;padding:0;width:100%}
+.day-photo .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--line)}
+.day-photo .ph svg{width:44px;height:44px}
+.day-body{padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;gap:4px}
+.day-title{font-weight:700;line-height:1.3;cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.day-title:hover{text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
+.day-cat{font-size:13px;color:var(--muted)}
+.day-tools{display:flex;gap:2px;margin-top:auto;padding-top:8px;border-top:1px solid var(--sage)}
+.day-tools .icon-btn{width:36px;height:36px;min-height:36px;border:0;background:none;color:var(--ink-2)}
+.day-tools .icon-btn:hover{background:var(--sage)}
+.day-tools .icon-btn[aria-pressed="true"]{background:var(--ink);color:#fff}
+.day-empty{flex:1;display:grid;place-items:center;padding:16px;text-align:center}
+.day.flash{animation:flash .5s ease}
+@keyframes flash{from{background:var(--gold-soft)}to{background:var(--paper)}}
+@media (prefers-reduced-motion:reduce){.day.flash{animation:none}}
+@media (max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:760px){
+  .week{grid-template-columns:1fr;gap:10px}
+  .day{flex-direction:row;min-height:0;align-items:stretch}
+  .day-head{flex-direction:column;align-items:flex-start;justify-content:center;width:92px;flex:none;padding:10px;border-right:1px solid var(--sage)}
+  .day-name{font-size:18px}
+  .day-photo{width:92px;aspect-ratio:auto;flex:none}
+  .day-body{padding:10px 8px 8px 12px;min-width:0}
+  .day-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .day-tools{border:0;padding-top:4px;margin-top:auto}
+  .day-empty{place-items:center start}
+}
 
-  </style>
+.planner-layout{display:grid;grid-template-columns:1fr;gap:28px}
+.panel{background:var(--paper);border-radius:var(--r-lg);padding:22px;border:1px solid var(--line)}
+.panel h2{font-size:28px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.plan-status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.dot.ok{background:#3C8A5E}
+
+/* listă de cumpărături */
+.shop{columns:3 220px;column-gap:28px;margin:0;padding:0;list-style:none}
+.shop li{break-inside:avoid}
+.shop label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.shop input{width:20px;height:20px;accent-color:var(--ink);margin:2px 0 0;flex:none}
+.shop .qty{margin-left:auto;font-size:13px;color:var(--gold);font-weight:700}
+.shop label.done span:first-of-type{text-decoration:line-through;color:var(--muted)}
+
+/* ---------- rețete ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.search{position:relative;flex:1;min-width:220px;max-width:440px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--muted)}
+.search .input{padding-left:44px;border-radius:999px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip .n{opacity:.6;margin-left:4px;font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.card{background:var(--paper);border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line);cursor:pointer;text-align:left;padding:0}
+.card:hover .card-title{text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
+.card-photo{aspect-ratio:4/3;background:var(--sage) center/cover no-repeat;position:relative}
+.card-photo .ph{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:56px;color:#C9D1C6}
+.card-body{padding:12px 14px 14px;display:grid;gap:4px}
+.card-title{font-weight:700;line-height:1.3}
+.card-meta{font-size:13px;color:var(--muted)}
+.card.paused .card-photo{filter:grayscale(1) opacity(.6)}
+.tag-paused{position:absolute;left:10px;top:10px;background:var(--paper);color:var(--ink);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
+.empty{background:var(--paper);border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:48px 24px;text-align:center;display:grid;gap:14px;justify-items:center}
+.empty h2{font-size:30px}
+.empty p{max-width:34em;margin:0}
+
+/* ---------- adaugă / import ---------- */
+.add-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+@media (max-width:980px){.add-layout{grid-template-columns:1fr}.import-box{order:-1}}
+.import-box{background:var(--ink);color:#fff;border-radius:var(--r-lg);padding:22px;display:grid;gap:14px}
+.import-box h2{font-size:26px}
+.import-box p{margin:0;color:#C8D6CE;font-size:15px}
+.import-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.import-opts .btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff;min-height:52px;border-radius:var(--r-sm)}
+.import-opts .btn:hover{background:rgba(255,255,255,.16)}
+.import-opts .btn.gold{background:var(--gold);border-color:var(--gold);grid-column:1/-1}
+.import-extra{display:grid;gap:8px}
+.import-extra .input{background:#fff;color:var(--ink)}
+.import-status{display:flex;align-items:center;gap:10px;font-size:15px;color:#fff;background:rgba(255,255,255,.08);border-radius:var(--r-sm);padding:12px}
+.spinner{width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.form{display:grid;gap:18px}
+.form-row{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+@media (max-width:600px){.form-row{grid-template-columns:1fr}}
+.photo-drop{display:flex;align-items:center;gap:14px;border:1.5px dashed var(--line);border-radius:var(--r-md);padding:12px;background:var(--sage)}
+.photo-drop .pv{width:96px;height:72px;border-radius:10px;background:var(--paper) center/cover no-repeat;flex:none;display:grid;place-items:center;color:var(--line)}
+.photo-drop .pv svg{width:32px;height:32px}
+.form-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding-top:6px}
+.switch{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:15px}
+.switch input{width:20px;height:20px;accent-color:var(--ink)}
+.usage{font-size:13px;color:#C8D6CE}
+
+/* ---------- dialoguri ---------- */
+dialog{border:0;padding:0;border-radius:var(--r-lg);max-width:760px;width:calc(100% - 24px);max-height:calc(100vh - 32px);background:var(--paper);color:var(--ink);box-shadow:0 30px 80px rgba(18,56,44,.3)}
+dialog::backdrop{background:rgba(18,56,44,.45)}
+.dlg-in{padding:24px;display:grid;gap:16px}
+.dlg-close{position:absolute;right:12px;top:12px;background:var(--paper)}
+.rv-photo{aspect-ratio:16/8;background:var(--sage) center/cover no-repeat}
+.rv-head h2{font-size:clamp(28px,4vw,38px)}
+.rv-cols{display:grid;grid-template-columns:240px 1fr;gap:28px}
+@media (max-width:640px){.rv-cols{grid-template-columns:1fr}
+  dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:var(--r-lg) var(--r-lg) 0 0;max-height:92vh}}
+.rv-cols h3{font-size:22px;margin-bottom:8px}
+.ingr{list-style:none;padding:0;margin:0}
+.ingr li{padding:7px 0;border-bottom:1px dashed var(--line);display:flex;gap:10px;align-items:flex-start}
+.ingr input{width:18px;height:18px;accent-color:var(--ink);margin-top:3px;flex:none}
+.ingr label{cursor:pointer}
+.ingr input:checked + label{text-decoration:line-through;color:var(--muted)}
+.steps{margin:0;padding-left:1.3em;display:grid;gap:10px;line-height:1.65;max-width:62ch}
+.steps li::marker{color:var(--gold);font-weight:700}
+.rv-foot{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.pick-list{display:grid;gap:6px;max-height:55vh;overflow:auto}
+.pick-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:var(--r-sm);border:1.5px solid var(--line);background:var(--paper);cursor:pointer;text-align:left;width:100%}
+.pick-row:hover{border-color:var(--ink)}
+.pick-row .th{width:56px;height:44px;border-radius:8px;background:var(--sage) center/cover;flex:none}
+.pick-row .nm{font-weight:700}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:4px;background:var(--sage);border-radius:999px;padding:4px 6px 4px 12px;font-size:14px}
+.tag button{border:0;background:none;cursor:pointer;width:24px;height:24px;border-radius:50%;line-height:1}
+.tag button:hover{background:var(--line)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:max-content;background:var(--ink);color:#fff;padding:12px 20px;border-radius:16px;text-align:center;font-weight:600;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:calc(100% - 32px)}
+.toast.err{background:var(--danger)}
+@media (max-width:760px){.toast{bottom:calc(var(--nav-h) + 16px)}}
+
+.loading-page{display:grid;place-items:center;min-height:60vh}
+.loading-page .spinner{border-color:var(--line);border-top-color:var(--ink);width:28px;height:28px}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1 class="brand">
-        <a href="/" title="Appetora - Home">
-          <img src="images/logo-appetora_2.PNG" alt="Appetora"/>
-        </a>
-      </h1>
-      <div class="row" style="gap:10px">
-        <div id="authBox" class="row">
-          <span id="hello" class="muted hidden">Hi, <b id="helloName"></b></span>
-          <button id="btnSignin" class="btn">Sign in</button>
-          <button id="btnRegister" class="btn">Register</button>
-          <button id="btnLogout" class="btn hidden">Sign out</button>
-        </div>
-      </div>
-    </header>
 
-    <!-- HERO (nelogat) -->
-    <section id="hero" class="hero">
-      <h2>Your weekly peek. Your daily pick.</h2>
-      <p>Plan your week in seconds, avoid repeats, and keep your favorite recipes in one place.</p>
-      <ul>
-        <li>Add recipes (now with photos)</li>
-        <li>Generate a 7-day plan from active recipes</li>
-        <li>Pause recipes you don’t want this week</li>
-      </ul>
-      <div id="heroCtas" class="row" style="margin-top:6px">
-        <button id="ctaRegister" class="btn primary">Create a free account</button>
-        <button id="ctaSignin" class="btn">I already have an account</button>
-      </div>
-    </section>
+<!-- iconițe -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 6h14M5 10h14M5 14h10M5 18h7"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7L20 8.6"/><path d="M20 3v5.6h-5.6"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="i-dish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 17h18M5 17a7 7 0 0 1 14 0M12 8V6M10 6h4"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7M8 20v-6h8v6"/></symbol>
+</svg>
 
-    <!-- MENIU (logat) -->
-    <div id="menu" class="menubar hidden">
-      <button class="tabBtn" data-tab="planner">Planner</button>
-      <button class="tabBtn" data-tab="search">Search Recipe</button>
-      <button class="tabBtn" data-tab="read">Read Recipe</button>
-      <button class="tabBtn" data-tab="add">Add Recipe</button>
-      <button class="tabBtn" data-tab="my">My Recipes</button>
+<header class="topbar" id="topbar" hidden>
+  <div class="in">
+    <a class="brand" href="#plan"><img src="images/logo-appetora.png" alt=""/><span>Appetora</span></a>
+    <nav class="nav" aria-label="Principal">
+      <a href="#plan" data-nav="plan"><svg><use href="#i-cal"/></svg>Săptămâna</a>
+      <a href="#recipes" data-nav="recipes"><svg><use href="#i-book"/></svg>Rețetele mele</a>
+      <a href="#add" data-nav="add"><svg><use href="#i-plus"/></svg>Adaugă rețetă</a>
+    </nav>
+    <div class="user">
+      <button class="avatar" id="avatarBtn" aria-haspopup="true" aria-expanded="false" aria-label="Contul meu"></button>
     </div>
-
-    <!-- PLANNER -->
-    <section id="sec-planner" class="section">
-      <section class="card grid">
-        <div class="row" style="align-items:center;justify-content:space-between">
-          <h2 style="margin:0">Planner</h2>
-          <div class="row">
-            <button id="btnPlan" class="btn">Generate weekly plan</button>
-            <button id="btnManual" class="btn">Select recipes manually</button>
-            <button id="btnPlanLatest" class="btn">Open last saved plan</button>
-          </div>
-        </div>
-      </section>
-    </section>
-
-    <!-- SEARCH -->
-    <section id="sec-search" class="section">
-      <section class="card grid">
-        <h2 style="margin:0">Search Recipe</h2>
-        <div class="row">
-          <input id="qSearch" placeholder="Search by name, category or ingredient… (min 2 chars)" />
-          <button id="btnSearch" class="btn">Search</button>
-          <span id="searchInfo" class="muted"></span>
-        </div>
-        <div id="searchResults" class="recipes"></div>
-      </section>
-    </section>
-
-    <!-- READ (URL, .txt, Photo) -->
-    <section id="sec-read" class="section">
-      <section class="card grid">
-        <h2 style="margin:0">Read Recipe (URL, .txt, or Photo)</h2>
-
-        <!-- URL -->
-        <div class="row">
-          <input id="readUrl" placeholder="Paste a URL to a recipe page"/>
-          <button id="btnReadUrl" class="btn">Read from URL</button>
-        </div>
-
-        <!-- .txt -->
-        <div class="row">
-          <input id="readFile" type="file" accept=".txt" />
-          <button id="btnReadFile" class="btn">Read from file</button>
-        </div>
-
-        <!-- IMAGE (upload / camera) -->
-        <div class="row">
-          <div class="uploader" style="flex:1;min-width:280px">
-            <div class="preview">
-              <img id="readImgPreview" alt="" class="hidden"/>
-              <span id="readImgLabel" class="muted">No image selected</span>
-            </div>
-            <div class="actions" style="margin-top:8px">
-              <input id="readImgFile" type="file" accept="image/*" class="hidden"/>
-              <button id="btnReadChoose" class="btn" type="button">Choose image</button>
-              <button id="btnReadCamera" class="btn" type="button">Take photo</button>
-              <button id="btnReadRemoveImg" class="btn" type="button">Remove</button>
-              <button id="btnReadImage" class="btn primary" type="button">Read from image</button>
-            </div>
-            <div id="readCamWrap" class="hidden" style="margin-top:10px">
-              <video id="readCam" class="preview" autoplay playsinline></video>
-              <div class="actions" style="margin-top:8px">
-                <button id="btnReadSnap" class="btn primary" type="button">Capture</button>
-                <button id="btnReadCloseCam" class="btn" type="button">Close camera</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <span id="readInfo" class="muted"></span>
-
-        <div id="readPreview" class="card hidden" style="margin-top:10px">
-          <h3 style="margin:0 0 8px">Preview (not saved yet)</h3>
-          <div class="row">
-            <div style="flex:1">
-              <label>Name</label>
-              <input id="rName"/>
-            </div>
-            <div style="width:280px;max-width:100%">
-              <label>Category</label>
-              <input id="rCat"/>
-            </div>
-          </div>
-          <div class="row">
-            <div style="flex:1">
-              <label>Ingredients (one per line)</label>
-              <textarea id="rIngr" rows="6"></textarea>
-            </div>
-            <div style="flex:1">
-              <label>Instructions</label>
-              <textarea id="rInstr" rows="6"></textarea>
-            </div>
-          </div>
-          <div class="row">
-            <button id="btnLoadToForm" class="btn" type="button">Load into Add Recipe</button>
-            <button id="btnSaveParsed" class="btn primary" type="button">Save as new recipe</button>
-          </div>
-        </div>
-      </section>
-    </section>
-
-    <!-- ADD RECIPE -->
-    <section id="sec-add" class="section">
-      <section class="card grid">
-        <h2 style="margin:0">Add Recipe</h2>
-        <div class="row">
-          <div style="flex:1">
-            <label>Name</label>
-            <input id="fName" placeholder="e.g. Pasta Carbonara"/>
-          </div>
-          <div style="width:280px;max-width:100%">
-            <label>Category</label>
-            <input id="fCat" placeholder="optional"/>
-          </div>
-        </div>
-
-        <div class="row">
-          <div style="flex:1">
-            <label>Ingredients (one per line)</label>
-            <textarea id="fIngr" rows="6" placeholder="spaghetti&#10;eggs&#10;bacon&#10;parmesan"></textarea>
-          </div>
-          <div style="width:360px;max-width:100%">
-            <label>Photo</label>
-            <div class="uploader">
-              <div class="preview">
-                <img id="imgPreview" alt="" class="hidden"/>
-                <span id="imgLabel" class="muted">No image selected</span>
-              </div>
-              <div class="actions" style="margin-top:8px">
-                <input id="fFile" type="file" accept="image/*" class="hidden"/>
-                <button id="btnChoose" class="btn" type="button">Choose image</button>
-                <button id="btnCamera" class="btn" type="button">Take photo</button>
-                <button id="btnRemoveImg" class="btn" type="button">Remove</button>
-              </div>
-              <div id="camWrap" class="hidden" style="margin-top:10px">
-                <video id="cam" class="preview" autoplay playsinline></video>
-                <div class="actions" style="margin-top:8px">
-                  <button id="btnSnap" class="btn primary" type="button">Capture</button>
-                  <button id="btnCloseCam" class="btn" type="button">Close camera</button>
-                </div>
-              </div>
-            </div>
-            <div class="muted">Images are stored securely in the cloud.</div>
-          </div>
-        </div>
-
-        <div>
-          <label>Instructions</label>
-          <textarea id="fInstr" rows="6" placeholder="Steps..."></textarea>
-        </div>
-        <div class="row">
-          <button id="btnSave" class="btn primary" type="button">Save to list</button>
-          <button id="btnClear" class="btn" type="button">Clear</button>
-          <span id="formInfo" class="muted"></span>
-        </div>
-      </section>
-    </section>
-
-    <!-- MY RECIPES -->
-    <section id="sec-my" class="section">
-      <section class="card grid">
-        <div class="row" style="align-items:center;justify-content:space-between">
-          <h2 style="margin:0">My Recipes</h2>
-          <span id="count" class="pill">0 recipes</span>
-        </div>
-        <div id="empty" class="muted">No recipes yet. Add one above.</div>
-        <div id="list" class="recipes"></div>
-        <div class="row" style="justify-content:center;margin-top:8px">
-          <button id="btnMore" class="btn hidden" type="button">Show more (+5)</button>
-        </div>
-      </section>
-    </section>
   </div>
+  <div class="menu-pop" id="userMenu" hidden>
+    <div class="who"><b id="whoName"></b><div class="muted" id="whoEmail"></div></div>
+    <button type="button" id="btnExcl">Ingrediente pe care le ai mereu</button>
+    <button type="button" id="btnLogout">Ieși din cont</button>
+  </div>
+</header>
 
-  <!-- View dialog -->
-  <dialog id="dlgView"><div class="dlg">
-    <div class="previewWrap">
-      <img id="vwImg" class="previewImg" alt="" onerror="this.style.display='none'"/>
-    </div>
-    <h3 id="vwTitle" style="margin:12px 0 4px"></h3>
-    <div id="vwCat" class="muted" style="margin-bottom:8px"></div>
-    <div class="hr"></div>
-    <div>
-      <h4 style="margin:.2rem 0">Ingredients</h4>
-      <ul id="vwIngr" style="margin:.2rem 0 .6rem 1.2rem"></ul>
-    </div>
-    <div class="hr"></div>
-    <div>
-      <h4 style="margin:.2rem 0">Instructions</h4>
-      <pre id="vwInstr" style="white-space:pre-wrap;margin:0"></pre>
-    </div>
-    <div class="row" style="margin-top:12px;justify-content:flex-end">
-      <button class="btn" onclick="dlgView.close()">Close</button>
-    </div>
-  </div></dialog>
+<main id="main">
+  <div class="loading-page" id="boot"><div class="spinner"></div></div>
 
-  <!-- Weekly plan dialog -->
-  <dialog id="dlgPlan"><div class="dlg">
-    <h3 style="margin:0 0 8px">Weekly plan</h3>
-    <div class="tabs">
-      <button id="tabPlan" class="tab active" type="button">Plan</button>
-      <button id="tabShop" class="tab" type="button">Shopping list</button>
-    </div>
-    <div id="planErr" class="muted"></div>
-    <div class="hr"></div>
-
-    <div id="viewPlan">
-      <div style="overflow:auto">
-        <table id="planTable">
-          <thead><tr><th style="width:140px">Date</th><th>Recipe</th><th style="width:160px">Category</th></tr></thead>
-          <tbody></tbody>
-        </table>
+  <!-- ============ LANDING ============ -->
+  <section id="v-landing" hidden>
+    <div class="landing">
+      <div>
+        <img class="landing-logo" src="images/logo-appetora_2.PNG" alt="Appetora"/>
+        <h1>Ce gătim săptămâna asta?</h1>
+        <p class="lead">Appetora e caietul tău de rețete și planul de meniu pentru toată săptămâna. Pui rețetele o singură dată, apoi meniul și lista de cumpărături se fac singure.</p>
+        <ul class="feat">
+          <li><svg><use href="#i-cam"/></svg><span><b>Fotografiezi rețeta</b> din carte sau de pe un bilețel și se completează singură.</span></li>
+          <li><svg><use href="#i-cal"/></svg><span><b>Meniul pe 7 zile</b>, fără repetări. Păstrezi zilele care îți plac și schimbi doar restul.</span></li>
+          <li><svg><use href="#i-list"/></svg><span><b>Lista de cumpărături</b> adunată din toate rețetele din plan.</span></li>
+        </ul>
+      </div>
+      <div class="auth-card">
+        <div class="seg" role="tablist">
+          <button type="button" role="tab" id="tabIn" aria-selected="true">Am cont</button>
+          <button type="button" role="tab" id="tabUp" aria-selected="false">Cont nou</button>
+        </div>
+        <form id="fIn" novalidate>
+          <div class="field"><label for="inEmail">Email</label><input class="input" id="inEmail" type="email" autocomplete="email" required/></div>
+          <div class="field"><label for="inPass">Parolă</label><input class="input" id="inPass" type="password" autocomplete="current-password" required/></div>
+          <p class="auth-err" id="inErr"></p>
+          <button class="btn primary" type="submit">Intră în cont</button>
+        </form>
+        <form id="fUp" novalidate hidden>
+          <div class="field"><label for="upName">Cum să-ți spunem?</label><input class="input" id="upName" autocomplete="given-name" placeholder="ex. Ioana"/></div>
+          <div class="field"><label for="upEmail">Email</label><input class="input" id="upEmail" type="email" autocomplete="email" required/></div>
+          <div class="field"><label for="upPass">Parolă</label><input class="input" id="upPass" type="password" autocomplete="new-password" minlength="6" required/><span class="hint">Minim 6 caractere.</span></div>
+          <p class="auth-err" id="upErr"></p>
+          <button class="btn primary" type="submit">Creează contul</button>
+        </form>
       </div>
     </div>
-    <div id="viewShop" class="hidden">
-      <ul id="shopList" class="checklist"></ul>
-    </div>
-    <div class="row" style="margin-top:12px;justify-content:flex-end">
-      <button class="btn" onclick="dlgPlan.close()">Close</button>
-    </div>
-  </div></dialog>
+  </section>
 
-  <!-- Manual select dialog -->
-  <dialog id="dlgPick"><div class="dlg">
-    <div class="pickHeader">
-      <h3 style="margin:0">Pick up to 7 recipes</h3>
-      <div class="badge"><span id="selCount">0</span> selected / 7 max</div>
-    </div>
-    <div class="row" style="margin:8px 0 6px">
-      <input id="pickQuery" placeholder="Filter by name/category/ingredient…"/>
-      <span class="help">Only active (not paused) recipes are listed.</span>
-    </div>
-    <div id="pickList" class="pickList"></div>
-    <div class="row" style="margin-top:12px;justify-content:flex-end">
-      <button id="btnPickCancel" class="btn" type="button">Cancel</button>
-      <button id="btnPickConfirm" class="btn primary" type="button" disabled>Build plan</button>
-    </div>
-  </div></dialog>
-
-  <!-- Auth dialogs -->
-  <dialog id="dlgSignin"><div class="dlg">
-    <h3>Sign in</h3>
-    <div class="grid">
-      <input id="siEmail" placeholder="email"/>
-      <input id="siPass" type="password" placeholder="password"/>
-      <div class="row">
-        <button id="doSignin" class="btn primary" type="button">Sign in</button>
-        <button class="btn" type="button" onclick="dlgSignin.close()">Cancel</button>
+  <!-- ============ SĂPTĂMÂNA ============ -->
+  <section id="v-plan" hidden>
+    <div class="view-head">
+      <div>
+        <h1>Meniul săptămânii</h1>
+        <p class="plan-status" id="planStatus"></p>
       </div>
-      <div id="siErr" class="muted"></div>
-    </div>
-  </div></dialog>
-
-  <dialog id="dlgRegister"><div class="dlg">
-    <h3>Register</h3>
-    <div class="grid">
-      <input id="reEmail" placeholder="email"/>
-      <input id="rePass" type="password" placeholder="password"/>
-      <div class="row">
-        <button id="doRegister" class="btn primary" type="button">Create account</button>
-        <button class="btn" type="button" onclick="dlgRegister.close()">Cancel</button>
+      <div class="actions">
+        <button class="btn" id="btnSavePlan" type="button"><svg><use href="#i-save"/></svg>Salvează planul</button>
+        <button class="btn primary" id="btnGen" type="button"><svg><use href="#i-shuffle"/></svg>Generează meniul</button>
       </div>
-      <div id="reErr" class="muted"></div>
     </div>
-  </div></dialog>
+    <div class="planner-layout">
+      <div class="week" id="week"></div>
+      <div class="panel" id="shopPanel">
+        <div class="panel-head">
+          <h2>Lista de cumpărături</h2>
+          <div class="actions">
+            <button class="btn quiet" type="button" id="btnShopCopy">Copiază lista</button>
+            <button class="btn quiet" type="button" id="btnShopReset">Debifează tot</button>
+          </div>
+        </div>
+        <ul class="shop" id="shop"></ul>
+        <p class="hint" id="shopHint"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REȚETE ============ -->
+  <section id="v-recipes" hidden>
+    <div class="view-head">
+      <div><h1>Rețetele mele</h1><p class="muted" id="recCount"></p></div>
+      <div class="actions"><a class="btn primary" href="#add"><svg><use href="#i-plus"/></svg>Adaugă rețetă</a></div>
+    </div>
+    <div class="toolbar">
+      <div class="search"><svg><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Caută după nume sau ingredient" aria-label="Caută rețete"/></div>
+      <label class="switch small"><input type="checkbox" id="showPaused" checked/> Arată și rețetele scoase din plan</label>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="recGrid"></div>
+    <div id="recEmpty" hidden></div>
+  </section>
+
+  <!-- ============ ADAUGĂ / EDITEAZĂ ============ -->
+  <section id="v-add" hidden>
+    <div class="view-head"><div><h1 id="addTitle">Rețetă nouă</h1><p class="muted" id="addSub">Scrie-o de mână sau las-o pe Appetora să o citească dintr-o poză, un link sau un text.</p></div></div>
+    <div class="add-layout">
+      <form class="panel form" id="recForm" novalidate>
+        <div class="form-row">
+          <div class="field"><label for="fName">Nume</label><input class="input" id="fName" required placeholder="ex. Ciorbă de perișoare"/></div>
+          <div class="field"><label for="fCat">Categorie</label><input class="input" id="fCat" list="catList" placeholder="ex. Ciorbe"/><datalist id="catList"></datalist></div>
+        </div>
+        <div class="field">
+          <label>Poza mâncării</label>
+          <div class="photo-drop">
+            <div class="pv" id="photoPv"><svg><use href="#i-img"/></svg></div>
+            <div class="actions">
+              <button class="btn" type="button" id="btnPhotoPick">Alege o poză</button>
+              <button class="btn quiet danger" type="button" id="btnPhotoDel" hidden>Scoate poza</button>
+            </div>
+            <input type="file" id="photoFile" accept="image/*" hidden/>
+          </div>
+        </div>
+        <div class="field"><label for="fIngr">Ingrediente</label><textarea class="input" id="fIngr" placeholder="500 g carne tocată&#10;1 ceapă&#10;2 morcovi"></textarea><span class="hint">Câte un ingredient pe rând.</span></div>
+        <div class="field"><label for="fInstr">Mod de preparare</label><textarea class="input" id="fInstr" style="min-height:220px" placeholder="Fiecare pas pe un rând nou."></textarea></div>
+        <div class="form-foot">
+          <label class="switch"><input type="checkbox" id="fPaused"/> Nu o pune în meniul generat</label>
+          <div class="actions">
+            <button class="btn quiet" type="button" id="btnCancel">Renunță</button>
+            <button class="btn primary" type="submit" id="btnSaveRec"><svg><use href="#i-check"/></svg>Salvează rețeta</button>
+          </div>
+        </div>
+      </form>
+
+      <aside class="import-box" id="importBox">
+        <h2>Citește rețeta pentru mine</h2>
+        <p>Fă o poză paginii din carte, lipește un link sau un text. Completăm noi formularul, tu doar verifici.</p>
+        <div class="import-opts">
+          <button class="btn gold" type="button" id="impCam"><svg><use href="#i-cam"/></svg>Fotografiază rețeta</button>
+          <button class="btn" type="button" id="impImg"><svg><use href="#i-img"/></svg>Din galerie</button>
+          <button class="btn" type="button" id="impLinkBtn"><svg><use href="#i-link"/></svg>Din link</button>
+          <button class="btn" type="button" id="impTextBtn" style="grid-column:1/-1"><svg><use href="#i-text"/></svg>Din text lipit</button>
+        </div>
+        <input type="file" id="impCamFile" accept="image/*" capture="environment" hidden/>
+        <input type="file" id="impImgFile" accept="image/*" hidden/>
+        <div class="import-extra" id="impLink" hidden>
+          <input class="input" id="impUrl" type="url" placeholder="https://…"/>
+          <button class="btn gold" type="button" id="impUrlGo">Citește linkul</button>
+        </div>
+        <div class="import-extra" id="impText" hidden>
+          <textarea class="input" id="impTxt" placeholder="Lipește aici textul rețetei"></textarea>
+          <button class="btn gold" type="button" id="impTxtGo">Citește textul</button>
+        </div>
+        <div class="import-status" id="impStatus" hidden><div class="spinner"></div><span id="impStatusTxt"></span></div>
+        <div class="usage" id="usage"></div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-nav" id="bottomNav" aria-label="Principal" hidden>
+  <a href="#plan" data-nav="plan"><svg><use href="#i-cal"/></svg>Săptămâna</a>
+  <a href="#recipes" data-nav="recipes"><svg><use href="#i-book"/></svg>Rețete</a>
+  <a href="#add" data-nav="add"><svg><use href="#i-plus"/></svg>Adaugă</a>
+</nav>
+
+<!-- vizualizare rețetă -->
+<dialog id="dlgRec">
+  <button class="btn icon-btn dlg-close" type="button" data-close aria-label="Închide"><svg><use href="#i-x"/></svg></button>
+  <div class="rv-photo" id="rvPhoto"></div>
+  <div class="dlg-in">
+    <div class="rv-head"><div class="muted" id="rvCat"></div><h2 id="rvName"></h2></div>
+    <div class="rv-cols">
+      <div><h3>Ingrediente</h3><ul class="ingr" id="rvIngr"></ul></div>
+      <div><h3>Preparare</h3><ol class="steps" id="rvSteps"></ol></div>
+    </div>
+    <div class="rv-foot">
+      <button class="btn" type="button" id="rvEdit"><svg><use href="#i-edit"/></svg>Editează</button>
+      <button class="btn" type="button" id="rvPause"></button>
+      <button class="btn quiet danger" type="button" id="rvDel" style="margin-left:auto">Șterge</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- alege rețetă pentru o zi -->
+<dialog id="dlgPick">
+  <button class="btn icon-btn dlg-close" type="button" data-close aria-label="Închide"><svg><use href="#i-x"/></svg></button>
+  <div class="dlg-in">
+    <h2 style="font-size:30px" id="pickTitle">Alege rețeta</h2>
+    <div class="search" style="max-width:none"><svg><use href="#i-search"/></svg><input class="input" id="pickQ" type="search" placeholder="Caută" aria-label="Caută rețete"/></div>
+    <div class="pick-list" id="pickList"></div>
+    <button class="btn quiet danger" type="button" id="pickClear">Lasă ziua liberă</button>
+  </div>
+</dialog>
+
+<!-- ingrediente excluse -->
+<dialog id="dlgExcl" style="max-width:560px">
+  <button class="btn icon-btn dlg-close" type="button" data-close aria-label="Închide"><svg><use href="#i-x"/></svg></button>
+  <div class="dlg-in">
+    <h2 style="font-size:30px">Ingrediente pe care le ai mereu</h2>
+    <p class="muted" style="margin:0">Nu apar în lista de cumpărături. De exemplu sare, piper, ulei.</p>
+    <form id="exclForm" style="display:flex;gap:8px"><input class="input" id="exclIn" placeholder="ex. oțet" aria-label="Ingredient"/><button class="btn primary" type="submit">Adaugă</button></form>
+    <div class="tag-list" id="exclTags"></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
-/* ===== helpers ===== */
-const $ = (s)=>document.querySelector(s);
-function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
-async function api(path, opts={}) {
-  const res = await fetch(path, { credentials:'include', ...opts });
-  const ct = res.headers.get('content-type') || '';
-  const body = ct.includes('application/json') ? await res.json() : await res.text();
-  return { status: res.status, body };
-}
+/* ================= utilitare ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAYS = ['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+const MONTHS = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
 
-/*=== exclude-ingredients===*/
-const DEFAULT_EXCLUDE_ING = [
-  'salt', 'sea salt', 'himalayan salt', 'sare', 'salz',
-  'pepper', 'black pepper', 'white pepper', 'piper','pfeffer',
-  'sugar','zahar','zucker',
-  'praf de usturoi',
-  'water', 'apa', 'apă',
-  'chilli','boia','paprikapulver',
-  'thymian','cimbru',
-  'busuioc',
-  'bulion','tomatenmark',
-  'oil','ulei', 'öl',
-  'vinegar','otet',
-  'mirodenii',
-  'sos soia',
-  'foi de dafin', 'lorbeerblätter'
-];
-
-/*=== normalizează ingredientul pentru comparare ===*/
-function normIngrLine(s){
-  return String(s||'')
-    .toLowerCase()
-    .replace(/\([^)]*\)/g,' ')
-    .replace(/[.,:;•\-–]/g,' ')
-    .replace(/\b\d+([.,]\d+)?\b/g,' ')
-    .replace(/\b(g|kg|ml|l|tbsp|tsp|linguri|lingura|lingurite|lingurita)\b/g,' ')
-    .replace(/\s+/g,' ')
-    .trim();
-}
-
-/*=== obține setul de excluderi: default + localStorage ===*/
-function getExcludeSet(){
-  let custom = [];
+async function api(path, opts = {}){
+  const o = { credentials:'include', ...opts };
+  if (o.json !== undefined){ o.method = o.method || 'POST'; o.headers = {'Content-Type':'application/json'}; o.body = JSON.stringify(o.json); delete o.json; }
   try{
-    custom = JSON.parse(localStorage.getItem('exclude_ingredients')||'[]');
-    if (!Array.isArray(custom)) custom = [];
-  }catch{}
-  const all = new Set([...DEFAULT_EXCLUDE_ING, ...custom.map(x=>String(x).toLowerCase().trim()).filter(Boolean)]);
-  return all;
+    const res = await fetch(path, o);
+    const ct = res.headers.get('content-type') || '';
+    const body = ct.includes('json') ? await res.json().catch(()=>null) : await res.text();
+    return { status: res.status, ok: res.ok, body };
+  }catch(e){ return { status:0, ok:false, body:{ error:'Nu ne-am putut conecta. Verifică internetul.' } }; }
+}
+const errMsg = (r, fallback) => {
+  const e = r.body && r.body.error;
+  const map = {
+    'Invalid credentials':'Email sau parolă greșită.',
+    'Email already registered':'Există deja un cont cu acest email.',
+    'Email and password required':'Completează emailul și parola.',
+    'Daily limit reached (5 imports)':'Ai folosit cele 5 citiri automate de azi. Mâine poți continua.',
+    'No active recipes':'Nu ai rețete active. Adaugă câteva sau scoate-le din pauză.'
+  };
+  return map[e] || e || fallback;
+};
+
+let toastT;
+function toast(msg, isErr){
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (isErr ? ' err' : ''); t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(()=> t.hidden = true, 3200);
 }
 
-/*=== verifică dacă un ingredient trebuie exclus ===*/
-function shouldSkipIngr(normLine){
-  const EX = getExcludeSet();
-  if (!normLine) return true;
-  if (EX.has(normLine)) return true;
-  for (const k of EX){
-    if (normLine.startsWith(k+' ') || normLine.endsWith(' '+k) || normLine.includes(' '+k+' ')) return true;
-  }
-  return false;
+const iso = d => { const z = new Date(d.getTime() - d.getTimezoneOffset()*60000); return z.toISOString().slice(0,10); };
+const parseIso = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+function shuffle(a){ a = [...a]; for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* imagine micșorată -> dataURL / Blob */
+function loadImg(file){ return new Promise((res, rej)=>{ const url = URL.createObjectURL(file); const im = new Image(); im.onload = ()=>{ res(im); URL.revokeObjectURL(url); }; im.onerror = rej; im.src = url; }); }
+async function downscale(file, max = 1400, q = .84){
+  const im = await loadImg(file);
+  let w = im.naturalWidth, h = im.naturalHeight; const k = Math.min(1, max / Math.max(w, h)); w = Math.round(w*k); h = Math.round(h*k);
+  const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h);
+  return c;
 }
 
-/*=== function === normalizare simplă pentru agregare */
-function normSimple(s){
-  return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+/* ================= stare ================= */
+const S = {
+  user: null,
+  recipes: [],
+  byId: new Map(),
+  cat: null,
+  week: [],           // [{date, recipeId|null, locked}]
+  dirty: false,
+  savedAt: null,
+  editId: null,
+  photoBlob: null,    // blobPath poza mâncării
+  pickDay: -1,
+};
+const imgCache = new Map();
+async function imgUrl(blob){
+  if (!blob) return null;
+  if (!imgCache.has(blob)) imgCache.set(blob, api('/api/view-url?blob=' + encodeURIComponent(blob)).then(r => r.ok && r.body && r.body.url || null));
+  return imgCache.get(blob);
+}
+function paintImages(root){
+  root.querySelectorAll('[data-blob]').forEach(async el => {
+    const u = await imgUrl(el.dataset.blob);
+    if (u){ el.style.backgroundImage = `url("${u.replace(/"/g,'%22')}")`; const ph = el.querySelector('.ph'); if (ph) ph.remove(); }
+  });
 }
 
-/* ===== DOM refs ===== */
-const hero = $('#hero'), heroCtas = $('#heroCtas');
-const menu = $('#menu');
-const hello = $('#hello'), helloName = $('#helloName');
-const btnSignin = $('#btnSignin'), btnRegister = $('#btnRegister'), btnLogout = $('#btnLogout');
-const ctaRegister = $('#ctaRegister'), ctaSignin = $('#ctaSignin');
-
-const secPlanner = $('#sec-planner'), secSearch = $('#sec-search'), secRead = $('#sec-read'),
-      secAdd = $('#sec-add'), secMy = $('#sec-my');
-const tabButtons = document.querySelectorAll('.tabBtn');
-
-const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count'), btnMore = $('#btnMore');
-const btnPlan = $('#btnPlan'), btnManual = $('#btnManual');
-const btnPlanLatest = document.getElementById('btnPlanLatest');
-const dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
-const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
-const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
-
-const dlgPick = $('#dlgPick'), pickQuery = $('#pickQuery'),
-      pickList = $('#pickList'), btnPickCancel = $('#btnPickCancel'),
-      btnPickConfirm = $('#btnPickConfirm'), selCountEl = $('#selCount');
-
-const fFile = $('#fFile'), btnChoose = $('#btnChoose'), btnCamera = $('#btnCamera');
-const imgPreview = $('#imgPreview'), imgLabel = $('#imgLabel'), btnRemoveImg = $('#btnRemoveImg');
-const camWrap = $('#camWrap'), cam = $('#cam'), btnSnap = $('#btnSnap'), btnCloseCam = $('#btnCloseCam');
-
-const qSearch = $('#qSearch'), btnSearch = $('#btnSearch'), searchInfo = $('#searchInfo'), searchResults = $('#searchResults');
-
-const readUrl = $('#readUrl'), readFile = $('#readFile'), btnReadUrl = $('#btnReadUrl'), btnReadFile = $('#btnReadFile'),
-      readInfo = $('#readInfo'), readPreview = $('#readPreview'),
-      rName = $('#rName'), rCat = $('#rCat'), rIngr = $('#rIngr'), rInstr = $('#rInstr'),
-      btnLoadToForm = $('#btnLoadToForm'), btnSaveParsed = $('#btnSaveParsed');
-
-const readImgPreview = $('#readImgPreview'), readImgLabel = $('#readImgLabel'),
-      readImgFile = $('#readImgFile'), btnReadChoose = $('#btnReadChoose'),
-      btnReadCamera = $('#btnReadCamera'), btnReadRemoveImg = $('#btnReadRemoveImg'),
-      btnReadImage = $('#btnReadImage'),
-      readCamWrap = $('#readCamWrap'), readCam = $('#readCam'),
-      btnReadSnap = $('#btnReadSnap'), btnReadCloseCam = $('#btnReadCloseCam');
-
-/* ===== State ===== */
-let readImageDataURL = null;
-let readMediaStream = null;
-
-let currentUser = null;
-let editId = null;
-let currentBlobPath = null;
-const imageUrlCache = new Map();
-
-let recipesAll = [];
-let showCount = 0;
-const firstPage = 10, stepPage = 5;
-
-const manualSelected = new Map();
-const MAX_SEL = 7;
-
-/* ===== Auth UI ===== */
-function showLoggedInUI(on){
-  if (on){
-    document.body.classList.add('auth');        // ←<<< controlează menubar-ul
-    hero.classList.add('hidden');
-    heroCtas.classList.add('hidden');
-    menu.classList.remove('hidden');            // ok să rămână; CSS îl guvernează
-    hello.classList.remove('hidden');
-    btnLogout.classList.remove('hidden');
-    btnSignin.classList.add('hidden'); 
-    btnRegister.classList.add('hidden');
-    activateTab('planner');
-    window.scrollTo(0,0);
-  }else{
-    document.body.classList.remove('auth');     // ←<<< ascunde menubar-ul
-    menu.classList.add('hidden');
-    hello.classList.add('hidden');
-    btnLogout.classList.add('hidden');
-    btnSignin.classList.remove('hidden'); 
-    btnRegister.classList.remove('hidden');
-    hero.classList.remove('hidden');
-    heroCtas.classList.remove('hidden');
-    document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
-    document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
-  }
+/* ================= rutare ================= */
+const VIEWS = ['plan','recipes','add'];
+function route(){
+  if (!S.user){ show('landing'); return; }
+  let v = location.hash.slice(1) || 'plan';
+  if (!VIEWS.includes(v)) v = 'plan';
+  if (v === 'add' && !S.editId) resetForm();
+  show(v);
 }
-
-function activateTab(name){
-  if (!currentUser){ dlgSignin.showModal(); return; }
-  const map = { planner:secPlanner, search:secSearch, read:secRead, add:secAdd, my:secMy };
-  Object.values(map).forEach(el=>el.classList.remove('active'));
-  tabButtons.forEach(b=>b.classList.remove('active'));
-  map[name].classList.add('active');
-  document.querySelector(`.tabBtn[data-tab="${name}"]`).classList.add('active');
+function show(v){
+  $('#boot').hidden = true;
+  ['landing', ...VIEWS].forEach(x => $('#v-' + x).hidden = x !== v);
+  $$('[data-nav]').forEach(a => { if (a.dataset.nav === v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  if (v === 'plan') renderPlan();
+  if (v === 'recipes') renderRecipes();
+  if (v === 'add') loadUsage();
+  window.scrollTo(0,0);
 }
-function requireLogin(){
-  if (!currentUser){ dlgSignin.showModal(); return false; }
-  return true;
-}
-tabButtons.forEach(b=>{
-  b.onclick = ()=>{ if (!requireLogin()) return; activateTab(b.getAttribute('data-tab')); };
-});
+window.addEventListener('hashchange', () => { if (location.hash !== '#add') S.editId = null; route(); });
 
-/* ===== Init Me & Recipes ===== */
-async function loadMe() {
+/* ================= autentificare ================= */
+function setAuthTab(up){
+  $('#tabIn').setAttribute('aria-selected', !up); $('#tabUp').setAttribute('aria-selected', up);
+  $('#fIn').hidden = up; $('#fUp').hidden = !up;
+}
+$('#tabIn').onclick = () => setAuthTab(false);
+$('#tabUp').onclick = () => setAuthTab(true);
+
+$('#fIn').onsubmit = async e => {
+  e.preventDefault(); $('#inErr').textContent = '';
+  const email = $('#inEmail').value.trim(), password = $('#inPass').value;
+  if (!email || !password){ $('#inErr').textContent = 'Completează emailul și parola.'; return; }
+  const r = await api('/api/auth/login', { json:{ email, password } });
+  if (!r.ok){ $('#inErr').textContent = errMsg(r, 'Nu am putut intra în cont.'); return; }
+  await boot();
+};
+$('#fUp').onsubmit = async e => {
+  e.preventDefault(); $('#upErr').textContent = '';
+  const name = $('#upName').value.trim(), email = $('#upEmail').value.trim(), password = $('#upPass').value;
+  if (!email || password.length < 6){ $('#upErr').textContent = 'Ai nevoie de un email și de o parolă de minim 6 caractere.'; return; }
+  const r = await api('/api/auth/register', { json:{ email, password, name: name || undefined } });
+  if (!r.ok){ $('#upErr').textContent = errMsg(r, 'Nu am putut crea contul.'); return; }
+  await boot();
+};
+
+const userMenu = $('#userMenu');
+$('#avatarBtn').onclick = e => { e.stopPropagation(); userMenu.hidden = !userMenu.hidden; $('#avatarBtn').setAttribute('aria-expanded', !userMenu.hidden); };
+document.addEventListener('click', e => { if (!userMenu.hidden && !userMenu.contains(e.target)) userMenu.hidden = true; });
+$('#btnLogout').onclick = async () => { await api('/api/auth/logout', { method:'POST' }); location.hash = ''; location.reload(); };
+
+async function boot(){
   const r = await api('/api/auth/me');
-  if (r.status === 200 && r.body && r.body.user) {
-    currentUser = r.body.user;
-    helloName.textContent = currentUser.name || currentUser.email;
-    showLoggedInUI(true);
+  S.user = r.ok && r.body && r.body.user || null;
+  document.body.classList.toggle('authed', !!S.user);
+  $('#topbar').hidden = !S.user; $('#bottomNav').hidden = !S.user;
+  if (S.user){
+    const nm = S.user.name && S.user.name !== S.user.email ? S.user.name : S.user.email.split('@')[0];
+    $('#avatarBtn').textContent = nm.charAt(0).toUpperCase();
+    $('#whoName').textContent = nm; $('#whoEmail').textContent = S.user.email;
     await loadRecipes();
-  } else {
-    currentUser = null;
-    showLoggedInUI(false);
+    await loadWeek();
   }
+  route();
 }
-async function loadRecipes() {
+
+/* ================= rețete ================= */
+async function loadRecipes(){
   const r = await api('/api/recipes');
-  recipesAll = (r.status === 200 && Array.isArray(r.body)) ? r.body : [];
-  renderRecipesPaged(true);
+  S.recipes = r.ok && Array.isArray(r.body) ? r.body : [];
+  S.byId = new Map(S.recipes.map(x => [x.id, x]));
+  const cats = [...new Set(S.recipes.map(x => (x.category||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ro'));
+  $('#catList').innerHTML = cats.map(c => `<option value="${esc(c)}">`).join('');
 }
+const hay = r => [r.name, r.category, ...(r.ingredients||[])].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
 
-/* ===== Listare rețete ===== */
-function renderRecipesPaged(reset){
-  if (reset){ showCount = Math.min(recipesAll.length, firstPage); }
-  countEl.textContent = `${recipesAll.length} recipe${recipesAll.length===1?'':'s'}`;
-  if (!recipesAll.length){ emptyEl.style.display='block'; listEl.innerHTML=''; btnMore.classList.add('hidden'); return; }
-  emptyEl.style.display='none';
-
-  const items = recipesAll.slice(0, showCount);
-  listEl.innerHTML = items.map(r=>{
-    const label = r.paused ? 'Resume' : 'Pause';
-    const pausedCls = r.paused ? 'paused' : '';
-    return `
-      <div class="item ${pausedCls}" data-id="${r.id}">
-        <div class="titleline clickable" style="min-width:0" onclick="viewRecipe('${r.id}')">
-          <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
-          <div>
-            <div class="name">${esc(r.name)}</div>
-            <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients${r.paused ? ' • ⏸ paused' : ''}</div>
-          </div>
-        </div>
-        <div class="right">
-          <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
-          <button class="btn" onclick="togglePause('${r.id}')">${label}</button>
-          <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const imgs = listEl.querySelectorAll('img[data-blob]');
-  imgs.forEach(async img=>{
-    const blob = img.getAttribute('data-blob');
-    if (!blob) return;
-    const url = await getImageUrl(blob);
-    if (url) { img.src = url; img.classList.remove('hidden'); }
-  });
-
-  if (showCount < recipesAll.length) btnMore.classList.remove('hidden');
-  else btnMore.classList.add('hidden');
+function cardHtml(r){
+  const ph = `<div class="ph">${esc((r.name||'?').charAt(0).toUpperCase())}</div>`;
+  return `<button class="card ${r.paused?'paused':''}" type="button" data-open="${esc(r.id)}">
+    <div class="card-photo" ${r.imageBlob?`data-blob="${esc(r.imageBlob)}"`:''}>${ph}${r.paused?'<span class="tag-paused">Scoasă din meniu</span>':''}</div>
+    <div class="card-body"><span class="card-title">${esc(r.name)}</span><span class="card-meta">${esc(r.category || 'Fără categorie')}, ${(r.ingredients||[]).length} ingrediente</span></div>
+  </button>`;
 }
-btnMore.onclick = ()=>{ showCount = Math.min(recipesAll.length, showCount + stepPage); renderRecipesPaged(false); };
+function renderRecipes(){
+  const total = S.recipes.length;
+  $('#recCount').textContent = total ? `${total} ${total===1?'rețetă':'rețete'}, ${S.recipes.filter(r=>r.paused).length} scoase din meniul generat` : '';
+  // categorii
+  const counts = {};
+  S.recipes.forEach(r => { const c = (r.category||'').trim() || 'Fără categorie'; counts[c] = (counts[c]||0) + 1; });
+  const cats = Object.keys(counts).sort((a,b)=>a.localeCompare(b,'ro'));
+  if (S.cat && !counts[S.cat]) S.cat = null;
+  $('#chips').innerHTML = total ? [`<button class="chip" type="button" data-cat="" aria-pressed="${!S.cat}">Toate<span class="n">${total}</span></button>`,
+    ...cats.map(c => `<button class="chip" type="button" data-cat="${esc(c)}" aria-pressed="${S.cat===c}">${esc(c)}<span class="n">${counts[c]}</span></button>`)].join('') : '';
 
-/* ===== Search ===== */
-$('#btnSearch').onclick = ()=>{
-  if (!requireLogin()) return;
-  const q = qSearch.value.trim().toLowerCase();
-  if (q.length < 2){ searchResults.innerHTML=''; searchInfo.textContent='Type at least 2 characters.'; return; }
-  const hit = recipesAll.filter(r=>{
-    const hay = [
-      r.name||'',
-      r.category||'',
-      ...(Array.isArray(r.ingredients)? r.ingredients : [])
-    ].join(' \n ').toLowerCase();
-    return hay.includes(q);
-  });
-  searchInfo.textContent = `${hit.length} result${hit.length===1?'':'s'}`;
-  searchResults.innerHTML = hit.map(r => `
-    <div class="item" data-id="${r.id}">
-      <div class="titleline clickable" style="min-width:0" onclick="viewRecipe('${r.id}')">
-        <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
-        <div>
-          <div class="name">${esc(r.name)}</div>
-          <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients</div>
-        </div>
-      </div>
-      <div class="right">
-        <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
-      </div>
-    </div>
-  `).join('');
+  const q = norm($('#q').value);
+  const showP = $('#showPaused').checked;
+  const list = S.recipes.filter(r => (showP || !r.paused)
+    && (!S.cat || ((r.category||'').trim() || 'Fără categorie') === S.cat)
+    && (!q || hay(r).includes(q)));
 
-  const imgs = searchResults.querySelectorAll('img[data-blob]');
-  imgs.forEach(async img=>{
-    const blob = img.getAttribute('data-blob');
-    const url = blob ? await getImageUrl(blob) : null;
-    if (url) { img.src = url; img.classList.remove('hidden'); }
-  });
-};
-
-/* ===== Read Recipe (URL / .txt / Image) ===== */
-$('#btnReadUrl').onclick = async ()=>{
-  if (!requireLogin()) return;
-  const url = readUrl.value.trim();
-  if (!url){ readInfo.textContent='Please paste a URL.'; return; }
-  readInfo.textContent='Reading…';
-  const r = await api('/api/import', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ url })
-  });
-  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read URL'; readPreview.classList.add('hidden'); return; }
-  applyParsedToPreview(r.body);
-};
-$('#btnReadFile').onclick = async ()=>{
-  if (!requireLogin()) return;
-  const f = readFile.files?.[0];
-  if (!f){ readInfo.textContent='Choose a .txt file first.'; return; }
-  const text = await f.text();
-  readInfo.textContent='Parsing…';
-  const r = await api('/api/import', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ text })
-  });
-  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to parse'; readPreview.classList.add('hidden'); return; }
-  applyParsedToPreview(r.body);
-};
-
-/* Image upload/camera pentru READ */
-$('#btnReadChoose').onclick = ()=> readImgFile.click();
-readImgFile.onchange = async (e)=>{
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const raw = await fileToDataURL(file);
-  readImageDataURL = await downscaleDataURL(raw, 1280, 1280, 0.82);
-  console.log('image size (KB):', dataURLSizeKB(readImageDataURL));
-  updateReadImagePreview();
-};
-$('#btnReadRemoveImg').onclick = ()=>{
-  readImageDataURL = null;
-  updateReadImagePreview();
-};
-$('#btnReadCamera').onclick = async ()=>{
-  try{
-    readMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }, audio:false });
-    readCam.srcObject = readMediaStream;
-
-    // fullscreen overlay
-    readCamWrap.classList.remove('hidden');
-    readCamWrap.classList.add('overlay');
-    document.body.classList.add('noscroll');
-
-    // încearcă și Fullscreen API (opțional, dacă e permis de browser)
-    if (readCamWrap.requestFullscreen) {
-      try { await readCamWrap.requestFullscreen(); } catch {}
-    }
-  }catch(e){
-    alert('Camera not available: '+e.message);
-  }
-};
-$('#btnReadCloseCam').onclick = async ()=>{
-  if (readMediaStream) readMediaStream.getTracks().forEach(t=>t.stop());
-  readMediaStream = null;
-
-  // ieșire din fullscreen dacă e cazul
-  if (document.fullscreenElement) {
-    try { await document.exitFullscreen(); } catch {}
-  }
-
-  readCamWrap.classList.add('hidden');
-  readCamWrap.classList.remove('overlay');
-  document.body.classList.remove('noscroll');
-};
-$('#btnReadSnap').onclick = async ()=>{
-  if (!readMediaStream) return;
-  const canvas = document.createElement('canvas');
-  canvas.width = readCam.videoWidth; canvas.height = readCam.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(readCam, 0, 0);
-  const raw = canvas.toDataURL('image/jpeg', 0.9);
-  readImageDataURL = await downscaleDataURL(raw, 1280, 1280, 0.82);
-  console.log('image size (KB):', dataURLSizeKB(readImageDataURL));
-  updateReadImagePreview();
-  $('#btnReadCloseCam').click();
-};
-$('#btnReadImage').onclick = async ()=>{
-  if (!requireLogin()) return;
-  if (!readImageDataURL){ readInfo.textContent = 'Select or take a photo first.'; return; }
-  readInfo.textContent='Reading image…';
-  const r = await api('/api/import-image', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ imageData: readImageDataURL })
-  });
-  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read image'; readPreview.classList.add('hidden'); return; }
-  applyParsedToPreview(r.body);
-};
-
-function updateReadImagePreview(){
-  if (readImageDataURL){
-    readImgPreview.src = readImageDataURL;
-    readImgPreview.classList.remove('hidden');
-    readImgLabel.textContent = 'Image selected';
-  }else{
-    readImgPreview.removeAttribute('src');
-    readImgPreview.classList.add('hidden');
-    readImgLabel.textContent = 'No image selected';
-  }
+  const grid = $('#recGrid'), empty = $('#recEmpty');
+  grid.innerHTML = list.map(cardHtml).join('');
+  paintImages(grid);
+  if (!total){
+    empty.hidden = false;
+    empty.innerHTML = `<div class="empty"><h2>Caietul e încă gol</h2><p class="muted">Începe cu rețetele pe care le gătești cel mai des. Cel mai repede e să fotografiezi pagina din carte.</p><a class="btn primary" href="#add"><svg><use href="#i-cam"/></svg>Adaugă prima rețetă</a></div>`;
+  } else if (!list.length){
+    empty.hidden = false;
+    empty.innerHTML = `<div class="empty"><p class="muted">Nicio rețetă nu se potrivește cu „${esc($('#q').value)}”${S.cat?` în ${esc(S.cat)}`:''}.</p><button class="btn" type="button" id="clrF">Șterge filtrele</button></div>`;
+    $('#clrF').onclick = () => { $('#q').value=''; S.cat=null; renderRecipes(); };
+  } else empty.hidden = true;
 }
-async function fileToDataURL(file){
-  return new Promise((resolve,reject)=>{
-    const fr = new FileReader();
-    fr.onload = ()=> resolve(fr.result);
-    fr.onerror = reject;
-    fr.readAsDataURL(file);
-  });
-}
-async function downscaleDataURL(dataURL, maxW=1280, maxH=1280, quality=0.82){
-  return new Promise((resolve, reject)=>{
-    const img = new Image();
-    img.onload = ()=>{
-      let w = img.width, h = img.height, ar = w/h;
-      if (w > maxW) { w = maxW; h = Math.round(w/ar); }
-      if (h > maxH) { h = maxH; w = Math.round(h*ar); }
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(c.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = reject;
-    img.src = dataURL;
-  });
-}
-function dataURLSizeKB(dataURL){
-  return Math.round(((dataURL||'').length * 3/4) / 1024);
-}
+$('#q').addEventListener('input', renderRecipes);
+$('#showPaused').addEventListener('change', renderRecipes);
+$('#chips').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return; S.cat = b.dataset.cat || null; renderRecipes(); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) openRecipe(b.dataset.open); });
 
-function applyParsedToPreview(obj){
-  rName.value = obj.name || '';
-  rCat.value = obj.category || '';
-  rIngr.value = (obj.ingredients||[]).join('\n');
-  rInstr.value = obj.instructions || '';
-  readInfo.textContent = 'Parsed. You can edit before saving.';
-  readPreview.classList.remove('hidden');
+/* --- vizualizare --- */
+let rvId = null;
+async function openRecipe(id){
+  const r = S.byId.get(id); if (!r) return;
+  rvId = id;
+  $('#rvName').textContent = r.name; $('#rvCat').textContent = r.category || '';
+  $('#rvIngr').innerHTML = (r.ingredients||[]).map((x,i) => `<li><input type="checkbox" id="ri${i}"/><label for="ri${i}">${esc(x)}</label></li>`).join('') || '<li class="muted">Fără ingrediente.</li>';
+  const steps = String(r.instructions||'').split(/\n+/).map(s => s.replace(/^\s*(\d+[.)]|[-•*])\s*/,'').trim()).filter(Boolean);
+  $('#rvSteps').innerHTML = steps.map(s => `<li>${esc(s)}</li>`).join('') || '<li class="muted">Fără instrucțiuni.</li>';
+  $('#rvPause').innerHTML = r.paused ? '<svg><use href="#i-shuffle"/></svg>Pune-o înapoi în meniu' : '<svg><use href="#i-pause"/></svg>Scoate-o din meniul generat';
+  const ph = $('#rvPhoto'); ph.style.backgroundImage = ''; ph.hidden = !r.imageBlob;
+  if (r.imageBlob){ const u = await imgUrl(r.imageBlob); if (u) ph.style.backgroundImage = `url("${u}")`; else ph.hidden = true; }
+  $('#dlgRec').showModal();
 }
-$('#btnLoadToForm').onclick = ()=>{
-  if (!requireLogin()) return;
-  $('#fName').value = rName.value;
-  $('#fCat').value  = rCat.value;
-  $('#fIngr').value = rIngr.value;
-  $('#fInstr').value= rInstr.value;
-  activateTab('add');
+$('#rvEdit').onclick = () => { $('#dlgRec').close(); editRecipe(rvId); };
+$('#rvPause').onclick = async () => {
+  const r = S.byId.get(rvId); if (!r) return;
+  const res = await api('/api/recipes', { method:'PUT', json:{ id:r.id, paused:!r.paused } });
+  if (!res.ok) return toast(errMsg(res,'Nu am putut salva.'), true);
+  r.paused = !r.paused;
+  toast(r.paused ? 'Nu va mai apărea în meniul generat.' : 'Rețeta revine în meniul generat.');
+  $('#dlgRec').close(); renderRecipes();
 };
-$('#btnSaveParsed').onclick = async ()=>{
-  if (!requireLogin()) return;
-  const payload = {
-    name: rName.value.trim(),
-    category: rCat.value.trim(),
-    ingredients: rIngr.value.split('\n').map(s=>s.trim()).filter(Boolean),
-    instructions: rInstr.value
-  };
-  if (!payload.name){ readInfo.textContent = 'Name required'; return; }
-  const res = await api('/api/recipes', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  });
-  if (res.status===201 || res.status===200){
-    readInfo.textContent='Saved.';
-    await loadRecipes();
-    activateTab('my');
-  }else if (res.status===401){
-    readInfo.textContent='Please sign in to save.'; dlgSignin.showModal();
-  }else{
-    readInfo.textContent = res.body?.error || 'Save failed';
-  }
+$('#rvDel').onclick = async () => {
+  const r = S.byId.get(rvId); if (!r) return;
+  if (!confirm(`Ștergi „${r.name}”? Nu se mai poate recupera.`)) return;
+  const res = await api('/api/recipes?id=' + encodeURIComponent(r.id), { method:'DELETE' });
+  if (!res.ok) return toast(errMsg(res,'Nu am putut șterge.'), true);
+  $('#dlgRec').close(); await loadRecipes();
+  S.week.forEach(d => { if (d.recipeId === r.id){ d.recipeId = null; d.locked = false; } }); persistWeek(true);
+  toast('Rețeta a fost ștearsă.'); renderRecipes();
 };
+$$('[data-close]').forEach(b => b.onclick = () => b.closest('dialog').close());
+$$('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
 
-/* ===== Planner Tabs ===== */
-tabPlan.onclick = ()=> setPlanTab(true);
-tabShop.onclick = ()=> setPlanTab(false);
-function setPlanTab(showPlan){
-  tabPlan.classList.toggle('active', showPlan);
-  tabShop.classList.toggle('active', !showPlan);
-  viewPlan.classList.toggle('hidden', !showPlan);
-  viewShop.classList.toggle('hidden', showPlan);
+/* --- formular --- */
+function setPhoto(blob){
+  S.photoBlob = blob || null;
+  const pv = $('#photoPv');
+  pv.style.backgroundImage = ''; pv.innerHTML = '<svg><use href="#i-img"/></svg>';
+  $('#btnPhotoDel').hidden = !blob; $('#btnPhotoPick').textContent = blob ? 'Schimbă poza' : 'Alege o poză';
+  if (blob) imgUrl(blob).then(u => { if (u && S.photoBlob === blob){ pv.style.backgroundImage = `url("${u}")`; pv.innerHTML = ''; } });
 }
-
-/* ===== Generate plan (auto) ===== */
-btnPlan.onclick = generatePlan;
-async function generatePlan() {
-  if (!requireLogin()) return;
-  const out = await api('/api/plan');
-  const errEl = $('#planErr');
-  const tbody = document.querySelector('#planTable tbody');
-
-  if (out.status !== 200 || !out.body?.plan) {
-    errEl.textContent = out.body?.error || 'Could not generate plan';
-    tbody.innerHTML = '';
-    $('#shopList').innerHTML = '';
-    setPlanTab(true);
-    dlgPlan.showModal();
-    return;
-  }
-  errEl.textContent = '';
-  const plan = out.body.plan;
-
-  tbody.innerHTML = plan.map(p => `
-    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
-  `).join('');
-
-  const r = await api('/api/recipes');
-  const all = Array.isArray(r.body) ? r.body : [];
-  const byId = new Map(all.map(x=>[x.id, x]));
-
-  const counts = new Map();
-  for (const day of plan) {
-    const rec = byId.get(day.recipeId);
-    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
-    for (const raw of ingr) {
-      const key = normSimple(String(raw));
-      if (!key) continue;
-      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
-      counts.set(key, (counts.get(key) || 0) + 1);
-    }
-  }
-  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
-                 .map(([key,count]) => ({ key, name:key, qty:count }));
-  renderShoppingList(items);
-
-  setPlanTab(true);
-  dlgPlan.showModal();
+function resetForm(){
+  S.editId = null;
+  $('#recForm').reset(); setPhoto(null);
+  $('#addTitle').textContent = 'Rețetă nouă';
+  $('#addSub').textContent = 'Scrie-o de mână sau las-o pe Appetora să o citească dintr-o poză, un link sau un text.';
+  $('#importBox').hidden = false;
 }
-
-btnPlanLatest.onclick = async ()=>{
-  if (!requireLogin()) return;
-
-  const out = await api('/api/plan-latest');
-  const errEl = document.getElementById('planErr');
-  const tbody = document.querySelector('#planTable tbody');
-
-  if (out.status !== 200 || !out.body?.plan) {
-    errEl.textContent = out.body?.error || 'No saved plan found.';
-    tbody.innerHTML = '';
-    setPlanTab(true);
-    dlgPlan.showModal();
-    return;
-  }
-
-  // Tabel plan
-  const plan = out.body.plan;
-  errEl.textContent = '';
-  tbody.innerHTML = plan.map(p => `
-    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
-  `).join('');
-
-  // Shopping list
-  const r = await api('/api/recipes');
-  const all = Array.isArray(r.body) ? r.body : [];
-  const byId = new Map(all.map(x=>[x.id, x]));
-
-  const counts = new Map();
-  for (const day of plan) {
-    const rec = byId.get(day.recipeId);
-    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
-    for (const raw of ingr) {
-      const key = normSimple(raw);
-      if (!key) continue;
-      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
-      counts.set(key, (counts.get(key) || 0) + 1);
-    }
-  }
-  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
-                 .map(([key,count]) => ({ key, name:key, qty:count }));
-  renderShoppingList(items);
-
-  setPlanTab(true);
-  dlgPlan.showModal();
-};
-
-/* ===== Manual select (și SAVE) ===== */
-btnManual.onclick = ()=>{
-  if (!requireLogin()) return;
-  manualSelected.clear();
-  selCountEl.textContent = "0";
-  pickQuery.value = "";
-  renderPickList();
-  dlgPick.showModal();
-};
-pickQuery.addEventListener('input', renderPickList);
-btnPickCancel.onclick = ()=> dlgPick.close();
-
-btnPickConfirm.onclick = async ()=>{
-  const ids = [...manualSelected.entries()]
-                .sort((a,b)=> a[1]-b[1])
-                .map(([id])=>id);
-  const byId = new Map(recipesAll.map(x=>[x.id,x]));
-  const today = new Date();
-  const plan = ids.map((id, idx)=>{
-    const d = new Date(today); d.setDate(today.getDate()+idx);
-    const rec = byId.get(id);
-    return {
-      date: d.toISOString().slice(0,10),
-      recipeId: id,
-      name: rec?.name || '(deleted)',
-      category: rec?.category || null
-    };
-  });
-
-  // Randare tabel
-  const tbody = document.querySelector('#planTable tbody');
-  tbody.innerHTML = plan.map(p => `
-    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
-  `).join('');
-  $('#planErr').textContent = '';
-
-  // Shopping list (cu filtrare)
-  const counts = new Map();
-  for (const id of ids){
-    const rec = byId.get(id);
-    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
-    for (const raw of ingr){
-      const key = normSimple(String(raw));
-      if (!key) continue;
-      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
-      counts.set(key, (counts.get(key)||0) + 1);
-    }
-  }
-  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
-                 .map(([key,count]) => ({ key, name:key, qty:count }));
-  renderShoppingList(items);
-
-  // SAVE în backend
-  const saveRes = await api('/api/plan-save', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ plan })
-  });
-  if (saveRes.status !== 200) {
-    alert(saveRes.body?.error || 'Could not save plan.');
-  }
-
-  setPlanTab(true);
-  dlgPick.close();
-  dlgPlan.showModal();
-};
-function renderPickList(){
-  const q = pickQuery.value.trim().toLowerCase();
-  let arr = recipesAll.filter(r=>!r.paused);
-  if (q.length>=2){
-    arr = arr.filter(r=>{
-      const hay = [ r.name||'', r.category||'', ...(Array.isArray(r.ingredients)? r.ingredients : []) ]
-        .join(' \n ').toLowerCase();
-      return hay.includes(q);
-    });
-  }
-  pickList.innerHTML = arr.map(r=>{
-    const checked = manualSelected.has(r.id);
-    return `
-      <div class="pickRow">
-        <input type="checkbox" data-id="${r.id}" ${checked?'checked':''}/>
-        <div class="titleline" style="min-width:0">
-          <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
-          <div>
-            <div class="name">${esc(r.name)}</div>
-            <div class="muted">${esc(r.category||'No category')} • ${r.ingredients?.length||0} ingredients</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  pickList.querySelectorAll('img[data-blob]').forEach(async img=>{
-    const blob = img.getAttribute('data-blob');
-    const url = blob ? await getImageUrl(blob) : null;
-    if (url){ img.src = url; img.classList.remove('hidden'); }
-  });
-
-  pickList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    cb.addEventListener('change',(e)=>{
-      const id = e.target.getAttribute('data-id');
-      if (e.target.checked){
-        if (manualSelected.size >= MAX_SEL){
-          e.target.checked = false;
-          alert('You can select up to 7 recipes.');
-          return;
-        }
-        manualSelected.set(id, Date.now()+Math.random());
-      }else{
-        manualSelected.delete(id);
-      }
-      selCountEl.textContent = String(manualSelected.size);
-      btnPickConfirm.disabled = manualSelected.size === 0;
-    });
-  });
-
-  selCountEl.textContent = String(manualSelected.size);
-  btnPickConfirm.disabled = manualSelected.size === 0;
+function editRecipe(id){
+  const r = S.byId.get(id); if (!r) return;
+  S.editId = id;
+  $('#fName').value = r.name || ''; $('#fCat').value = r.category || '';
+  $('#fIngr').value = (r.ingredients||[]).join('\n'); $('#fInstr').value = r.instructions || '';
+  $('#fPaused').checked = !!r.paused; setPhoto(r.imageBlob);
+  $('#addTitle').textContent = 'Editează rețeta'; $('#addSub').textContent = r.name;
+  $('#importBox').hidden = true;
+  if (location.hash === '#add') show('add'); else location.hash = 'add';
 }
-
-/* ===== Shopping list (persist check în localStorage) ===== */
-function renderShoppingList(agg){
-  const list = $('#shopList');
-  const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
-
-  list.innerHTML = agg.map(it => `
-    <li>
-      <label class="item ${saved[it.key] ? 'done' : ''}">
-        <input type="checkbox" data-key="${it.key}" ${saved[it.key] ? 'checked' : ''}/>
-        <span class="name">${esc(it.name)}</span>
-        ${it.qty>1?`<span class="qty">×${it.qty}</span>`:''}
-      </label>
-    </li>
-  `).join('');
-
-  list.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    cb.addEventListener('change', e=>{
-      const key = e.target.getAttribute('data-key');
-      const label = e.target.closest('label.item');
-      if (e.target.checked){ saved[key]=true; label.classList.add('done'); }
-      else { delete saved[key]; label.classList.remove('done'); }
-      localStorage.setItem('shopping_checked', JSON.stringify(saved));
-    });
-  });
-}
-
-/* ===== CRUD rețete ===== */
-async function getImageUrl(blobPath){
-  if (!blobPath) return null;
-  if (imageUrlCache.has(blobPath)) return imageUrlCache.get(blobPath);
-  const r = await api('/api/view-url?blob='+encodeURIComponent(blobPath));
-  const url = (r.status===200 && r.body?.url) ? r.body.url : null;
-  imageUrlCache.set(blobPath, url);
-  return url;
-}
-async function saveRecipe() {
-  if (!requireLogin()) return;
+$('#btnCancel').onclick = () => { S.editId = null; location.hash = 'recipes'; };
+$('#recForm').onsubmit = async e => {
+  e.preventDefault();
   const name = $('#fName').value.trim();
-  if (!name) { info('Name required'); return; }
+  if (!name){ $('#fName').focus(); return toast('Rețeta are nevoie de un nume.', true); }
   const payload = {
-    id: editId || undefined,
-    name,
-    category: $('#fCat').value.trim(),
-    imageBlob: currentBlobPath || null,
+    name, category: $('#fCat').value.trim(),
     ingredients: $('#fIngr').value.split('\n').map(s=>s.trim()).filter(Boolean),
-    instructions: $('#fInstr').value
+    instructions: $('#fInstr').value.trim(),
+    imageBlob: S.photoBlob || '',
+    paused: $('#fPaused').checked
   };
-  const method = editId ? 'PUT' : 'POST';
-  const r = await api('/api/recipes', {
-    method, headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  });
-  if (r.status===401){ info('Please sign in to save.'); dlgSignin.showModal(); return; }
-  if (r.status===200 || r.status===201) {
-    clearForm(); info(editId?'Updated.':'Saved.');
-    await loadRecipes();
-    activateTab('my');
-  } else {
-    info(r.body?.error || 'Error');
-  }
-}
-async function delRecipe(id) {
-  if (!requireLogin()) return;
-  if (!confirm('Delete recipe?')) return;
-  const r = await api('/api/recipes?id='+encodeURIComponent(id), { method:'DELETE' });
-  if (r.status===200) { await loadRecipes(); activateTab('my'); }
-}
-async function togglePause(id) {
-  if (!requireLogin()) return;
-  const r = await api('/api/recipes');
-  if (r.status !== 200 || !Array.isArray(r.body)) return;
-  const rec = r.body.find(x => x.id === id);
-  if (!rec) return;
-  const upd = await api('/api/recipes', {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ id, paused: !rec.paused })
-  });
-  if (upd.status === 200) { await loadRecipes(); }
-}
-async function editRecipe(id) {
-  if (!requireLogin()) return;
-  const r = await api('/api/recipes');
-  if (r.status!==200) return;
-  const rec = (r.body||[]).find(x=>x.id===id);
-  if (!rec) return;
-  editId = rec.id;
-  $('#fName').value = rec.name || '';
-  $('#fCat').value = rec.category || '';
-  $('#fIngr').value = (rec.ingredients||[]).join('\n');
-  $('#fInstr').value = rec.instructions || '';
-  currentBlobPath = rec.imageBlob || null;
-  await updatePreviewFromBlob(currentBlobPath);
-  info('Editing… Save to apply or Clear to cancel.');
-}
-async function viewRecipe(id) {
-  if (!requireLogin()) return;
-  const r = await api('/api/recipes');
-  if (r.status !== 200) return;
-  const rec = (r.body || []).find(x => x.id === id);
-  if (!rec) return;
-
-  const img = document.getElementById('vwImg');
-  if (rec.imageBlob) {
-    const url = await getImageUrl(rec.imageBlob);
-    if (url) { img.src = url; img.style.display='block'; } else { img.removeAttribute('src'); img.style.display='none'; }
-  } else { img.removeAttribute('src'); img.style.display='none'; }
-
-  $('#vwTitle').textContent = rec.name || '';
-  $('#vwCat').textContent = rec.category ? `Category: ${rec.category}` : 'No category';
-
-  const ul = document.getElementById('vwIngr');
-  ul.innerHTML = '';
-  (rec.ingredients || []).forEach(it => {
-    const li = document.createElement('li');
-    li.textContent = String(it);
-    ul.appendChild(li);
-  });
-
-  document.getElementById('vwInstr').textContent = rec.instructions || '';
-
-  dlgView.showModal();
-}
-
-/* ===== Add: upload logic ===== */
-$('#btnSave').onclick = saveRecipe;
-$('#btnClear').onclick = clearForm;
-
-$('#btnChoose').onclick = ()=> fFile.click();
-fFile.onchange = async (e)=>{
-  const file = e.target.files?.[0];
-  if (!file) return;
-  await uploadSelectedFile(file);
+  const btn = $('#btnSaveRec'); btn.disabled = true;
+  const r = S.editId ? await api('/api/recipes', { method:'PUT', json:{ id:S.editId, ...payload } })
+                     : await api('/api/recipes', { json:{ ...payload, imageBlob: S.photoBlob || null } });
+  btn.disabled = false;
+  if (!r.ok) return toast(errMsg(r,'Nu am putut salva rețeta.'), true);
+  const wasEdit = !!S.editId;
+  await loadRecipes(); S.editId = null;
+  toast(wasEdit ? 'Modificările au fost salvate.' : 'Rețeta a fost salvată.');
+  location.hash = 'recipes';
 };
-$('#btnRemoveImg').onclick = ()=>{
-  currentBlobPath = null;
-  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
-  imgLabel.textContent = 'No image selected';
-};
-let mediaStream = null;
-$('#btnCamera').onclick = async ()=>{
+
+/* poza mâncării -> Azure Blob */
+$('#btnPhotoPick').onclick = () => $('#photoFile').click();
+$('#btnPhotoDel').onclick = () => setPhoto(null);
+$('#photoFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try{
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio:false });
-    cam.srcObject = mediaStream;
-    camWrap.classList.remove('hidden');
-  }catch(e){ alert('Camera not available: ' + e.message); }
+    toast('Se încarcă poza…');
+    const c = await downscale(f, 1600, .85);
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', .85));
+    const up = await api('/api/upload-url', { json:{ filename: (f.name||'poza').replace(/\.[^.]+$/,'') + '.jpg', contentType:'image/jpeg' } });
+    if (!up.ok || !up.body?.uploadUrl) throw new Error(errMsg(up,'Nu am primit adresa de încărcare.'));
+    const put = await fetch(up.body.uploadUrl, { method:'PUT', headers:{ 'x-ms-blob-type':'BlockBlob', 'Content-Type':'image/jpeg' }, body: blob });
+    if (!put.ok) throw new Error('Încărcarea pozei a eșuat.');
+    setPhoto(up.body.blobPath); toast('Poza a fost adăugată.');
+  }catch(err){ toast(err.message || 'Nu am putut încărca poza.', true); }
 };
-$('#btnCloseCam').onclick = ()=>{
-  if (mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
-  mediaStream = null;
-  camWrap.classList.add('hidden');
-};
-$('#btnSnap').onclick = async ()=>{
-  if (!mediaStream) return;
-  const canvas = document.createElement('canvas');
-  canvas.width = cam.videoWidth; canvas.height = cam.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(cam, 0, 0);
-  canvas.toBlob(async (blob)=>{
-    if (!blob) return;
-    const file = new File([blob], 'photo.jpg', { type: blob.type || 'image/jpeg' });
-    await uploadSelectedFile(file);
-    $('#btnCloseCam').click();
-  }, 'image/jpeg', 0.9);
-};
-async function uploadSelectedFile(file){
-  if (!requireLogin()) return;
-  info('Uploading image...');
-  const up = await api('/api/upload-url', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ filename: file.name || 'image.jpg', contentType: file.type || 'image/jpeg' })
-  });
-  if (up.status !== 200 || !up.body?.uploadUrl) { info('Could not get upload URL'); return; }
-  const putRes = await fetch(up.body.uploadUrl, {
-    method:'PUT',
-    headers:{ 'x-ms-blob-type': 'BlockBlob', 'Content-Type': file.type || 'application/octet-stream' },
-    body: file
-  });
-  if (!putRes.ok) { info('Upload failed'); return; }
-  currentBlobPath = up.body.blobPath;
-  await updatePreviewFromBlob(currentBlobPath);
-  info('Image uploaded.');
-}
-async function updatePreviewFromBlob(blobPath){
-  if (!blobPath) {
-    imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
-    imgLabel.textContent = 'No image selected';
-    return;
-  }
-  const url = await getImageUrl(blobPath);
-  if (url){
-    imgPreview.src = url; imgPreview.classList.remove('hidden');
-    imgLabel.textContent = blobPath.split('/').slice(-1)[0];
-  }else{
-    imgPreview.classList.add('hidden'); imgLabel.textContent='No image selected';
-  }
-}
-function clearForm(){
-  editId = null;
-  $('#fName').value=''; $('#fCat').value='';
-  $('#fIngr').value=''; $('#fInstr').value='';
-  currentBlobPath = null;
-  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
-  imgLabel.textContent = 'No image selected';
-  info('');
-}
-function info(t){ $('#formInfo').textContent = t; }
 
-/* ===== Auth ===== */
-btnSignin.onclick = ()=> dlgSignin.showModal();
-btnRegister.onclick = ()=> dlgRegister.showModal();
-ctaRegister.onclick = ()=> dlgRegister.showModal();
-ctaSignin .onclick = ()=> dlgSignin.showModal();
+/* ================= import cu AI ================= */
+function impBusy(on, txt){ $('#impStatus').hidden = !on; $('#impStatusTxt').textContent = txt || ''; $$('#importBox button').forEach(b => b.disabled = on); }
+function fillFromImport(o){
+  $('#fName').value = o.name || $('#fName').value;
+  if (o.category) $('#fCat').value = o.category;
+  if (o.ingredients?.length) $('#fIngr').value = o.ingredients.join('\n');
+  if (o.instructions) $('#fInstr').value = o.instructions;
+  toast('Gata. Verifică formularul și salvează.');
+  $('#fName').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center' });
+  loadUsage();
+}
+async function importImage(f){
+  if (!f) return;
+  impBusy(true, 'Citim rețeta din poză. Durează câteva secunde…');
+  try{
+    const c = await downscale(f, 1280, .82);
+    const r = await api('/api/import-image', { json:{ imageData: c.toDataURL('image/jpeg', .82) } });
+    if (!r.ok) throw new Error(errMsg(r, 'Nu am reușit să citim poza. Încearcă o poză mai clară, cu tot textul în cadru.'));
+    fillFromImport(r.body);
+  }catch(e){ toast(e.message, true); }
+  impBusy(false);
+}
+$('#impCam').onclick = () => $('#impCamFile').click();
+$('#impImg').onclick = () => $('#impImgFile').click();
+$('#impCamFile').onchange = e => { importImage(e.target.files[0]); e.target.value=''; };
+$('#impImgFile').onchange = e => { importImage(e.target.files[0]); e.target.value=''; };
+$('#impLinkBtn').onclick = () => { $('#impLink').hidden = !$('#impLink').hidden; $('#impText').hidden = true; if (!$('#impLink').hidden) $('#impUrl').focus(); };
+$('#impTextBtn').onclick = () => { $('#impText').hidden = !$('#impText').hidden; $('#impLink').hidden = true; if (!$('#impText').hidden) $('#impTxt').focus(); };
+$('#impUrlGo').onclick = async () => {
+  const url = $('#impUrl').value.trim();
+  if (!/^https?:\/\//i.test(url)) return toast('Lipește un link complet, care începe cu https://', true);
+  impBusy(true, 'Citim pagina…');
+  const r = await api('/api/import', { json:{ url } });
+  impBusy(false);
+  if (!r.ok) return toast(errMsg(r, 'Nu am putut citi pagina.'), true);
+  fillFromImport(r.body); $('#impLink').hidden = true; $('#impUrl').value = '';
+};
+$('#impTxtGo').onclick = async () => {
+  const text = $('#impTxt').value.trim();
+  if (text.length < 20) return toast('Lipește textul complet al rețetei.', true);
+  impBusy(true, 'Citim textul…');
+  const r = await api('/api/import', { json:{ text } });
+  impBusy(false);
+  if (!r.ok) return toast(errMsg(r, 'Nu am putut citi textul.'), true);
+  fillFromImport(r.body); $('#impText').hidden = true; $('#impTxt').value = '';
+};
+async function loadUsage(){
+  const r = await api('/api/usage/today');
+  const n = r.ok && r.body ? (r.body.calls || 0) : null;
+  $('#usage').textContent = n == null ? '' : `Citiri din link sau text azi: ${n} din 5.`;
+}
 
-$('#doSignin').onclick = async ()=>{
-  $('#siErr').textContent='';
-  const email = $('#siEmail').value.trim(), password = $('#siPass').value;
-  const r = await api('/api/auth/login',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
-  if (r.status===200) {
-    dlgSignin.close();
-    await loadMe();            // setează currentUser și ascunde hero
-    activateTab('planner');    // ← mergi direct pe Planner
-    window.scrollTo(0,0);      // ← opțional, sus de tot
+/* ================= planul săptămânii ================= */
+const WEEK_KEY = () => 'appetora_week_' + (S.user?.id || S.user?.email || '');
+function freshWeek(start){
+  const s = start || new Date();
+  return Array.from({length:7}, (_,i) => { const d = new Date(s); d.setDate(s.getDate()+i); return { date: iso(d), recipeId:null, locked:false }; });
+}
+async function loadWeek(){
+  const local = LS.get(WEEK_KEY(), null);
+  const today = iso(new Date());
+  if (local && Array.isArray(local.week) && local.week.length === 7 && local.week[6].date >= today){
+    S.week = local.week; S.dirty = !!local.dirty; S.savedAt = local.savedAt || null;
   } else {
-    $('#siErr').textContent = r.body?.error || 'Sign in failed';
+    // ultimul plan salvat pe server
+    const r = await api('/api/plan-latest');
+    const plan = r.ok && Array.isArray(r.body?.plan) ? r.body.plan : null;
+    if (plan && plan.length && plan[plan.length-1].date >= today){
+      const start = parseIso(plan[0].date);
+      S.week = freshWeek(start);
+      plan.forEach(p => { const d = S.week.find(x => x.date === p.date); if (d) d.recipeId = S.byId.has(p.recipeId) ? p.recipeId : null; });
+      S.savedAt = r.body.createdAt; S.dirty = false;
+    } else { S.week = freshWeek(); S.dirty = false; S.savedAt = null; }
   }
-};
+  S.week.forEach(d => { if (d.recipeId && !S.byId.has(d.recipeId)){ d.recipeId = null; d.locked = false; } });
+}
+function persistWeek(dirty){
+  if (dirty !== undefined) S.dirty = dirty;
+  LS.set(WEEK_KEY(), { week:S.week, dirty:S.dirty, savedAt:S.savedAt });
+}
+function lastPlanIds(){ return new Set(LS.get('appetora_prev_' + (S.user?.email||''), [])); }
 
-$('#doRegister').onclick = async ()=>{
-  $('#reErr').textContent='';
-  const email = $('#reEmail').value.trim(), password = $('#rePass').value;
-  const r = await api('/api/auth/register',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
-  if (r.status===200) {
-    dlgRegister.close();
-    await loadMe();
-    activateTab('planner');    // ← sari direct în Planner
-    window.scrollTo(0,0);
+function generate(){
+  const active = S.recipes.filter(r => !r.paused);
+  if (!active.length){ toast(S.recipes.length ? 'Toate rețetele sunt scoase din meniu. Pune câteva înapoi.' : 'Adaugă întâi câteva rețete.', true); return; }
+  // dacă planul e din trecut, mută-l pe săptămâna curentă păstrând zilele blocate
+  const today = iso(new Date());
+  if (S.week[0].date !== today && !S.week.some(d => d.locked)) S.week = freshWeek();
+  const locked = new Set(S.week.filter(d => d.locked && d.recipeId).map(d => d.recipeId));
+  const prev = lastPlanIds();
+  // întâi rețetele care nu au fost în planul anterior, apoi restul
+  const fresh = shuffle(active.filter(r => !locked.has(r.id) && !prev.has(r.id)));
+  const older = shuffle(active.filter(r => !locked.has(r.id) && prev.has(r.id)));
+  let pool = [...fresh, ...older];
+  // evită aceeași categorie în zile consecutive, cât se poate
+  S.week.forEach((d, i) => {
+    if (d.locked && d.recipeId) return;
+    if (!pool.length) pool = shuffle(active.filter(r => !locked.has(r.id)));
+    if (!pool.length){ d.recipeId = null; return; }
+    const prevCat = S.byId.get(S.week[i-1]?.recipeId)?.category;
+    let k = pool.findIndex(r => !prevCat || r.category !== prevCat);
+    if (k < 0) k = 0;
+    d.recipeId = pool.splice(k,1)[0].id;
+  });
+  persistWeek(true); renderPlan(true);
+  toast(active.length < 7 ? `Ai doar ${active.length} rețete active, așa că unele se repetă.` : 'Meniul e gata. Blochează ce-ți place și generează din nou restul.');
+}
+function swapDay(i){
+  const used = new Set(S.week.map(d => d.recipeId));
+  let cand = S.recipes.filter(r => !r.paused && !used.has(r.id));
+  if (!cand.length) cand = S.recipes.filter(r => !r.paused && r.id !== S.week[i].recipeId);
+  if (!cand.length) return toast('Nu mai sunt alte rețete active.', true);
+  S.week[i].recipeId = cand[Math.floor(Math.random()*cand.length)].id;
+  persistWeek(true); renderPlan(false, i);
+}
+function dayLabel(dateStr){
+  const d = parseIso(dateStr); const t = iso(new Date());
+  const tm = new Date(); tm.setDate(tm.getDate()+1);
+  const name = dateStr === t ? 'Azi' : dateStr === iso(tm) ? 'Mâine' : DAYS[d.getDay()];
+  return { name, date: `${d.getDate()} ${MONTHS[d.getMonth()]}`, full: `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}` };
+}
+function renderPlan(flashAll, flashIdx){
+  const t = iso(new Date());
+  const wk = $('#week');
+  wk.innerHTML = S.week.map((d, i) => {
+    const r = d.recipeId && S.byId.get(d.recipeId);
+    const L = dayLabel(d.date);
+    const cls = ['day', d.date===t?'today':'', d.locked?'locked':'', (flashAll || flashIdx===i)?'flash':''].join(' ');
+    if (!r) return `<article class="${cls}" aria-label="${esc(L.full)}">
+      <div class="day-head"><span class="day-name">${esc(L.name)}</span><span class="day-date">${esc(L.date)}</span></div>
+      <div class="day-empty"><button class="btn" type="button" data-pick="${i}"><svg><use href="#i-plus"/></svg>Alege</button></div>
+    </article>`;
+    return `<article class="${cls}" aria-label="${esc(L.full)}">
+      <div class="day-head"><span class="day-name">${esc(L.name)}</span><span class="day-date">${esc(L.date)}</span></div>
+      <button class="day-photo" type="button" data-open="${esc(r.id)}" aria-label="Deschide ${esc(r.name)}" ${r.imageBlob?`data-blob="${esc(r.imageBlob)}"`:''}><span class="ph"><svg><use href="#i-dish"/></svg></span></button>
+      <div class="day-body">
+        <button class="day-title" type="button" data-open="${esc(r.id)}">${esc(r.name)}</button>
+        <span class="day-cat">${esc(r.category || '')}</span>
+        <div class="day-tools">
+          <button class="icon-btn" type="button" data-lock="${i}" aria-pressed="${d.locked}" title="${d.locked?'Deblochează ziua':'Păstrează rețeta la regenerare'}" aria-label="${d.locked?'Deblochează':'Blochează'} ${esc(L.full)}"><svg><use href="#i-lock"/></svg></button>
+          <button class="icon-btn" type="button" data-swap="${i}" title="Altă rețetă la întâmplare" aria-label="Altă rețetă pentru ${esc(L.full)}" ${d.locked?'disabled':''}><svg><use href="#i-swap"/></svg></button>
+          <button class="icon-btn" type="button" data-pick="${i}" title="Alege tu rețeta" aria-label="Alege rețeta pentru ${esc(L.full)}"><svg><use href="#i-list"/></svg></button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+  paintImages(wk);
+
+  const filled = S.week.filter(d => d.recipeId).length;
+  const st = $('#planStatus');
+  if (!S.recipes.length){
+    st.innerHTML = 'Adaugă câteva rețete și apoi generează meniul.';
+  } else if (!filled){
+    st.innerHTML = 'Apasă „Generează meniul” sau alege tu rețeta pentru fiecare zi.';
+  } else if (S.dirty){
+    st.innerHTML = '<span class="dot"></span>Modificări nesalvate. Salvează planul ca să-l vezi și pe alt dispozitiv.';
   } else {
-    $('#reErr').textContent = r.body?.error || 'Register failed';
+    st.innerHTML = '<span class="dot ok"></span>Plan salvat' + (S.savedAt ? ', ' + new Date(S.savedAt).toLocaleDateString('ro-RO',{day:'numeric',month:'long'}) : '') + '.';
   }
-};
-btnLogout.onclick = async ()=>{
-  await api('/api/auth/logout', { method:'POST' });
-  await loadMe();
+  $('#btnSavePlan').disabled = !filled || !S.dirty;
+  $('#btnGen').innerHTML = `<svg><use href="#i-shuffle"/></svg>${filled ? (S.week.some(d=>d.locked) ? 'Regenerează zilele deblocate' : 'Generează din nou') : 'Generează meniul'}`;
+  renderShop();
+}
+$('#week').addEventListener('click', e => {
+  const L = e.target.closest('[data-lock]'), W = e.target.closest('[data-swap]'), P = e.target.closest('[data-pick]');
+  if (L){ const d = S.week[+L.dataset.lock]; d.locked = !d.locked; persistWeek(); renderPlan(); }
+  else if (W) swapDay(+W.dataset.swap);
+  else if (P) openPick(+P.dataset.pick);
+});
+$('#btnGen').onclick = generate;
+$('#btnSavePlan').onclick = async () => {
+  const plan = S.week.filter(d => d.recipeId).map(d => { const r = S.byId.get(d.recipeId); return { date:d.date, recipeId:d.recipeId, name:r?.name||'', category:r?.category||null }; });
+  if (!plan.length) return;
+  const r = await api('/api/plan-save', { json:{ plan } });
+  if (!r.ok) return toast(errMsg(r, 'Nu am putut salva planul.'), true);
+  LS.set('appetora_prev_' + (S.user?.email||''), plan.map(p => p.recipeId));
+  S.savedAt = new Date().toISOString(); persistWeek(false); renderPlan();
+  toast('Planul a fost salvat.');
 };
 
-/* ===== Start ===== */
-loadMe();
+/* alege manual */
+function openPick(i){
+  S.pickDay = i;
+  $('#pickTitle').textContent = 'Ce gătim ' + (dayLabel(S.week[i].date).name === 'Azi' ? 'azi' : dayLabel(S.week[i].date).name === 'Mâine' ? 'mâine' : 'pe ' + dayLabel(S.week[i].date).full) + '?';
+  $('#pickQ').value = ''; renderPick(); $('#pickClear').hidden = !S.week[i].recipeId;
+  $('#dlgPick').showModal(); $('#pickQ').focus();
+}
+function renderPick(){
+  const q = norm($('#pickQ').value);
+  const list = S.recipes.filter(r => !q || hay(r).includes(q)).sort((a,b) => (a.paused-b.paused) || a.name.localeCompare(b.name,'ro'));
+  $('#pickList').innerHTML = list.map(r => `<button class="pick-row" type="button" data-choose="${esc(r.id)}">
+    <span class="th" ${r.imageBlob?`data-blob="${esc(r.imageBlob)}"`:''}></span>
+    <span><span class="nm">${esc(r.name)}</span><br><span class="muted small">${esc(r.category||'Fără categorie')}${r.paused?', scoasă din meniul generat':''}</span></span>
+  </button>`).join('') || '<p class="muted">Nicio rețetă găsită.</p>';
+  paintImages($('#pickList'));
+}
+$('#pickQ').addEventListener('input', renderPick);
+$('#pickList').addEventListener('click', e => {
+  const b = e.target.closest('[data-choose]'); if (!b) return;
+  const d = S.week[S.pickDay]; d.recipeId = b.dataset.choose; d.locked = true;
+  $('#dlgPick').close(); persistWeek(true); renderPlan(false, S.pickDay);
+});
+$('#pickClear').onclick = () => { const d = S.week[S.pickDay]; d.recipeId = null; d.locked = false; $('#dlgPick').close(); persistWeek(true); renderPlan(); };
+
+/* ================= lista de cumpărături ================= */
+const DEFAULT_EXCL = ['sare','sare de mare','piper','piper negru','zahar','zahăr','apa','apă','ulei','ulei de masline','ulei de măsline','otet','oțet','boia','foi de dafin','cimbru','busuioc','salt','pepper','sugar','water','oil'];
+const getExcl = () => LS.get('appetora_excl', null) ?? [...DEFAULT_EXCL, ...LS.get('exclude_ingredients', [])];
+function ingKey(s){
+  return norm(String(s))
+    .replace(/\([^)]*\)/g,' ')
+    .replace(/\b\d+([.,/]\d+)?\b/g,' ')
+    .replace(/\b(g|gr|kg|ml|l|buc|bucati|lingura|linguri|lingurita|lingurite|cana|cani|legatura|catel|catei|varf de cutit|praf|un|o|doua|trei|de)\b/g,' ')
+    .replace(/[.,:;•\-–]/g,' ').replace(/\s+/g,' ').trim();
+}
+// „2 căței de usturoi” -> „usturoi”, folosit când același ingredient vine din mai multe rețete
+function stripQty(s){
+  const t = s.replace(/^[\d\s.,/½¼¾-]+/, '')
+    .replace(/^(g|gr|kg|ml|l|buc\.?|bucăți|bucati|linguri(ță|ța|te|țe|ta|tă)?|lingur[ăa]|c[ăa]n[ăi]|c[ăa]ței|c[ăa]țel|catei|catel|leg[ăa]tur[ăa]|pachet(e)?)\b\.?\s*/i, '')
+    .replace(/^de\s+/i, '').trim();
+  return t || s;
+}
+function renderShop(){
+  const excl = new Set(getExcl().map(norm));
+  const agg = new Map();
+  S.week.forEach(d => {
+    const r = d.recipeId && S.byId.get(d.recipeId); if (!r) return;
+    (r.ingredients||[]).forEach(raw => {
+      const k = ingKey(raw); if (!k) return;
+      if ([...excl].some(x => k === x || k.startsWith(x+' ') || k.endsWith(' '+x))) return;
+      if (!agg.has(k)) agg.set(k, { raw: String(raw).trim(), n:0, from:new Set() });
+      const a = agg.get(k); a.n++; a.from.add(r.name);
+    });
+  });
+  const checked = LS.get('shopping_checked', {});
+  const items = [...agg.entries()].sort((a,b) => a[0].localeCompare(b[0],'ro'));
+  $('#shopPanel').hidden = !items.length;
+  $('#shop').innerHTML = items.map(([k,a]) => `<li><label class="${checked[k]?'done':''}" title="${esc([...a.from].join(', '))}">
+    <input type="checkbox" data-k="${esc(k)}" ${checked[k]?'checked':''}/><span>${esc(a.n>1 ? stripQty(a.raw) : a.raw)}</span>${a.n>1?`<span class="qty">×${a.n}</span>`:''}</label></li>`).join('');
+  $('#shopHint').innerHTML = `Nu apar ingredientele pe care le ai mereu (sare, ulei…). <button class="btn quiet small" type="button" id="shopExcl" style="min-height:32px;padding:0 8px;text-decoration:underline">Modifică lista</button>`;
+  $('#shopExcl').onclick = openExcl;
+}
+$('#shop').addEventListener('change', e => {
+  const cb = e.target.closest('[data-k]'); if (!cb) return;
+  const c = LS.get('shopping_checked', {}); if (cb.checked) c[cb.dataset.k] = 1; else delete c[cb.dataset.k];
+  LS.set('shopping_checked', c); cb.closest('label').classList.toggle('done', cb.checked);
+});
+$('#btnShopReset').onclick = () => { LS.set('shopping_checked', {}); renderShop(); };
+$('#btnShopCopy').onclick = async () => {
+  const c = LS.get('shopping_checked', {});
+  const lines = $$('#shop [data-k]').filter(cb => !c[cb.dataset.k]).map(cb => '• ' + cb.closest('label').innerText.replace(/\s+/g,' ').trim());
+  try{ await navigator.clipboard.writeText(lines.join('\n')); toast('Lista a fost copiată. O poți lipi în WhatsApp sau Notițe.'); }
+  catch{ toast('Nu am putut copia lista.', true); }
+};
+
+/* ingrediente excluse */
+function openExcl(){ userMenu.hidden = true; renderExcl(); $('#dlgExcl').showModal(); }
+function renderExcl(){
+  $('#exclTags').innerHTML = getExcl().map((x,i) => `<span class="tag">${esc(x)}<button type="button" data-rm="${i}" aria-label="Scoate ${esc(x)}">×</button></span>`).join('');
+}
+$('#btnExcl').onclick = openExcl;
+$('#exclForm').onsubmit = e => { e.preventDefault(); const v = $('#exclIn').value.trim().toLowerCase(); if (!v) return; const l = getExcl(); if (!l.includes(v)) LS.set('appetora_excl', [...l, v]); $('#exclIn').value=''; renderExcl(); renderShop(); };
+$('#exclTags').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; const l = getExcl(); l.splice(+b.dataset.rm,1); LS.set('appetora_excl', l); renderExcl(); renderShop(); });
+
+boot();
 </script>
 </body>
 </html>

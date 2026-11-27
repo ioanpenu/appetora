@@ -1,0 +1,1365 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Appetora</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;--accent:#ff7a17;}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    h1{font-size:24px;margin:0}
+    .btn{padding:.55rem .9rem;border:1px solid var(--border);border-radius:10px;background:#f8fafc;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+    .btn.ghost{background:transparent}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    input,textarea{width:100%;padding:.6rem .7rem;border:1px solid var(--border);border-radius:12px;background:#fff}
+    label{font-size:12px;color:var(--muted)}
+    .grid{display:grid;gap:10px}
+    .recipes{display:grid;gap:8px}
+    .item{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px}
+    .muted{color:var(--muted);font-size:12px}
+    .pill{font-size:11px;border:1px solid var(--border);padding:.15rem .5rem;border-radius:999px;color:var(--muted)}
+    .right{display:flex;gap:6px;align-items:center}
+    .hidden{display:none}
+    dialog{border:none;border-radius:16px;padding:0;max-width:900px;width:calc(100% - 24px)}
+    .dlg{padding:16px}
+    .dlg h3{margin:0 0 8px}
+    .hr{height:1px;background:var(--border);margin:12px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
+    th{color:var(--muted);font-weight:600}
+    /* hero */
+    .hero{display:grid;gap:14px;place-items:start;background:linear-gradient(180deg,#fff,#f6f7fb);border:1px solid var(--border);border-radius:18px;padding:24px}
+    .hero h2{font-size:28px;margin:0}
+    .hero p{margin:0;color:var(--muted)}
+    .hero ul{margin:0;padding-left:1.1rem;color:var(--muted)}
+    /*logo  */
+    h1.brand a {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    h1.brand img {
+      height: 130px;
+      width: auto;
+      display: block;
+      border-radius: 8px;
+    }
+    @media (min-width: 768px){
+      h1.brand img { height: 150px; }
+    }
+    /* meniu */
+    .menubar{display:flex;gap:8px;margin:16px 0 12px}
+    .tabBtn{padding:.45rem .7rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
+    .tabBtn.active{background:var(--accent);color:#fff;border-color:transparent}
+    /* thumb */
+    .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
+    .titleline{display:flex;align-items:center;gap:12px;min-width:0}
+    .titleline .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+    /* uploader */
+    .uploader{border:1px dashed var(--border);border-radius:12px;padding:10px;background:#fff}
+    .uploader .preview{display:flex;align-items:center;gap:10px}
+    .uploader .preview img{width:96px;height:96px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
+    .uploader .actions{display:flex;gap:8px;flex-wrap:wrap}
+    video.preview{width:240px;border-radius:12px;border:1px solid var(--border)}
+    /* paused look */
+    .item.paused{opacity:.65}
+    /* plan tabs */
+    .tabs{display:flex;gap:6px;margin-bottom:8px}
+    .tab{padding:.35rem .6rem;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
+    .tab.active{background:var(--accent);color:#fff;border-color:transparent}
+    /* shopping list curată */
+    .checklist{margin:0;padding:0;list-style:none}
+    .checklist li{margin:4px 0;padding:6px 0;border-bottom:1px dashed var(--border)}
+    .checklist li:last-child{border-bottom:none}
+    .checklist label.item{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+    .checklist input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin-top:2px}
+    .checklist .name{flex:1;line-height:1.45}
+    .checklist .qty{font-size:12px;color:#64748b;white-space:nowrap;margin-left:6px}
+    .checklist label.item.done .name{text-decoration:line-through;color:#94a3b8}
+    /* select manual */
+    .pickRow{display:flex;align-items:center;justify-content:flex-start;gap:10px;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fff}
+    .pickRow input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin:0}
+    .pickRow .thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;border:1px solid var(--border);background:#fff}
+    .pickRow .titleline{flex:1;min-width:0}
+    .pickRow .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pickRow .muted{font-size:12px;color:var(--muted)}
+    .pickList{display:grid;gap:8px;max-height:420px;overflow:auto}
+    .pickHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .help{font-size:12px;color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:.1rem .5rem;color:var(--muted)}
+    /* secțiuni */
+    .section{display:none}
+    .section.active{display:block}
+    /* camera fullscreen (READ) */
+    body.noscroll{overflow:hidden}
+
+    #readCamWrap.overlay{
+      position:fixed; inset:0; z-index:9999;
+      background:rgba(15,23,42,.92); /* slate-900 ~transparent */
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+
+    #readCamWrap.overlay video.preview{
+      width:100%; height:auto; max-height:calc(100vh - 160px);
+      max-width:1000px; border:none; border-radius:16px; object-fit:contain;
+      box-shadow:0 10px 40px rgba(0,0,0,.35);
+    }
+
+    #readCamWrap.overlay .actions{
+      position:fixed; bottom:20px; left:0; right:0;
+      display:flex; gap:10px; justify-content:center;
+    }
+
+    #readCamWrap.overlay .btn{
+      padding:.7rem 1rem; font-size:16px; border-radius:12px;
+    }
+    /* menubar ascuns by default; vizibil doar când userul este autentificat */
+    .menubar{ display:none; }
+    body.auth .menubar{ display:flex; }
+
+    /* (opțional) dacă vrei să fii extra-sigur că nici secțiunile nu apar accidental */
+    .section{ display:none; }
+    body.auth .section.active{ display:block; }
+
+    /* ascunde hero dupa login*/
+    body.auth #hero { display: none !important; }
+
+    /*  visual feedback */
+    .titleline.clickable { cursor:pointer; }
+    .titleline.clickable:hover { background:#f9fafb; border-radius:8px; }
+
+    #dlgView .previewWrap{width:100%;text-align:center;margin-bottom:12px;overflow:hidden;border-radius:18px;}
+    #dlgView .previewImg{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="brand">
+        <a href="/" title="Appetora - Home">
+          <img src="images/logo-appetora_2.PNG" alt="Appetora"/>
+        </a>
+      </h1>
+      <div class="row" style="gap:10px">
+        <div id="authBox" class="row">
+          <span id="hello" class="muted hidden">Hi, <b id="helloName"></b></span>
+          <button id="btnSignin" class="btn">Sign in</button>
+          <button id="btnRegister" class="btn">Register</button>
+          <button id="btnLogout" class="btn hidden">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- HERO (nelogat) -->
+    <section id="hero" class="hero">
+      <h2>Your weekly peek. Your daily pick.</h2>
+      <p>Plan your week in seconds, avoid repeats, and keep your favorite recipes in one place.</p>
+      <ul>
+        <li>Add recipes (now with photos)</li>
+        <li>Generate a 7-day plan from active recipes</li>
+        <li>Pause recipes you don’t want this week</li>
+      </ul>
+      <div id="heroCtas" class="row" style="margin-top:6px">
+        <button id="ctaRegister" class="btn primary">Create a free account</button>
+        <button id="ctaSignin" class="btn">I already have an account</button>
+      </div>
+    </section>
+
+    <!-- MENIU (logat) -->
+    <div id="menu" class="menubar hidden">
+      <button class="tabBtn" data-tab="planner">Planner</button>
+      <button class="tabBtn" data-tab="search">Search Recipe</button>
+      <button class="tabBtn" data-tab="read">Read Recipe</button>
+      <button class="tabBtn" data-tab="add">Add Recipe</button>
+      <button class="tabBtn" data-tab="my">My Recipes</button>
+    </div>
+
+    <!-- PLANNER -->
+    <section id="sec-planner" class="section">
+      <section class="card grid">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <h2 style="margin:0">Planner</h2>
+          <div class="row">
+            <button id="btnPlan" class="btn">Generate weekly plan</button>
+            <button id="btnManual" class="btn">Select recipes manually</button>
+            <button id="btnPlanLatest" class="btn">Open last saved plan</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- SEARCH -->
+    <section id="sec-search" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Search Recipe</h2>
+        <div class="row">
+          <input id="qSearch" placeholder="Search by name, category or ingredient… (min 2 chars)" />
+          <button id="btnSearch" class="btn">Search</button>
+          <span id="searchInfo" class="muted"></span>
+        </div>
+        <div id="searchResults" class="recipes"></div>
+      </section>
+    </section>
+
+    <!-- READ (URL, .txt, Photo) -->
+    <section id="sec-read" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Read Recipe (URL, .txt, or Photo)</h2>
+
+        <!-- URL -->
+        <div class="row">
+          <input id="readUrl" placeholder="Paste a URL to a recipe page"/>
+          <button id="btnReadUrl" class="btn">Read from URL</button>
+        </div>
+
+        <!-- .txt -->
+        <div class="row">
+          <input id="readFile" type="file" accept=".txt" />
+          <button id="btnReadFile" class="btn">Read from file</button>
+        </div>
+
+        <!-- IMAGE (upload / camera) -->
+        <div class="row">
+          <div class="uploader" style="flex:1;min-width:280px">
+            <div class="preview">
+              <img id="readImgPreview" alt="" class="hidden"/>
+              <span id="readImgLabel" class="muted">No image selected</span>
+            </div>
+            <div class="actions" style="margin-top:8px">
+              <input id="readImgFile" type="file" accept="image/*" class="hidden"/>
+              <button id="btnReadChoose" class="btn" type="button">Choose image</button>
+              <button id="btnReadCamera" class="btn" type="button">Take photo</button>
+              <button id="btnReadRemoveImg" class="btn" type="button">Remove</button>
+              <button id="btnReadImage" class="btn primary" type="button">Read from image</button>
+            </div>
+            <div id="readCamWrap" class="hidden" style="margin-top:10px">
+              <video id="readCam" class="preview" autoplay playsinline></video>
+              <div class="actions" style="margin-top:8px">
+                <button id="btnReadSnap" class="btn primary" type="button">Capture</button>
+                <button id="btnReadCloseCam" class="btn" type="button">Close camera</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <span id="readInfo" class="muted"></span>
+
+        <div id="readPreview" class="card hidden" style="margin-top:10px">
+          <h3 style="margin:0 0 8px">Preview (not saved yet)</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label>Name</label>
+              <input id="rName"/>
+            </div>
+            <div style="width:280px;max-width:100%">
+              <label>Category</label>
+              <input id="rCat"/>
+            </div>
+          </div>
+          <div class="row">
+            <div style="flex:1">
+              <label>Ingredients (one per line)</label>
+              <textarea id="rIngr" rows="6"></textarea>
+            </div>
+            <div style="flex:1">
+              <label>Instructions</label>
+              <textarea id="rInstr" rows="6"></textarea>
+            </div>
+          </div>
+          <div class="row">
+            <button id="btnLoadToForm" class="btn" type="button">Load into Add Recipe</button>
+            <button id="btnSaveParsed" class="btn primary" type="button">Save as new recipe</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ADD RECIPE -->
+    <section id="sec-add" class="section">
+      <section class="card grid">
+        <h2 style="margin:0">Add Recipe</h2>
+        <div class="row">
+          <div style="flex:1">
+            <label>Name</label>
+            <input id="fName" placeholder="e.g. Pasta Carbonara"/>
+          </div>
+          <div style="width:280px;max-width:100%">
+            <label>Category</label>
+            <input id="fCat" placeholder="optional"/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div style="flex:1">
+            <label>Ingredients (one per line)</label>
+            <textarea id="fIngr" rows="6" placeholder="spaghetti&#10;eggs&#10;bacon&#10;parmesan"></textarea>
+          </div>
+          <div style="width:360px;max-width:100%">
+            <label>Photo</label>
+            <div class="uploader">
+              <div class="preview">
+                <img id="imgPreview" alt="" class="hidden"/>
+                <span id="imgLabel" class="muted">No image selected</span>
+              </div>
+              <div class="actions" style="margin-top:8px">
+                <input id="fFile" type="file" accept="image/*" class="hidden"/>
+                <button id="btnChoose" class="btn" type="button">Choose image</button>
+                <button id="btnCamera" class="btn" type="button">Take photo</button>
+                <button id="btnRemoveImg" class="btn" type="button">Remove</button>
+              </div>
+              <div id="camWrap" class="hidden" style="margin-top:10px">
+                <video id="cam" class="preview" autoplay playsinline></video>
+                <div class="actions" style="margin-top:8px">
+                  <button id="btnSnap" class="btn primary" type="button">Capture</button>
+                  <button id="btnCloseCam" class="btn" type="button">Close camera</button>
+                </div>
+              </div>
+            </div>
+            <div class="muted">Images are stored securely in the cloud.</div>
+          </div>
+        </div>
+
+        <div>
+          <label>Instructions</label>
+          <textarea id="fInstr" rows="6" placeholder="Steps..."></textarea>
+        </div>
+        <div class="row">
+          <button id="btnSave" class="btn primary" type="button">Save to list</button>
+          <button id="btnClear" class="btn" type="button">Clear</button>
+          <span id="formInfo" class="muted"></span>
+        </div>
+      </section>
+    </section>
+
+    <!-- MY RECIPES -->
+    <section id="sec-my" class="section">
+      <section class="card grid">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <h2 style="margin:0">My Recipes</h2>
+          <span id="count" class="pill">0 recipes</span>
+        </div>
+        <div id="empty" class="muted">No recipes yet. Add one above.</div>
+        <div id="list" class="recipes"></div>
+        <div class="row" style="justify-content:center;margin-top:8px">
+          <button id="btnMore" class="btn hidden" type="button">Show more (+5)</button>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <!-- View dialog -->
+  <dialog id="dlgView"><div class="dlg">
+    <div class="previewWrap">
+      <img id="vwImg" class="previewImg" alt="" onerror="this.style.display='none'"/>
+    </div>
+    <h3 id="vwTitle" style="margin:12px 0 4px"></h3>
+    <div id="vwCat" class="muted" style="margin-bottom:8px"></div>
+    <div class="hr"></div>
+    <div>
+      <h4 style="margin:.2rem 0">Ingredients</h4>
+      <ul id="vwIngr" style="margin:.2rem 0 .6rem 1.2rem"></ul>
+    </div>
+    <div class="hr"></div>
+    <div>
+      <h4 style="margin:.2rem 0">Instructions</h4>
+      <pre id="vwInstr" style="white-space:pre-wrap;margin:0"></pre>
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end">
+      <button class="btn" onclick="dlgView.close()">Close</button>
+    </div>
+  </div></dialog>
+
+  <!-- Weekly plan dialog -->
+  <dialog id="dlgPlan"><div class="dlg">
+    <h3 style="margin:0 0 8px">Weekly plan</h3>
+    <div class="tabs">
+      <button id="tabPlan" class="tab active" type="button">Plan</button>
+      <button id="tabShop" class="tab" type="button">Shopping list</button>
+    </div>
+    <div id="planErr" class="muted"></div>
+    <div class="hr"></div>
+
+    <div id="viewPlan">
+      <div style="overflow:auto">
+        <table id="planTable">
+          <thead><tr><th style="width:140px">Date</th><th>Recipe</th><th style="width:160px">Category</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="viewShop" class="hidden">
+      <ul id="shopList" class="checklist"></ul>
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end">
+      <button class="btn" onclick="dlgPlan.close()">Close</button>
+    </div>
+  </div></dialog>
+
+  <!-- Manual select dialog -->
+  <dialog id="dlgPick"><div class="dlg">
+    <div class="pickHeader">
+      <h3 style="margin:0">Pick up to 7 recipes</h3>
+      <div class="badge"><span id="selCount">0</span> selected / 7 max</div>
+    </div>
+    <div class="row" style="margin:8px 0 6px">
+      <input id="pickQuery" placeholder="Filter by name/category/ingredient…"/>
+      <span class="help">Only active (not paused) recipes are listed.</span>
+    </div>
+    <div id="pickList" class="pickList"></div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end">
+      <button id="btnPickCancel" class="btn" type="button">Cancel</button>
+      <button id="btnPickConfirm" class="btn primary" type="button" disabled>Build plan</button>
+    </div>
+  </div></dialog>
+
+  <!-- Auth dialogs -->
+  <dialog id="dlgSignin"><div class="dlg">
+    <h3>Sign in</h3>
+    <div class="grid">
+      <input id="siEmail" placeholder="email"/>
+      <input id="siPass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doSignin" class="btn primary" type="button">Sign in</button>
+        <button class="btn" type="button" onclick="dlgSignin.close()">Cancel</button>
+      </div>
+      <div id="siErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
+  <dialog id="dlgRegister"><div class="dlg">
+    <h3>Register</h3>
+    <div class="grid">
+      <input id="reEmail" placeholder="email"/>
+      <input id="rePass" type="password" placeholder="password"/>
+      <div class="row">
+        <button id="doRegister" class="btn primary" type="button">Create account</button>
+        <button class="btn" type="button" onclick="dlgRegister.close()">Cancel</button>
+      </div>
+      <div id="reErr" class="muted"></div>
+    </div>
+  </div></dialog>
+
+<script>
+/* ===== helpers ===== */
+const $ = (s)=>document.querySelector(s);
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])) }
+async function api(path, opts={}) {
+  const res = await fetch(path, { credentials:'include', ...opts });
+  const ct = res.headers.get('content-type') || '';
+  const body = ct.includes('application/json') ? await res.json() : await res.text();
+  return { status: res.status, body };
+}
+
+/*=== exclude-ingredients===*/
+const DEFAULT_EXCLUDE_ING = [
+  'salt', 'sea salt', 'himalayan salt', 'sare', 'salz',
+  'pepper', 'black pepper', 'white pepper', 'piper','pfeffer',
+  'sugar','zahar','zucker',
+  'praf de usturoi',
+  'water', 'apa', 'apă',
+  'chilli','boia','paprikapulver',
+  'thymian','cimbru',
+  'busuioc',
+  'bulion','tomatenmark',
+  'oil','ulei', 'öl',
+  'vinegar','otet',
+  'mirodenii',
+  'sos soia',
+  'foi de dafin', 'lorbeerblätter'
+];
+
+/*=== normalizează ingredientul pentru comparare ===*/
+function normIngrLine(s){
+  return String(s||'')
+    .toLowerCase()
+    .replace(/\([^)]*\)/g,' ')
+    .replace(/[.,:;•\-–]/g,' ')
+    .replace(/\b\d+([.,]\d+)?\b/g,' ')
+    .replace(/\b(g|kg|ml|l|tbsp|tsp|linguri|lingura|lingurite|lingurita)\b/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+/*=== obține setul de excluderi: default + localStorage ===*/
+function getExcludeSet(){
+  let custom = [];
+  try{
+    custom = JSON.parse(localStorage.getItem('exclude_ingredients')||'[]');
+    if (!Array.isArray(custom)) custom = [];
+  }catch{}
+  const all = new Set([...DEFAULT_EXCLUDE_ING, ...custom.map(x=>String(x).toLowerCase().trim()).filter(Boolean)]);
+  return all;
+}
+
+/*=== verifică dacă un ingredient trebuie exclus ===*/
+function shouldSkipIngr(normLine){
+  const EX = getExcludeSet();
+  if (!normLine) return true;
+  if (EX.has(normLine)) return true;
+  for (const k of EX){
+    if (normLine.startsWith(k+' ') || normLine.endsWith(' '+k) || normLine.includes(' '+k+' ')) return true;
+  }
+  return false;
+}
+
+/*=== function === normalizare simplă pentru agregare */
+function normSimple(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+
+/* ===== DOM refs ===== */
+const hero = $('#hero'), heroCtas = $('#heroCtas');
+const menu = $('#menu');
+const hello = $('#hello'), helloName = $('#helloName');
+const btnSignin = $('#btnSignin'), btnRegister = $('#btnRegister'), btnLogout = $('#btnLogout');
+const ctaRegister = $('#ctaRegister'), ctaSignin = $('#ctaSignin');
+
+const secPlanner = $('#sec-planner'), secSearch = $('#sec-search'), secRead = $('#sec-read'),
+      secAdd = $('#sec-add'), secMy = $('#sec-my');
+const tabButtons = document.querySelectorAll('.tabBtn');
+
+const listEl = $('#list'), emptyEl = $('#empty'), countEl = $('#count'), btnMore = $('#btnMore');
+const btnPlan = $('#btnPlan'), btnManual = $('#btnManual');
+const btnPlanLatest = document.getElementById('btnPlanLatest');
+const dlgView = $('#dlgView'), dlgPlan = $('#dlgPlan');
+const tabPlan = $('#tabPlan'), tabShop = $('#tabShop');
+const viewPlan = $('#viewPlan'), viewShop = $('#viewShop');
+
+const dlgPick = $('#dlgPick'), pickQuery = $('#pickQuery'),
+      pickList = $('#pickList'), btnPickCancel = $('#btnPickCancel'),
+      btnPickConfirm = $('#btnPickConfirm'), selCountEl = $('#selCount');
+
+const fFile = $('#fFile'), btnChoose = $('#btnChoose'), btnCamera = $('#btnCamera');
+const imgPreview = $('#imgPreview'), imgLabel = $('#imgLabel'), btnRemoveImg = $('#btnRemoveImg');
+const camWrap = $('#camWrap'), cam = $('#cam'), btnSnap = $('#btnSnap'), btnCloseCam = $('#btnCloseCam');
+
+const qSearch = $('#qSearch'), btnSearch = $('#btnSearch'), searchInfo = $('#searchInfo'), searchResults = $('#searchResults');
+
+const readUrl = $('#readUrl'), readFile = $('#readFile'), btnReadUrl = $('#btnReadUrl'), btnReadFile = $('#btnReadFile'),
+      readInfo = $('#readInfo'), readPreview = $('#readPreview'),
+      rName = $('#rName'), rCat = $('#rCat'), rIngr = $('#rIngr'), rInstr = $('#rInstr'),
+      btnLoadToForm = $('#btnLoadToForm'), btnSaveParsed = $('#btnSaveParsed');
+
+const readImgPreview = $('#readImgPreview'), readImgLabel = $('#readImgLabel'),
+      readImgFile = $('#readImgFile'), btnReadChoose = $('#btnReadChoose'),
+      btnReadCamera = $('#btnReadCamera'), btnReadRemoveImg = $('#btnReadRemoveImg'),
+      btnReadImage = $('#btnReadImage'),
+      readCamWrap = $('#readCamWrap'), readCam = $('#readCam'),
+      btnReadSnap = $('#btnReadSnap'), btnReadCloseCam = $('#btnReadCloseCam');
+
+/* ===== State ===== */
+let readImageDataURL = null;
+let readMediaStream = null;
+
+let currentUser = null;
+let editId = null;
+let currentBlobPath = null;
+const imageUrlCache = new Map();
+
+let recipesAll = [];
+let showCount = 0;
+const firstPage = 10, stepPage = 5;
+
+const manualSelected = new Map();
+const MAX_SEL = 7;
+
+/* ===== Auth UI ===== */
+function showLoggedInUI(on){
+  if (on){
+    document.body.classList.add('auth');        // ←<<< controlează menubar-ul
+    hero.classList.add('hidden');
+    heroCtas.classList.add('hidden');
+    menu.classList.remove('hidden');            // ok să rămână; CSS îl guvernează
+    hello.classList.remove('hidden');
+    btnLogout.classList.remove('hidden');
+    btnSignin.classList.add('hidden'); 
+    btnRegister.classList.add('hidden');
+    activateTab('planner');
+    window.scrollTo(0,0);
+  }else{
+    document.body.classList.remove('auth');     // ←<<< ascunde menubar-ul
+    menu.classList.add('hidden');
+    hello.classList.add('hidden');
+    btnLogout.classList.add('hidden');
+    btnSignin.classList.remove('hidden'); 
+    btnRegister.classList.remove('hidden');
+    hero.classList.remove('hidden');
+    heroCtas.classList.remove('hidden');
+    document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
+  }
+}
+
+function activateTab(name){
+  if (!currentUser){ dlgSignin.showModal(); return; }
+  const map = { planner:secPlanner, search:secSearch, read:secRead, add:secAdd, my:secMy };
+  Object.values(map).forEach(el=>el.classList.remove('active'));
+  tabButtons.forEach(b=>b.classList.remove('active'));
+  map[name].classList.add('active');
+  document.querySelector(`.tabBtn[data-tab="${name}"]`).classList.add('active');
+}
+function requireLogin(){
+  if (!currentUser){ dlgSignin.showModal(); return false; }
+  return true;
+}
+tabButtons.forEach(b=>{
+  b.onclick = ()=>{ if (!requireLogin()) return; activateTab(b.getAttribute('data-tab')); };
+});
+
+/* ===== Init Me & Recipes ===== */
+async function loadMe() {
+  const r = await api('/api/auth/me');
+  if (r.status === 200 && r.body && r.body.user) {
+    currentUser = r.body.user;
+    helloName.textContent = currentUser.name || currentUser.email;
+    showLoggedInUI(true);
+    await loadRecipes();
+  } else {
+    currentUser = null;
+    showLoggedInUI(false);
+  }
+}
+async function loadRecipes() {
+  const r = await api('/api/recipes');
+  recipesAll = (r.status === 200 && Array.isArray(r.body)) ? r.body : [];
+  renderRecipesPaged(true);
+}
+
+/* ===== Listare rețete ===== */
+function renderRecipesPaged(reset){
+  if (reset){ showCount = Math.min(recipesAll.length, firstPage); }
+  countEl.textContent = `${recipesAll.length} recipe${recipesAll.length===1?'':'s'}`;
+  if (!recipesAll.length){ emptyEl.style.display='block'; listEl.innerHTML=''; btnMore.classList.add('hidden'); return; }
+  emptyEl.style.display='none';
+
+  const items = recipesAll.slice(0, showCount);
+  listEl.innerHTML = items.map(r=>{
+    const label = r.paused ? 'Resume' : 'Pause';
+    const pausedCls = r.paused ? 'paused' : '';
+    return `
+      <div class="item ${pausedCls}" data-id="${r.id}">
+        <div class="titleline clickable" style="min-width:0" onclick="viewRecipe('${r.id}')">
+          <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+          <div>
+            <div class="name">${esc(r.name)}</div>
+            <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients${r.paused ? ' • ⏸ paused' : ''}</div>
+          </div>
+        </div>
+        <div class="right">
+          <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
+          <button class="btn" onclick="togglePause('${r.id}')">${label}</button>
+          <button class="btn" onclick="delRecipe('${r.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const imgs = listEl.querySelectorAll('img[data-blob]');
+  imgs.forEach(async img=>{
+    const blob = img.getAttribute('data-blob');
+    if (!blob) return;
+    const url = await getImageUrl(blob);
+    if (url) { img.src = url; img.classList.remove('hidden'); }
+  });
+
+  if (showCount < recipesAll.length) btnMore.classList.remove('hidden');
+  else btnMore.classList.add('hidden');
+}
+btnMore.onclick = ()=>{ showCount = Math.min(recipesAll.length, showCount + stepPage); renderRecipesPaged(false); };
+
+/* ===== Search ===== */
+$('#btnSearch').onclick = ()=>{
+  if (!requireLogin()) return;
+  const q = qSearch.value.trim().toLowerCase();
+  if (q.length < 2){ searchResults.innerHTML=''; searchInfo.textContent='Type at least 2 characters.'; return; }
+  const hit = recipesAll.filter(r=>{
+    const hay = [
+      r.name||'',
+      r.category||'',
+      ...(Array.isArray(r.ingredients)? r.ingredients : [])
+    ].join(' \n ').toLowerCase();
+    return hay.includes(q);
+  });
+  searchInfo.textContent = `${hit.length} result${hit.length===1?'':'s'}`;
+  searchResults.innerHTML = hit.map(r => `
+    <div class="item" data-id="${r.id}">
+      <div class="titleline clickable" style="min-width:0" onclick="viewRecipe('${r.id}')">
+        <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+        <div>
+          <div class="name">${esc(r.name)}</div>
+          <div class="muted">${esc(r.category || 'No category')} • ${r.ingredients?.length||0} ingredients</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="btn" onclick="editRecipe('${r.id}');activateTab('add')">Edit</button>
+      </div>
+    </div>
+  `).join('');
+
+  const imgs = searchResults.querySelectorAll('img[data-blob]');
+  imgs.forEach(async img=>{
+    const blob = img.getAttribute('data-blob');
+    const url = blob ? await getImageUrl(blob) : null;
+    if (url) { img.src = url; img.classList.remove('hidden'); }
+  });
+};
+
+/* ===== Read Recipe (URL / .txt / Image) ===== */
+$('#btnReadUrl').onclick = async ()=>{
+  if (!requireLogin()) return;
+  const url = readUrl.value.trim();
+  if (!url){ readInfo.textContent='Please paste a URL.'; return; }
+  readInfo.textContent='Reading…';
+  const r = await api('/api/import', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ url })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read URL'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+$('#btnReadFile').onclick = async ()=>{
+  if (!requireLogin()) return;
+  const f = readFile.files?.[0];
+  if (!f){ readInfo.textContent='Choose a .txt file first.'; return; }
+  const text = await f.text();
+  readInfo.textContent='Parsing…';
+  const r = await api('/api/import', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ text })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to parse'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+
+/* Image upload/camera pentru READ */
+$('#btnReadChoose').onclick = ()=> readImgFile.click();
+readImgFile.onchange = async (e)=>{
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const raw = await fileToDataURL(file);
+  readImageDataURL = await downscaleDataURL(raw, 1280, 1280, 0.82);
+  console.log('image size (KB):', dataURLSizeKB(readImageDataURL));
+  updateReadImagePreview();
+};
+$('#btnReadRemoveImg').onclick = ()=>{
+  readImageDataURL = null;
+  updateReadImagePreview();
+};
+$('#btnReadCamera').onclick = async ()=>{
+  try{
+    readMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }, audio:false });
+    readCam.srcObject = readMediaStream;
+
+    // fullscreen overlay
+    readCamWrap.classList.remove('hidden');
+    readCamWrap.classList.add('overlay');
+    document.body.classList.add('noscroll');
+
+    // încearcă și Fullscreen API (opțional, dacă e permis de browser)
+    if (readCamWrap.requestFullscreen) {
+      try { await readCamWrap.requestFullscreen(); } catch {}
+    }
+  }catch(e){
+    alert('Camera not available: '+e.message);
+  }
+};
+$('#btnReadCloseCam').onclick = async ()=>{
+  if (readMediaStream) readMediaStream.getTracks().forEach(t=>t.stop());
+  readMediaStream = null;
+
+  // ieșire din fullscreen dacă e cazul
+  if (document.fullscreenElement) {
+    try { await document.exitFullscreen(); } catch {}
+  }
+
+  readCamWrap.classList.add('hidden');
+  readCamWrap.classList.remove('overlay');
+  document.body.classList.remove('noscroll');
+};
+$('#btnReadSnap').onclick = async ()=>{
+  if (!readMediaStream) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = readCam.videoWidth; canvas.height = readCam.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(readCam, 0, 0);
+  const raw = canvas.toDataURL('image/jpeg', 0.9);
+  readImageDataURL = await downscaleDataURL(raw, 1280, 1280, 0.82);
+  console.log('image size (KB):', dataURLSizeKB(readImageDataURL));
+  updateReadImagePreview();
+  $('#btnReadCloseCam').click();
+};
+$('#btnReadImage').onclick = async ()=>{
+  if (!requireLogin()) return;
+  if (!readImageDataURL){ readInfo.textContent = 'Select or take a photo first.'; return; }
+  readInfo.textContent='Reading image…';
+  const r = await api('/api/import-image', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ imageData: readImageDataURL })
+  });
+  if (r.status !== 200){ readInfo.textContent = r.body?.error || 'Failed to read image'; readPreview.classList.add('hidden'); return; }
+  applyParsedToPreview(r.body);
+};
+
+function updateReadImagePreview(){
+  if (readImageDataURL){
+    readImgPreview.src = readImageDataURL;
+    readImgPreview.classList.remove('hidden');
+    readImgLabel.textContent = 'Image selected';
+  }else{
+    readImgPreview.removeAttribute('src');
+    readImgPreview.classList.add('hidden');
+    readImgLabel.textContent = 'No image selected';
+  }
+}
+async function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const fr = new FileReader();
+    fr.onload = ()=> resolve(fr.result);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
+async function downscaleDataURL(dataURL, maxW=1280, maxH=1280, quality=0.82){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height, ar = w/h;
+      if (w > maxW) { w = maxW; h = Math.round(w/ar); }
+      if (h > maxH) { h = maxH; w = Math.round(h*ar); }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    img.src = dataURL;
+  });
+}
+function dataURLSizeKB(dataURL){
+  return Math.round(((dataURL||'').length * 3/4) / 1024);
+}
+
+function applyParsedToPreview(obj){
+  rName.value = obj.name || '';
+  rCat.value = obj.category || '';
+  rIngr.value = (obj.ingredients||[]).join('\n');
+  rInstr.value = obj.instructions || '';
+  readInfo.textContent = 'Parsed. You can edit before saving.';
+  readPreview.classList.remove('hidden');
+}
+$('#btnLoadToForm').onclick = ()=>{
+  if (!requireLogin()) return;
+  $('#fName').value = rName.value;
+  $('#fCat').value  = rCat.value;
+  $('#fIngr').value = rIngr.value;
+  $('#fInstr').value= rInstr.value;
+  activateTab('add');
+};
+$('#btnSaveParsed').onclick = async ()=>{
+  if (!requireLogin()) return;
+  const payload = {
+    name: rName.value.trim(),
+    category: rCat.value.trim(),
+    ingredients: rIngr.value.split('\n').map(s=>s.trim()).filter(Boolean),
+    instructions: rInstr.value
+  };
+  if (!payload.name){ readInfo.textContent = 'Name required'; return; }
+  const res = await api('/api/recipes', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.status===201 || res.status===200){
+    readInfo.textContent='Saved.';
+    await loadRecipes();
+    activateTab('my');
+  }else if (res.status===401){
+    readInfo.textContent='Please sign in to save.'; dlgSignin.showModal();
+  }else{
+    readInfo.textContent = res.body?.error || 'Save failed';
+  }
+};
+
+/* ===== Planner Tabs ===== */
+tabPlan.onclick = ()=> setPlanTab(true);
+tabShop.onclick = ()=> setPlanTab(false);
+function setPlanTab(showPlan){
+  tabPlan.classList.toggle('active', showPlan);
+  tabShop.classList.toggle('active', !showPlan);
+  viewPlan.classList.toggle('hidden', !showPlan);
+  viewShop.classList.toggle('hidden', showPlan);
+}
+
+/* ===== Generate plan (auto) ===== */
+btnPlan.onclick = generatePlan;
+async function generatePlan() {
+  if (!requireLogin()) return;
+  const out = await api('/api/plan');
+  const errEl = $('#planErr');
+  const tbody = document.querySelector('#planTable tbody');
+
+  if (out.status !== 200 || !out.body?.plan) {
+    errEl.textContent = out.body?.error || 'Could not generate plan';
+    tbody.innerHTML = '';
+    $('#shopList').innerHTML = '';
+    setPlanTab(true);
+    dlgPlan.showModal();
+    return;
+  }
+  errEl.textContent = '';
+  const plan = out.body.plan;
+
+  tbody.innerHTML = plan.map(p => `
+    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
+  `).join('');
+
+  const r = await api('/api/recipes');
+  const all = Array.isArray(r.body) ? r.body : [];
+  const byId = new Map(all.map(x=>[x.id, x]));
+
+  const counts = new Map();
+  for (const day of plan) {
+    const rec = byId.get(day.recipeId);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr) {
+      const key = normSimple(String(raw));
+      if (!key) continue;
+      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+                 .map(([key,count]) => ({ key, name:key, qty:count }));
+  renderShoppingList(items);
+
+  setPlanTab(true);
+  dlgPlan.showModal();
+}
+
+btnPlanLatest.onclick = async ()=>{
+  if (!requireLogin()) return;
+
+  const out = await api('/api/plan-latest');
+  const errEl = document.getElementById('planErr');
+  const tbody = document.querySelector('#planTable tbody');
+
+  if (out.status !== 200 || !out.body?.plan) {
+    errEl.textContent = out.body?.error || 'No saved plan found.';
+    tbody.innerHTML = '';
+    setPlanTab(true);
+    dlgPlan.showModal();
+    return;
+  }
+
+  // Tabel plan
+  const plan = out.body.plan;
+  errEl.textContent = '';
+  tbody.innerHTML = plan.map(p => `
+    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
+  `).join('');
+
+  // Shopping list
+  const r = await api('/api/recipes');
+  const all = Array.isArray(r.body) ? r.body : [];
+  const byId = new Map(all.map(x=>[x.id, x]));
+
+  const counts = new Map();
+  for (const day of plan) {
+    const rec = byId.get(day.recipeId);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr) {
+      const key = normSimple(raw);
+      if (!key) continue;
+      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+                 .map(([key,count]) => ({ key, name:key, qty:count }));
+  renderShoppingList(items);
+
+  setPlanTab(true);
+  dlgPlan.showModal();
+};
+
+/* ===== Manual select (și SAVE) ===== */
+btnManual.onclick = ()=>{
+  if (!requireLogin()) return;
+  manualSelected.clear();
+  selCountEl.textContent = "0";
+  pickQuery.value = "";
+  renderPickList();
+  dlgPick.showModal();
+};
+pickQuery.addEventListener('input', renderPickList);
+btnPickCancel.onclick = ()=> dlgPick.close();
+
+btnPickConfirm.onclick = async ()=>{
+  const ids = [...manualSelected.entries()]
+                .sort((a,b)=> a[1]-b[1])
+                .map(([id])=>id);
+  const byId = new Map(recipesAll.map(x=>[x.id,x]));
+  const today = new Date();
+  const plan = ids.map((id, idx)=>{
+    const d = new Date(today); d.setDate(today.getDate()+idx);
+    const rec = byId.get(id);
+    return {
+      date: d.toISOString().slice(0,10),
+      recipeId: id,
+      name: rec?.name || '(deleted)',
+      category: rec?.category || null
+    };
+  });
+
+  // Randare tabel
+  const tbody = document.querySelector('#planTable tbody');
+  tbody.innerHTML = plan.map(p => `
+    <tr><td>${esc(p.date)}</td><td>${esc(p.name)}</td><td>${esc(p.category||'')}</td></tr>
+  `).join('');
+  $('#planErr').textContent = '';
+
+  // Shopping list (cu filtrare)
+  const counts = new Map();
+  for (const id of ids){
+    const rec = byId.get(id);
+    const ingr = Array.isArray(rec?.ingredients) ? rec.ingredients : [];
+    for (const raw of ingr){
+      const key = normSimple(String(raw));
+      if (!key) continue;
+      if (shouldSkipIngr(normIngrLine(key))) continue; // filtrare
+      counts.set(key, (counts.get(key)||0) + 1);
+    }
+  }
+  const items = [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+                 .map(([key,count]) => ({ key, name:key, qty:count }));
+  renderShoppingList(items);
+
+  // SAVE în backend
+  const saveRes = await api('/api/plan-save', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ plan })
+  });
+  if (saveRes.status !== 200) {
+    alert(saveRes.body?.error || 'Could not save plan.');
+  }
+
+  setPlanTab(true);
+  dlgPick.close();
+  dlgPlan.showModal();
+};
+function renderPickList(){
+  const q = pickQuery.value.trim().toLowerCase();
+  let arr = recipesAll.filter(r=>!r.paused);
+  if (q.length>=2){
+    arr = arr.filter(r=>{
+      const hay = [ r.name||'', r.category||'', ...(Array.isArray(r.ingredients)? r.ingredients : []) ]
+        .join(' \n ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  pickList.innerHTML = arr.map(r=>{
+    const checked = manualSelected.has(r.id);
+    return `
+      <div class="pickRow">
+        <input type="checkbox" data-id="${r.id}" ${checked?'checked':''}/>
+        <div class="titleline" style="min-width:0">
+          <img data-blob="${r.imageBlob||''}" class="thumb ${r.imageBlob?'':'hidden'}" alt=""/>
+          <div>
+            <div class="name">${esc(r.name)}</div>
+            <div class="muted">${esc(r.category||'No category')} • ${r.ingredients?.length||0} ingredients</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  pickList.querySelectorAll('img[data-blob]').forEach(async img=>{
+    const blob = img.getAttribute('data-blob');
+    const url = blob ? await getImageUrl(blob) : null;
+    if (url){ img.src = url; img.classList.remove('hidden'); }
+  });
+
+  pickList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change',(e)=>{
+      const id = e.target.getAttribute('data-id');
+      if (e.target.checked){
+        if (manualSelected.size >= MAX_SEL){
+          e.target.checked = false;
+          alert('You can select up to 7 recipes.');
+          return;
+        }
+        manualSelected.set(id, Date.now()+Math.random());
+      }else{
+        manualSelected.delete(id);
+      }
+      selCountEl.textContent = String(manualSelected.size);
+      btnPickConfirm.disabled = manualSelected.size === 0;
+    });
+  });
+
+  selCountEl.textContent = String(manualSelected.size);
+  btnPickConfirm.disabled = manualSelected.size === 0;
+}
+
+/* ===== Shopping list (persist check în localStorage) ===== */
+function renderShoppingList(agg){
+  const list = $('#shopList');
+  const saved = JSON.parse(localStorage.getItem('shopping_checked') || '{}');
+
+  list.innerHTML = agg.map(it => `
+    <li>
+      <label class="item ${saved[it.key] ? 'done' : ''}">
+        <input type="checkbox" data-key="${it.key}" ${saved[it.key] ? 'checked' : ''}/>
+        <span class="name">${esc(it.name)}</span>
+        ${it.qty>1?`<span class="qty">×${it.qty}</span>`:''}
+      </label>
+    </li>
+  `).join('');
+
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const key = e.target.getAttribute('data-key');
+      const label = e.target.closest('label.item');
+      if (e.target.checked){ saved[key]=true; label.classList.add('done'); }
+      else { delete saved[key]; label.classList.remove('done'); }
+      localStorage.setItem('shopping_checked', JSON.stringify(saved));
+    });
+  });
+}
+
+/* ===== CRUD rețete ===== */
+async function getImageUrl(blobPath){
+  if (!blobPath) return null;
+  if (imageUrlCache.has(blobPath)) return imageUrlCache.get(blobPath);
+  const r = await api('/api/view-url?blob='+encodeURIComponent(blobPath));
+  const url = (r.status===200 && r.body?.url) ? r.body.url : null;
+  imageUrlCache.set(blobPath, url);
+  return url;
+}
+async function saveRecipe() {
+  if (!requireLogin()) return;
+  const name = $('#fName').value.trim();
+  if (!name) { info('Name required'); return; }
+  const payload = {
+    id: editId || undefined,
+    name,
+    category: $('#fCat').value.trim(),
+    imageBlob: currentBlobPath || null,
+    ingredients: $('#fIngr').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    instructions: $('#fInstr').value
+  };
+  const method = editId ? 'PUT' : 'POST';
+  const r = await api('/api/recipes', {
+    method, headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (r.status===401){ info('Please sign in to save.'); dlgSignin.showModal(); return; }
+  if (r.status===200 || r.status===201) {
+    clearForm(); info(editId?'Updated.':'Saved.');
+    await loadRecipes();
+    activateTab('my');
+  } else {
+    info(r.body?.error || 'Error');
+  }
+}
+async function delRecipe(id) {
+  if (!requireLogin()) return;
+  if (!confirm('Delete recipe?')) return;
+  const r = await api('/api/recipes?id='+encodeURIComponent(id), { method:'DELETE' });
+  if (r.status===200) { await loadRecipes(); activateTab('my'); }
+}
+async function togglePause(id) {
+  if (!requireLogin()) return;
+  const r = await api('/api/recipes');
+  if (r.status !== 200 || !Array.isArray(r.body)) return;
+  const rec = r.body.find(x => x.id === id);
+  if (!rec) return;
+  const upd = await api('/api/recipes', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ id, paused: !rec.paused })
+  });
+  if (upd.status === 200) { await loadRecipes(); }
+}
+async function editRecipe(id) {
+  if (!requireLogin()) return;
+  const r = await api('/api/recipes');
+  if (r.status!==200) return;
+  const rec = (r.body||[]).find(x=>x.id===id);
+  if (!rec) return;
+  editId = rec.id;
+  $('#fName').value = rec.name || '';
+  $('#fCat').value = rec.category || '';
+  $('#fIngr').value = (rec.ingredients||[]).join('\n');
+  $('#fInstr').value = rec.instructions || '';
+  currentBlobPath = rec.imageBlob || null;
+  await updatePreviewFromBlob(currentBlobPath);
+  info('Editing… Save to apply or Clear to cancel.');
+}
+async function viewRecipe(id) {
+  if (!requireLogin()) return;
+  const r = await api('/api/recipes');
+  if (r.status !== 200) return;
+  const rec = (r.body || []).find(x => x.id === id);
+  if (!rec) return;
+
+  const img = document.getElementById('vwImg');
+  if (rec.imageBlob) {
+    const url = await getImageUrl(rec.imageBlob);
+    if (url) { img.src = url; img.style.display='block'; } else { img.removeAttribute('src'); img.style.display='none'; }
+  } else { img.removeAttribute('src'); img.style.display='none'; }
+
+  $('#vwTitle').textContent = rec.name || '';
+  $('#vwCat').textContent = rec.category ? `Category: ${rec.category}` : 'No category';
+
+  const ul = document.getElementById('vwIngr');
+  ul.innerHTML = '';
+  (rec.ingredients || []).forEach(it => {
+    const li = document.createElement('li');
+    li.textContent = String(it);
+    ul.appendChild(li);
+  });
+
+  document.getElementById('vwInstr').textContent = rec.instructions || '';
+
+  dlgView.showModal();
+}
+
+/* ===== Add: upload logic ===== */
+$('#btnSave').onclick = saveRecipe;
+$('#btnClear').onclick = clearForm;
+
+$('#btnChoose').onclick = ()=> fFile.click();
+fFile.onchange = async (e)=>{
+  const file = e.target.files?.[0];
+  if (!file) return;
+  await uploadSelectedFile(file);
+};
+$('#btnRemoveImg').onclick = ()=>{
+  currentBlobPath = null;
+  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
+  imgLabel.textContent = 'No image selected';
+};
+let mediaStream = null;
+$('#btnCamera').onclick = async ()=>{
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio:false });
+    cam.srcObject = mediaStream;
+    camWrap.classList.remove('hidden');
+  }catch(e){ alert('Camera not available: ' + e.message); }
+};
+$('#btnCloseCam').onclick = ()=>{
+  if (mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+  mediaStream = null;
+  camWrap.classList.add('hidden');
+};
+$('#btnSnap').onclick = async ()=>{
+  if (!mediaStream) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = cam.videoWidth; canvas.height = cam.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(cam, 0, 0);
+  canvas.toBlob(async (blob)=>{
+    if (!blob) return;
+    const file = new File([blob], 'photo.jpg', { type: blob.type || 'image/jpeg' });
+    await uploadSelectedFile(file);
+    $('#btnCloseCam').click();
+  }, 'image/jpeg', 0.9);
+};
+async function uploadSelectedFile(file){
+  if (!requireLogin()) return;
+  info('Uploading image...');
+  const up = await api('/api/upload-url', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ filename: file.name || 'image.jpg', contentType: file.type || 'image/jpeg' })
+  });
+  if (up.status !== 200 || !up.body?.uploadUrl) { info('Could not get upload URL'); return; }
+  const putRes = await fetch(up.body.uploadUrl, {
+    method:'PUT',
+    headers:{ 'x-ms-blob-type': 'BlockBlob', 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
+  });
+  if (!putRes.ok) { info('Upload failed'); return; }
+  currentBlobPath = up.body.blobPath;
+  await updatePreviewFromBlob(currentBlobPath);
+  info('Image uploaded.');
+}
+async function updatePreviewFromBlob(blobPath){
+  if (!blobPath) {
+    imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
+    imgLabel.textContent = 'No image selected';
+    return;
+  }
+  const url = await getImageUrl(blobPath);
+  if (url){
+    imgPreview.src = url; imgPreview.classList.remove('hidden');
+    imgLabel.textContent = blobPath.split('/').slice(-1)[0];
+  }else{
+    imgPreview.classList.add('hidden'); imgLabel.textContent='No image selected';
+  }
+}
+function clearForm(){
+  editId = null;
+  $('#fName').value=''; $('#fCat').value='';
+  $('#fIngr').value=''; $('#fInstr').value='';
+  currentBlobPath = null;
+  imgPreview.classList.add('hidden'); imgPreview.removeAttribute('src');
+  imgLabel.textContent = 'No image selected';
+  info('');
+}
+function info(t){ $('#formInfo').textContent = t; }
+
+/* ===== Auth ===== */
+btnSignin.onclick = ()=> dlgSignin.showModal();
+btnRegister.onclick = ()=> dlgRegister.showModal();
+ctaRegister.onclick = ()=> dlgRegister.showModal();
+ctaSignin .onclick = ()=> dlgSignin.showModal();
+
+$('#doSignin').onclick = async ()=>{
+  $('#siErr').textContent='';
+  const email = $('#siEmail').value.trim(), password = $('#siPass').value;
+  const r = await api('/api/auth/login',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
+  if (r.status===200) {
+    dlgSignin.close();
+    await loadMe();            // setează currentUser și ascunde hero
+    activateTab('planner');    // ← mergi direct pe Planner
+    window.scrollTo(0,0);      // ← opțional, sus de tot
+  } else {
+    $('#siErr').textContent = r.body?.error || 'Sign in failed';
+  }
+};
+
+$('#doRegister').onclick = async ()=>{
+  $('#reErr').textContent='';
+  const email = $('#reEmail').value.trim(), password = $('#rePass').value;
+  const r = await api('/api/auth/register',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
+  if (r.status===200) {
+    dlgRegister.close();
+    await loadMe();
+    activateTab('planner');    // ← sari direct în Planner
+    window.scrollTo(0,0);
+  } else {
+    $('#reErr').textContent = r.body?.error || 'Register failed';
+  }
+};
+btnLogout.onclick = async ()=>{
+  await api('/api/auth/logout', { method:'POST' });
+  await loadMe();
+};
+
+/* ===== Start ===== */
+loadMe();
+</script>
+</body>
+</html>
