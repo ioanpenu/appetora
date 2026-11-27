@@ -24,6 +24,7 @@ recipes = [
     R('9', 'Clătite cu brânză', 'Desert', ['2 ouă', '250 ml lapte', '150 g făină', '250 g brânză dulce', 'zahăr'], 6),
     R('10', 'Mici la grătar', 'Grătar', ['1 kg carne mixtă', 'usturoi', 'cimbru', 'bicarbonat'], 7),
 ]
+bring = {}  # listele trimise spre Bring!
 settings = {}  # documentul de setări al userului
 plans = []  # planurile salvate, ca pe server (history/manual_plan)
 IMPORTED = {'name': 'Zacuscă de casă', 'category': 'Conserve',
@@ -87,6 +88,13 @@ class H(BaseHTTPRequestHandler):
                         if k in b: settings[k] = b[k]
                     settings['updatedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()) + str(time.time())
                 return self.send(200, {'settings': settings or None})
+            if p == '/api/bring-list' and m == 'POST':
+                b = self.body(); bid = 'test' + str(int(time.time()*1000)) + 'abcdefghij'
+                bring[bid] = b
+                host = self.headers.get('host')
+                url = f'http://{host}/api/bring-list?id={bid}'
+                from urllib.parse import quote
+                return self.send(200, {'id': bid, 'url': url, 'deeplink': 'https://api.getbring.com/rest/bringrecipes/deeplink?url=' + quote(url, safe='') + '&source=web&baseQuantity=4&requestedQuantity=4'})
             if p == '/api/usage/today': return self.send(200, {'calls': 2})
             if p in ('/api/import-image', '/api/import'):
                 self.body(); time.sleep(0.6); return self.send(200, IMPORTED)
