@@ -248,6 +248,59 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .toast.err{background:var(--danger)}
 @media (max-width:760px){.toast{bottom:calc(var(--nav-h) + 16px)}}
 
+/* vegetarian */
+:root{--leaf:#3C7A4E}
+.veg{display:inline-flex;align-items:center;gap:4px;color:var(--leaf);font-weight:600}
+.veg svg{width:15px;height:15px}
+.tag-veg{position:absolute;right:10px;top:10px;background:var(--paper);color:var(--leaf);border-radius:999px;width:30px;height:30px;display:grid;place-items:center}
+.tag-veg svg{width:18px;height:18px}
+.vegdays{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-6px 0 18px}
+.vegdays .lbl{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:14px;color:var(--ink-2);margin-right:4px}
+.vegdays .lbl svg{width:18px;height:18px;color:var(--leaf)}
+.vd{min-width:40px;height:34px;padding:0 8px;border-radius:999px;border:1.5px solid var(--line);background:var(--paper);font-weight:600;font-size:13px;cursor:pointer}
+.vd[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.day-veg{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--leaf);margin-top:2px}
+.day-veg svg{width:14px;height:14px}
+@media (max-width:760px){.day-veg span{display:none}.vegdays .lbl{width:100%}.vd{min-width:38px;padding:0 4px}}
+.switches{display:flex;flex-direction:column;gap:8px}
+
+/* modul de gătit */
+dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:none;margin:0;border-radius:0;box-shadow:none}
+.cook{display:flex;flex-direction:column;height:100%}
+.cook-top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cook-top h2{font-size:clamp(20px,3vw,28px);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cook-tabs{display:none}
+.cook-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(260px,340px) 1fr}
+.cook-ingr{overflow:auto;padding:20px;background:var(--sage)}
+.cook-ingr h3{font-size:22px;margin-bottom:8px}
+.cook-ingr .ingr li{font-size:18px;padding:10px 0}
+.cook-ingr .ingr input{width:22px;height:22px}
+.cook-step{overflow:auto;padding:28px clamp(20px,5vw,72px);display:flex;flex-direction:column;gap:20px;touch-action:pan-y}
+.cook-n{font-size:14px;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.cook-text{font-size:clamp(22px,3.2vw,34px);line-height:1.45;max-width:34ch;margin:0}
+.cook-tm{display:flex;gap:8px;flex-wrap:wrap}
+.cook-next{margin:auto 0 0;font-size:15px;max-width:60ch}
+.cook-foot{display:flex;gap:10px;align-items:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.cook-foot .btn{min-height:54px;flex:1;max-width:280px;font-size:16px}
+.cook-foot .wake-note{flex:1;text-align:center;font-size:13px;color:var(--muted)}
+.timers{display:flex;gap:6px;flex-wrap:wrap}
+.timer{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border-radius:999px;padding:4px 4px 4px 14px;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.timer.done{background:var(--gold);animation:pulse 1s ease-in-out infinite}
+.timer button{border:0;background:rgba(255,255,255,.18);color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+.timer button svg{width:16px;height:16px}
+@keyframes pulse{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){.timer.done{animation:none}}
+@media (max-width:760px){
+  .cook-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--sage);border-radius:999px;padding:4px;margin:10px 16px 0}
+  .cook-tabs button{border:0;background:none;padding:9px;border-radius:999px;font-weight:600;cursor:pointer}
+  .cook-tabs button[aria-selected="true"]{background:var(--paper);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .cook-body{grid-template-columns:1fr}
+  .cook-ingr{background:none}
+  .cook[data-tab="steps"] .cook-ingr,.cook[data-tab="ingr"] .cook-step{display:none}
+  .cook-step{padding:22px 20px}
+  .cook-foot .wake-note{display:none}
+}
+
 .loading-page{display:grid;place-items:center;min-height:60vh}
 .loading-page .spinner{border-color:var(--line);border-top-color:var(--ink);width:28px;height:28px}
 </style>
@@ -273,6 +326,9 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
   <symbol id="i-dish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 17h18M5 17a7 7 0 0 1 14 0M12 8V6M10 6h4"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z"/><path d="M5 19 13 11"/></symbol>
+  <symbol id="i-pot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M2 10h2M20 10h2M9 6c0-1 1-1 1-2M13 6c0-1 1-1 1-2"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7M8 20v-6h8v6"/></symbol>
 </svg>
 
@@ -345,6 +401,7 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
         <button class="btn primary" id="btnGen" type="button"><svg><use href="#i-shuffle"/></svg>Generează meniul</button>
       </div>
     </div>
+    <div class="vegdays" id="vegDays" role="group" aria-label="Zile vegetariene"></div>
     <div class="planner-layout">
       <div class="week" id="week"></div>
       <div class="panel" id="shopPanel">
@@ -399,7 +456,10 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
         <div class="field"><label for="fIngr">Ingrediente</label><textarea class="input" id="fIngr" placeholder="500 g carne tocată&#10;1 ceapă&#10;2 morcovi"></textarea><span class="hint">Câte un ingredient pe rând.</span></div>
         <div class="field"><label for="fInstr">Mod de preparare</label><textarea class="input" id="fInstr" style="min-height:220px" placeholder="Fiecare pas pe un rând nou."></textarea></div>
         <div class="form-foot">
-          <label class="switch"><input type="checkbox" id="fPaused"/> Nu o pune în meniul generat</label>
+          <div class="switches">
+            <label class="switch"><input type="checkbox" id="fVeg"/> <span class="veg"><svg><use href="#i-leaf"/></svg>Vegetariană</span> <span class="hint" id="fVegHint"></span></label>
+            <label class="switch"><input type="checkbox" id="fPaused"/> Nu o pune în meniul generat</label>
+          </div>
           <div class="actions">
             <button class="btn quiet" type="button" id="btnCancel">Renunță</button>
             <button class="btn primary" type="submit" id="btnSaveRec"><svg><use href="#i-check"/></svg>Salvează rețeta</button>
@@ -450,6 +510,7 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
       <div><h3>Preparare</h3><ol class="steps" id="rvSteps"></ol></div>
     </div>
     <div class="rv-foot">
+      <button class="btn primary" type="button" id="rvCook"><svg><use href="#i-pot"/></svg>Gătește</button>
       <button class="btn" type="button" id="rvEdit"><svg><use href="#i-edit"/></svg>Editează</button>
       <button class="btn" type="button" id="rvPause"></button>
       <button class="btn quiet danger" type="button" id="rvDel" style="margin-left:auto">Șterge</button>
@@ -476,6 +537,35 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
     <p class="muted" style="margin:0">Nu apar în lista de cumpărături. De exemplu sare, piper, ulei.</p>
     <form id="exclForm" style="display:flex;gap:8px"><input class="input" id="exclIn" placeholder="ex. oțet" aria-label="Ingredient"/><button class="btn primary" type="submit">Adaugă</button></form>
     <div class="tag-list" id="exclTags"></div>
+  </div>
+</dialog>
+
+<!-- modul de gătit -->
+<dialog id="dlgCook" aria-labelledby="cookName">
+  <div class="cook" id="cook" data-tab="steps">
+    <div class="cook-top">
+      <button class="btn icon-btn" type="button" id="cookClose" aria-label="Ieși din modul de gătit"><svg><use href="#i-x"/></svg></button>
+      <h2 id="cookName"></h2>
+      <div class="timers" id="cookTimers" aria-live="polite"></div>
+    </div>
+    <div class="cook-tabs" role="tablist">
+      <button type="button" role="tab" data-ctab="ingr" aria-selected="false" id="cookTabIngr">Ingrediente</button>
+      <button type="button" role="tab" data-ctab="steps" aria-selected="true">Pași</button>
+    </div>
+    <div class="cook-body">
+      <aside class="cook-ingr"><h3>Ingrediente</h3><ul class="ingr" id="cookIngr"></ul></aside>
+      <section class="cook-step" id="cookStep" aria-live="polite">
+        <div class="cook-n" id="cookN"></div>
+        <p class="cook-text" id="cookText"></p>
+        <div class="cook-tm" id="cookTm"></div>
+        <p class="cook-next muted" id="cookNext"></p>
+      </section>
+    </div>
+    <div class="cook-foot">
+      <button class="btn" type="button" id="cookPrev">Înapoi</button>
+      <span class="wake-note" id="cookWake"></span>
+      <button class="btn primary" type="button" id="cookNextBtn">Pasul următor</button>
+    </div>
   </div>
 </dialog>
 
@@ -546,6 +636,7 @@ const S = {
   editId: null,
   photoBlob: null,    // blobPath poza mâncării
   pickDay: -1,
+  settings: { excl:null, vegDays:[], shopChecked:{} },   // sincronizate prin /api/settings
 };
 const imgCache = new Map();
 async function imgUrl(blob){
@@ -619,7 +710,7 @@ async function boot(){
     const nm = S.user.name && S.user.name !== S.user.email ? S.user.name : S.user.email.split('@')[0];
     $('#avatarBtn').textContent = nm.charAt(0).toUpperCase();
     $('#whoName').textContent = nm; $('#whoEmail').textContent = S.user.email;
-    await loadRecipes();
+    await Promise.all([loadRecipes(), loadSettings()]);
     await loadWeek();
   }
   route();
@@ -637,13 +728,32 @@ async function loadRecipes(){
 const hay = r => [r.name, r.category, ...(r.ingredients||[])].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
 
+/* vegetarian: ales de user (true/false) sau detectat din nume și ingrediente (fără carne și pește) */
+const MEAT = ['carne','carnea','carnati','carnat','carnaciori','pui','puiul','gaina','porc','porcului','vita','vitel','miel','berbec','curcan','rata','gasca','iepure','vanat','mistret','caprioara',
+  'peste','pestele','ton','somon','pastrav','crap','salau','stiuca','macrou','hering','sardine','sardina','scrumbie','hamsii','ansoa','cod','calcan','dorada','biban','creveti','calamar','calamari','midii','scoici','caracatita','fructe de mare','icre',
+  'sunca','bacon','slanina','costita','afumatura','afumaturi','ciolan','crenvursti','crenvurst','salam','parizer','kaizer','pancetta','guanciale','prosciutto','chorizo','pastrama',
+  'ficat','ficatei','pipote','rinichi','maduva','oase','zgarda','mititei','piept','aripi','aripioare','cotlet','cotlete','antricot','muschi','muschiulet','fleica','untura','jumari','gelatina','drob','burta','snitel',
+  'chicken','beef','pork','ham','fish','tuna','salmon','shrimp','prawns','lamb','turkey','sausage','meat','anchovies'];
+const MEAT_RE = new RegExp('(^|[^a-z])(' + MEAT.map(w => w.replace(/ /g,'\\s+')).join('|') + ')([^a-z]|$)');
+const VEG_NAME_RE = /(^|[^a-z])(vegetarian[a-z]*|vegan[a-z]*|de post|fara carne|de legume)([^a-z]|$)/;
+const vegCache = new WeakMap();
+function autoVeg(r){
+  if (vegCache.has(r)) return vegCache.get(r);
+  const name = norm(r.name || '');
+  const v = VEG_NAME_RE.test(name) || !MEAT_RE.test(norm([name, ...(r.ingredients||[])].join(' \n ')));
+  vegCache.set(r, v); return v;
+}
+const isVeg = r => !!r && (typeof r.vegetarian === 'boolean' ? r.vegetarian : autoVeg(r));
+const VEG_ICON = '<svg><use href="#i-leaf"/></svg>';
+
 function cardHtml(r){
   const ph = `<div class="ph">${esc((r.name||'?').charAt(0).toUpperCase())}</div>`;
   return `<button class="card ${r.paused?'paused':''}" type="button" data-open="${esc(r.id)}">
-    <div class="card-photo" ${r.imageBlob?`data-blob="${esc(r.imageBlob)}"`:''}>${ph}${r.paused?'<span class="tag-paused">Scoasă din meniu</span>':''}</div>
+    <div class="card-photo" ${r.imageBlob?`data-blob="${esc(r.imageBlob)}"`:''}>${ph}${r.paused?'<span class="tag-paused">Scoasă din meniu</span>':''}${isVeg(r)?`<span class="tag-veg" title="Vegetariană" aria-label="Vegetariană">${VEG_ICON}</span>`:''}</div>
     <div class="card-body"><span class="card-title">${esc(r.name)}</span><span class="card-meta">${esc(r.category || 'Fără categorie')}, ${(r.ingredients||[]).length} ingrediente</span></div>
   </button>`;
 }
+const VEG_CAT = '__veg';
 function renderRecipes(){
   const total = S.recipes.length;
   $('#recCount').textContent = total ? `${total} ${total===1?'rețetă':'rețete'}, ${S.recipes.filter(r=>r.paused).length} scoase din meniul generat` : '';
@@ -651,14 +761,16 @@ function renderRecipes(){
   const counts = {};
   S.recipes.forEach(r => { const c = (r.category||'').trim() || 'Fără categorie'; counts[c] = (counts[c]||0) + 1; });
   const cats = Object.keys(counts).sort((a,b)=>a.localeCompare(b,'ro'));
-  if (S.cat && !counts[S.cat]) S.cat = null;
+  const nVeg = S.recipes.filter(isVeg).length;
+  if (S.cat && S.cat !== VEG_CAT && !counts[S.cat]) S.cat = null;
   $('#chips').innerHTML = total ? [`<button class="chip" type="button" data-cat="" aria-pressed="${!S.cat}">Toate<span class="n">${total}</span></button>`,
+    nVeg ? `<button class="chip" type="button" data-cat="${VEG_CAT}" aria-pressed="${S.cat===VEG_CAT}"><span class="veg" style="color:inherit">${VEG_ICON}Vegetariene</span><span class="n">${nVeg}</span></button>` : '',
     ...cats.map(c => `<button class="chip" type="button" data-cat="${esc(c)}" aria-pressed="${S.cat===c}">${esc(c)}<span class="n">${counts[c]}</span></button>`)].join('') : '';
 
   const q = norm($('#q').value);
   const showP = $('#showPaused').checked;
   const list = S.recipes.filter(r => (showP || !r.paused)
-    && (!S.cat || ((r.category||'').trim() || 'Fără categorie') === S.cat)
+    && (!S.cat || (S.cat === VEG_CAT ? isVeg(r) : ((r.category||'').trim() || 'Fără categorie') === S.cat))
     && (!q || hay(r).includes(q)));
 
   const grid = $('#recGrid'), empty = $('#recEmpty');
@@ -669,7 +781,7 @@ function renderRecipes(){
     empty.innerHTML = `<div class="empty"><h2>Caietul e încă gol</h2><p class="muted">Începe cu rețetele pe care le gătești cel mai des. Cel mai repede e să fotografiezi pagina din carte.</p><a class="btn primary" href="#add"><svg><use href="#i-cam"/></svg>Adaugă prima rețetă</a></div>`;
   } else if (!list.length){
     empty.hidden = false;
-    empty.innerHTML = `<div class="empty"><p class="muted">Nicio rețetă nu se potrivește cu „${esc($('#q').value)}”${S.cat?` în ${esc(S.cat)}`:''}.</p><button class="btn" type="button" id="clrF">Șterge filtrele</button></div>`;
+    empty.innerHTML = `<div class="empty"><p class="muted">Nicio rețetă nu se potrivește cu „${esc($('#q').value)}”${S.cat?` în ${esc(S.cat===VEG_CAT?'Vegetariene':S.cat)}`:''}.</p><button class="btn" type="button" id="clrF">Șterge filtrele</button></div>`;
     $('#clrF').onclick = () => { $('#q').value=''; S.cat=null; renderRecipes(); };
   } else empty.hidden = true;
 }
@@ -679,13 +791,15 @@ $('#chips').addEventListener('click', e => { const b = e.target.closest('[data-c
 document.addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) openRecipe(b.dataset.open); });
 
 /* --- vizualizare --- */
+const stepsOf = r => String(r.instructions||'').split(/\n+/).map(s => s.replace(/^\s*(\d+[.)]|[-•*])\s*/,'').trim()).filter(Boolean);
 let rvId = null;
 async function openRecipe(id){
   const r = S.byId.get(id); if (!r) return;
   rvId = id;
-  $('#rvName').textContent = r.name; $('#rvCat').textContent = r.category || '';
+  $('#rvName').textContent = r.name;
+  $('#rvCat').innerHTML = [esc(r.category || ''), isVeg(r) ? `<span class="veg">${VEG_ICON}Vegetariană</span>` : ''].filter(Boolean).join(' · ');
   $('#rvIngr').innerHTML = (r.ingredients||[]).map((x,i) => `<li><input type="checkbox" id="ri${i}"/><label for="ri${i}">${esc(x)}</label></li>`).join('') || '<li class="muted">Fără ingrediente.</li>';
-  const steps = String(r.instructions||'').split(/\n+/).map(s => s.replace(/^\s*(\d+[.)]|[-•*])\s*/,'').trim()).filter(Boolean);
+  const steps = stepsOf(r);
   $('#rvSteps').innerHTML = steps.map(s => `<li>${esc(s)}</li>`).join('') || '<li class="muted">Fără instrucțiuni.</li>';
   $('#rvPause').innerHTML = r.paused ? '<svg><use href="#i-shuffle"/></svg>Pune-o înapoi în meniu' : '<svg><use href="#i-pause"/></svg>Scoate-o din meniul generat';
   const ph = $('#rvPhoto'); ph.style.backgroundImage = ''; ph.hidden = !r.imageBlob;
@@ -721,9 +835,17 @@ function setPhoto(blob){
   $('#btnPhotoDel').hidden = !blob; $('#btnPhotoPick').textContent = blob ? 'Schimbă poza' : 'Alege o poză';
   if (blob) imgUrl(blob).then(u => { if (u && S.photoBlob === blob){ pv.style.backgroundImage = `url("${u}")`; pv.innerHTML = ''; } });
 }
+function vegFormSync(){
+  const auto = autoVeg({ name: $('#fName').value, ingredients: $('#fIngr').value.split('\n') });
+  if (!S.vegTouched) $('#fVeg').checked = auto;
+  $('#fVegHint').textContent = S.vegTouched ? (auto === $('#fVeg').checked ? '' : '(ales de tine)') : '(detectat din ingrediente)';
+}
+$('#fVeg').addEventListener('change', () => { S.vegTouched = true; vegFormSync(); });
+$('#fIngr').addEventListener('input', vegFormSync);
+$('#fName').addEventListener('input', vegFormSync);
 function resetForm(){
-  S.editId = null;
-  $('#recForm').reset(); setPhoto(null);
+  S.editId = null; S.vegTouched = false;
+  $('#recForm').reset(); setPhoto(null); vegFormSync();
   $('#addTitle').textContent = 'Rețetă nouă';
   $('#addSub').textContent = 'Scrie-o de mână sau las-o pe Appetora să o citească dintr-o poză, un link sau un text.';
   $('#importBox').hidden = false;
@@ -734,6 +856,7 @@ function editRecipe(id){
   $('#fName').value = r.name || ''; $('#fCat').value = r.category || '';
   $('#fIngr').value = (r.ingredients||[]).join('\n'); $('#fInstr').value = r.instructions || '';
   $('#fPaused').checked = !!r.paused; setPhoto(r.imageBlob);
+  S.vegTouched = typeof r.vegetarian === 'boolean'; $('#fVeg').checked = isVeg(r); vegFormSync();
   $('#addTitle').textContent = 'Editează rețeta'; $('#addSub').textContent = r.name;
   $('#importBox').hidden = true;
   if (location.hash === '#add') show('add'); else location.hash = 'add';
@@ -748,7 +871,8 @@ $('#recForm').onsubmit = async e => {
     ingredients: $('#fIngr').value.split('\n').map(s=>s.trim()).filter(Boolean),
     instructions: $('#fInstr').value.trim(),
     imageBlob: S.photoBlob || '',
-    paused: $('#fPaused').checked
+    paused: $('#fPaused').checked,
+    vegetarian: S.vegTouched ? $('#fVeg').checked : null
   };
   const btn = $('#btnSaveRec'); btn.disabled = true;
   const r = S.editId ? await api('/api/recipes', { method:'PUT', json:{ id:S.editId, ...payload } })
@@ -785,6 +909,7 @@ function fillFromImport(o){
   if (o.category) $('#fCat').value = o.category;
   if (o.ingredients?.length) $('#fIngr').value = o.ingredients.join('\n');
   if (o.instructions) $('#fInstr').value = o.instructions;
+  vegFormSync();
   toast('Gata. Verifică formularul și salvează.');
   $('#fName').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center' });
   loadUsage();
@@ -843,7 +968,7 @@ function weekFromServer(body){
   const plan = body.plan;
   const prevLocks = new Map((S.week || []).filter(d => d.locked).map(d => [d.date + '|' + d.recipeId, true]));
   S.week = freshWeek(parseIso(plan[0].date));
-  plan.forEach(p => { const d = S.week.find(x => x.date === p.date); if (d && S.byId.has(p.recipeId)){ d.recipeId = p.recipeId; d.locked = prevLocks.has(d.date + '|' + p.recipeId); } });
+  plan.forEach(p => { const d = S.week.find(x => x.date === p.date); if (d && S.byId.has(p.recipeId)){ d.recipeId = p.recipeId; d.locked = typeof p.locked === 'boolean' ? p.locked : prevLocks.has(d.date + '|' + p.recipeId); } });
   S.savedAt = body.createdAt; S.savedId = body.id || null; S.editedAt = null; S.dirty = false;
 }
 async function fetchServerPlan(){
@@ -886,35 +1011,47 @@ function persistWeek(dirty){
 }
 function lastPlanIds(){ return new Set(LS.get('appetora_prev_' + (S.user?.email||''), [])); }
 
+const vegDaySet = () => new Set(S.settings.vegDays || []);
+const isVegDay = (d, set = vegDaySet()) => set.has(parseIso(d.date).getDay());
 function generate(){
   const active = S.recipes.filter(r => !r.paused);
   if (!active.length){ toast(S.recipes.length ? 'Toate rețetele sunt scoase din meniu. Pune câteva înapoi.' : 'Adaugă întâi câteva rețete.', true); return; }
   // dacă planul e din trecut, mută-l pe săptămâna curentă păstrând zilele blocate
   const today = iso(new Date());
   if (S.week[0].date !== today && !S.week.some(d => d.locked)) S.week = freshWeek();
-  const locked = new Set(S.week.filter(d => d.locked && d.recipeId).map(d => d.recipeId));
+  const vds = vegDaySet();
+  const used = new Set(S.week.filter(d => d.locked && d.recipeId).map(d => d.recipeId));
   const prev = lastPlanIds();
-  // întâi rețetele care nu au fost în planul anterior, apoi restul
-  const fresh = shuffle(active.filter(r => !locked.has(r.id) && !prev.has(r.id)));
-  const older = shuffle(active.filter(r => !locked.has(r.id) && prev.has(r.id)));
-  let pool = [...fresh, ...older];
-  // evită aceeași categorie în zile consecutive, cât se poate
-  S.week.forEach((d, i) => {
-    if (d.locked && d.recipeId) return;
-    if (!pool.length) pool = shuffle(active.filter(r => !locked.has(r.id)));
-    if (!pool.length){ d.recipeId = null; return; }
-    const prevCat = S.byId.get(S.week[i-1]?.recipeId)?.category;
-    let k = pool.findIndex(r => !prevCat || r.category !== prevCat);
-    if (k < 0) k = 0;
-    d.recipeId = pool.splice(k,1)[0].id;
+  const todo = S.week.map((d, i) => i).filter(i => !(S.week[i].locked && S.week[i].recipeId));
+  todo.forEach(i => S.week[i].recipeId = null);
+  // zilele vegetariene primele, ca să nu le „consume” celelalte zile rețetele vegetariene
+  todo.sort((a, b) => isVegDay(S.week[b], vds) - isVegDay(S.week[a], vds));
+  let missVeg = 0;
+  todo.forEach(i => {
+    const d = S.week[i], needVeg = isVegDay(d, vds);
+    const tiers = needVeg
+      ? [r => !used.has(r.id) && isVeg(r), r => isVeg(r), r => !used.has(r.id), () => true]
+      : [r => !used.has(r.id), () => true];
+    let cand = [];
+    for (const t of tiers){ cand = active.filter(t); if (cand.length) break; }
+    // preferă rețetele care nu au fost în planul anterior și o altă categorie decât zilele vecine
+    const nb = new Set([i-1, i+1].map(j => S.byId.get(S.week[j]?.recipeId)?.category).filter(Boolean));
+    const score = r => (prev.has(r.id) ? 2 : 0) + (r.category && nb.has(r.category) ? 1 : 0);
+    const pick = shuffle(cand).sort((x, y) => score(x) - score(y))[0];
+    d.recipeId = pick.id; used.add(pick.id);
+    if (needVeg && !isVeg(pick)) missVeg++;
   });
   persistWeek(true); renderPlan(true);
-  toast(active.length < 7 ? `Ai doar ${active.length} rețete active, așa că unele se repetă.` : 'Meniul e gata. Blochează ce-ți place și generează din nou restul.');
+  if (missVeg) toast(`Nu ai destule rețete vegetariene active: ${missVeg} ${missVeg===1?'zi vegetariană a primit':'zile vegetariene au primit'} altceva.`, true);
+  else toast(active.length < 7 ? `Ai doar ${active.length} rețete active, așa că unele se repetă.` : 'Meniul e gata. Blochează ce-ți place și generează din nou restul.');
 }
 function swapDay(i){
   const used = new Set(S.week.map(d => d.recipeId));
-  let cand = S.recipes.filter(r => !r.paused && !used.has(r.id));
-  if (!cand.length) cand = S.recipes.filter(r => !r.paused && r.id !== S.week[i].recipeId);
+  const needVeg = isVegDay(S.week[i]);
+  const ok = r => !r.paused && (!needVeg || isVeg(r));
+  let cand = S.recipes.filter(r => ok(r) && !used.has(r.id));
+  if (!cand.length) cand = S.recipes.filter(r => ok(r) && r.id !== S.week[i].recipeId);
+  if (!cand.length && needVeg) return toast('Nu mai sunt alte rețete vegetariene active.', true);
   if (!cand.length) return toast('Nu mai sunt alte rețete active.', true);
   S.week[i].recipeId = cand[Math.floor(Math.random()*cand.length)].id;
   persistWeek(true); renderPlan(false, i);
@@ -925,19 +1062,35 @@ function dayLabel(dateStr){
   const name = dateStr === t ? 'Azi' : dateStr === iso(tm) ? 'Mâine' : DAYS[d.getDay()];
   return { name, date: `${d.getDate()} ${MONTHS[d.getMonth()]}`, full: `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}` };
 }
+const VD_ORDER = [1,2,3,4,5,6,0], VD_SHORT = ['D','L','Ma','Mi','J','V','S'];
+function renderVegDays(){
+  const set = vegDaySet();
+  $('#vegDays').innerHTML = `<span class="lbl">${VEG_ICON}Zile vegetariene</span>` + VD_ORDER.map(n =>
+    `<button class="vd" type="button" data-vd="${n}" aria-pressed="${set.has(n)}" aria-label="${DAYS[n]}" title="${DAYS[n]}">${VD_SHORT[n]}</button>`).join('');
+}
+$('#vegDays').addEventListener('click', e => {
+  const b = e.target.closest('[data-vd]'); if (!b) return;
+  const set = vegDaySet(), n = +b.dataset.vd;
+  if (set.has(n)) set.delete(n); else set.add(n);
+  saveSettings({ vegDays: [...set].sort() }); renderPlan();
+  toast(set.has(n) ? `${DAYS[n]} e zi vegetariană. Generează meniul ca să se aplice.` : `${DAYS[n]} nu mai e zi vegetariană.`);
+});
 function renderPlan(flashAll, flashIdx){
   const t = iso(new Date());
+  const vds = vegDaySet();
+  renderVegDays();
   const wk = $('#week');
   wk.innerHTML = S.week.map((d, i) => {
     const r = d.recipeId && S.byId.get(d.recipeId);
     const L = dayLabel(d.date);
     const cls = ['day', d.date===t?'today':'', d.locked?'locked':'', (flashAll || flashIdx===i)?'flash':''].join(' ');
+    const vtag = isVegDay(d, vds) ? `<span class="day-veg" title="Zi vegetariană">${VEG_ICON}<span>Vegetarian</span></span>` : '';
     if (!r) return `<article class="${cls}" aria-label="${esc(L.full)}">
-      <div class="day-head"><span class="day-name">${esc(L.name)}</span><span class="day-date">${esc(L.date)}</span></div>
+      <div class="day-head"><span class="day-name">${esc(L.name)}</span><span class="day-date">${esc(L.date)}</span>${vtag}</div>
       <div class="day-empty"><button class="btn" type="button" data-pick="${i}"><svg><use href="#i-plus"/></svg>Alege</button></div>
     </article>`;
     return `<article class="${cls}" aria-label="${esc(L.full)}">
-      <div class="day-head"><span class="day-name">${esc(L.name)}</span><span class="day-date">${esc(L.date)}</span></div>
+      <div class="day-head"><span class="day-name">${esc(L.name)}</span><span class="day-date">${esc(L.date)}</span>${vtag}</div>
       <button class="day-photo" type="button" data-open="${esc(r.id)}" aria-label="Deschide ${esc(r.name)}" ${r.imageBlob?`data-blob="${esc(r.imageBlob)}"`:''}><span class="ph"><svg><use href="#i-dish"/></svg></span></button>
       <div class="day-body">
         <button class="day-title" type="button" data-open="${esc(r.id)}">${esc(r.name)}</button>
@@ -975,7 +1128,7 @@ $('#week').addEventListener('click', e => {
 });
 $('#btnGen').onclick = generate;
 $('#btnSavePlan').onclick = async () => {
-  const plan = S.week.filter(d => d.recipeId).map(d => { const r = S.byId.get(d.recipeId); return { date:d.date, recipeId:d.recipeId, name:r?.name||'', category:r?.category||null }; });
+  const plan = S.week.filter(d => d.recipeId).map(d => { const r = S.byId.get(d.recipeId); return { date:d.date, recipeId:d.recipeId, name:r?.name||'', category:r?.category||null, locked:!!d.locked }; });
   if (!plan.length) return;
   const r = await api('/api/plan-save', { json:{ plan } });
   if (!r.ok) return toast(errMsg(r, 'Nu am putut salva planul.'), true);
@@ -993,10 +1146,11 @@ function openPick(i){
 }
 function renderPick(){
   const q = norm($('#pickQ').value);
-  const list = S.recipes.filter(r => !q || hay(r).includes(q)).sort((a,b) => (a.paused-b.paused) || a.name.localeCompare(b.name,'ro'));
+  const vegFirst = S.pickDay >= 0 && isVegDay(S.week[S.pickDay]);
+  const list = S.recipes.filter(r => !q || hay(r).includes(q)).sort((a,b) => (a.paused-b.paused) || (vegFirst ? isVeg(b)-isVeg(a) : 0) || a.name.localeCompare(b.name,'ro'));
   $('#pickList').innerHTML = list.map(r => `<button class="pick-row" type="button" data-choose="${esc(r.id)}">
     <span class="th" ${r.imageBlob?`data-blob="${esc(r.imageBlob)}"`:''}></span>
-    <span><span class="nm">${esc(r.name)}</span><br><span class="muted small">${esc(r.category||'Fără categorie')}${r.paused?', scoasă din meniul generat':''}</span></span>
+    <span><span class="nm">${esc(r.name)}</span><br><span class="muted small">${esc(r.category||'Fără categorie')}${isVeg(r)?', vegetariană':''}${r.paused?', scoasă din meniul generat':''}</span></span>
   </button>`).join('') || '<p class="muted">Nicio rețetă găsită.</p>';
   paintImages($('#pickList'));
 }
@@ -1010,7 +1164,47 @@ $('#pickClear').onclick = () => { const d = S.week[S.pickDay]; d.recipeId = null
 
 /* ================= lista de cumpărături ================= */
 const DEFAULT_EXCL = ['sare','sare de mare','piper','piper negru','zahar','zahăr','apa','apă','ulei','ulei de masline','ulei de măsline','otet','oțet','boia','foi de dafin','cimbru','busuioc','salt','pepper','sugar','water','oil'];
-const getExcl = () => LS.get('appetora_excl', null) ?? [...DEFAULT_EXCL, ...LS.get('exclude_ingredients', [])];
+const legacyExcl = () => LS.get('appetora_excl', null) ?? [...DEFAULT_EXCL, ...LS.get('exclude_ingredients', [])];
+const getExcl = () => S.settings.excl ?? legacyExcl();
+const getChecked = () => S.settings.shopChecked || {};
+
+/* setări sincronizate între dispozitive (/api/settings), cu o copie locală pentru pornire rapidă */
+const SET_KEY = () => 'appetora_settings_' + (S.user?.id || S.user?.email || '');
+let setTimer = null, setPending = {};
+function applySettings(x){ ['excl','vegDays','shopChecked','updatedAt'].forEach(k => { if (x[k] !== undefined) S.settings[k] = x[k]; }); }
+async function loadSettings(){
+  const cached = LS.get(SET_KEY(), null); if (cached) applySettings(cached);
+  const r = await api('/api/settings');
+  if (!r.ok || !r.body) return;
+  if (r.body.settings) { applySettings(r.body.settings); LS.set(SET_KEY(), S.settings); }
+  else if (!cached) {
+    // prima dată: mută pe server ce era doar în acest browser
+    saveSettings({ excl: legacyExcl(), vegDays: [], shopChecked: LS.get('shopping_checked', {}) }, true);
+  }
+}
+function saveSettings(part, now){
+  Object.assign(S.settings, part); Object.assign(setPending, part);
+  LS.set(SET_KEY(), S.settings);
+  clearTimeout(setTimer); setTimer = setTimeout(flushSettings, now ? 0 : 600);
+}
+async function flushSettings(){
+  clearTimeout(setTimer);
+  const body = setPending; setPending = {};
+  if (!Object.keys(body).length) return;
+  const r = await api('/api/settings', { method:'PUT', json: body });
+  if (!r.ok) setPending = { ...body, ...setPending };          // se reîncearcă la următoarea schimbare
+  else if (r.body?.settings?.updatedAt) S.settings.updatedAt = r.body.settings.updatedAt;
+}
+document.addEventListener('visibilitychange', async () => {
+  if (!S.user) return;
+  if (document.visibilityState === 'hidden') return flushSettings();
+  if (Object.keys(setPending).length) return;
+  const r = await api('/api/settings');
+  if (r.ok && r.body?.settings && r.body.settings.updatedAt !== S.settings.updatedAt){
+    applySettings(r.body.settings); LS.set(SET_KEY(), S.settings);
+    if (!$('#v-plan').hidden) renderPlan();
+  }
+});
 function ingKey(s){
   return norm(String(s))
     .replace(/\([^)]*\)/g,' ')
@@ -1037,7 +1231,8 @@ function renderShop(){
       const a = agg.get(k); a.n++; a.from.add(r.name);
     });
   });
-  const checked = LS.get('shopping_checked', {});
+  const checked = getChecked();
+  S.shopKeys = new Set(agg.keys());
   const items = [...agg.entries()].sort((a,b) => a[0].localeCompare(b[0],'ro'));
   $('#shopPanel').hidden = !items.length;
   $('#shop').innerHTML = items.map(([k,a]) => `<li><label class="${checked[k]?'done':''}" title="${esc([...a.from].join(', '))}">
@@ -1047,12 +1242,14 @@ function renderShop(){
 }
 $('#shop').addEventListener('change', e => {
   const cb = e.target.closest('[data-k]'); if (!cb) return;
-  const c = LS.get('shopping_checked', {}); if (cb.checked) c[cb.dataset.k] = 1; else delete c[cb.dataset.k];
-  LS.set('shopping_checked', c); cb.closest('label').classList.toggle('done', cb.checked);
+  // păstrează doar bifele pentru ingredientele din lista curentă
+  const c = {}; Object.keys(getChecked()).forEach(k => { if (S.shopKeys?.has(k)) c[k] = 1; });
+  if (cb.checked) c[cb.dataset.k] = 1; else delete c[cb.dataset.k];
+  saveSettings({ shopChecked: c }); cb.closest('label').classList.toggle('done', cb.checked);
 });
-$('#btnShopReset').onclick = () => { LS.set('shopping_checked', {}); renderShop(); };
+$('#btnShopReset').onclick = () => { saveSettings({ shopChecked: {} }); renderShop(); };
 $('#btnShopCopy').onclick = async () => {
-  const c = LS.get('shopping_checked', {});
+  const c = getChecked();
   const lines = $$('#shop [data-k]').filter(cb => !c[cb.dataset.k]).map(cb => '• ' + cb.closest('label').innerText.replace(/\s+/g,' ').trim());
   try{ await navigator.clipboard.writeText(lines.join('\n')); toast('Lista a fost copiată. O poți lipi în WhatsApp sau Notițe.'); }
   catch{ toast('Nu am putut copia lista.', true); }
@@ -1064,8 +1261,113 @@ function renderExcl(){
   $('#exclTags').innerHTML = getExcl().map((x,i) => `<span class="tag">${esc(x)}<button type="button" data-rm="${i}" aria-label="Scoate ${esc(x)}">×</button></span>`).join('');
 }
 $('#btnExcl').onclick = openExcl;
-$('#exclForm').onsubmit = e => { e.preventDefault(); const v = $('#exclIn').value.trim().toLowerCase(); if (!v) return; const l = getExcl(); if (!l.includes(v)) LS.set('appetora_excl', [...l, v]); $('#exclIn').value=''; renderExcl(); renderShop(); };
-$('#exclTags').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; const l = getExcl(); l.splice(+b.dataset.rm,1); LS.set('appetora_excl', l); renderExcl(); renderShop(); });
+$('#exclForm').onsubmit = e => { e.preventDefault(); const v = $('#exclIn').value.trim().toLowerCase(); if (!v) return; const l = getExcl(); if (!l.includes(v)) saveSettings({ excl: [...l, v] }); $('#exclIn').value=''; renderExcl(); renderShop(); };
+$('#exclTags').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; const l = getExcl(); l.splice(+b.dataset.rm,1); saveSettings({ excl: l }); renderExcl(); renderShop(); });
+
+/* ================= modul de gătit ================= */
+const C = { r:null, i:0, steps:[], checked:new Map(), timers:[], wake:null, tick:null, audio:null };
+// „30 de minute”, „1-2 ore”, „45 min”, „o oră”, „jumătate de oră”, „10 secunde”
+function findTimers(text){
+  const out = [], seen = new Set();
+  const add = (sec, label) => { if (sec > 0 && sec <= 12*3600 && !seen.has(sec)){ seen.add(sec); out.push({ sec, label }); } };
+  const re = /(\d+(?:[.,]\d+)?)(?:\s*(?:-|–|sau|până la)\s*\d+(?:[.,]\d+)?)?\s*(?:de\s+)?(minute|minut|min|ore|oră|ora|h|secunde|sec)(?![\p{L}])/giu;
+  let m;
+  while ((m = re.exec(text))){
+    const v = parseFloat(m[1].replace(',', '.')), u = m[2].toLowerCase();
+    add(Math.round(v * (u.startsWith('s') ? 1 : (u.startsWith('o') || u === 'h') ? 3600 : 60)), m[0]);
+  }
+  if (/jum[ăa]tate de or[ăa]/iu.test(text)) add(1800, 'jumătate de oră');
+  if (/(^|[^\p{L}])un sfert de or[ăa]/iu.test(text)) add(900, 'un sfert de oră');
+  if (/(^|[^\p{L}])o or[ăa](?![\p{L}])/iu.test(text)) add(3600, 'o oră');
+  return out;
+}
+const fmtDur = sec => sec >= 3600 ? `${Math.floor(sec/3600)} h${sec%3600 ? ' ' + Math.round(sec%3600/60) + ' min' : ''}` : sec >= 60 ? `${Math.round(sec/60)} min` : `${sec} s`;
+const fmtClock = sec => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec/3600), m = Math.floor(sec%3600/60), s2 = sec%60; return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(s2).padStart(2,'0'); };
+
+async function wakeOn(){
+  try{ if ('wakeLock' in navigator && !C.wake){ C.wake = await navigator.wakeLock.request('screen'); C.wake.addEventListener('release', () => C.wake = null); } }catch{}
+}
+function wakeOff(){ try{ C.wake?.release(); }catch{} C.wake = null; }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#dlgCook').open) wakeOn(); });
+
+function openCook(id){
+  const r = S.byId.get(id); if (!r) return;
+  if (C.r?.id !== id) C.i = 0;
+  C.r = r; C.steps = stepsOf(r);
+  if (!C.checked.has(id)) C.checked.set(id, new Set());
+  $('#cookName').textContent = r.name;
+  const chk = C.checked.get(id);
+  $('#cookIngr').innerHTML = (r.ingredients||[]).map((x,i) => `<li><input type="checkbox" id="ci${i}" data-ci="${i}" ${chk.has(i)?'checked':''}/><label for="ci${i}">${esc(x)}</label></li>`).join('') || '<li class="muted">Fără ingrediente.</li>';
+  $('#cookTabIngr').textContent = `Ingrediente (${(r.ingredients||[]).length})`;
+  $('#cookWake').textContent = 'wakeLock' in navigator ? 'Ecranul rămâne aprins cât gătești.' : '';
+  setCookTab('steps');
+  renderCookStep(); renderTimers();
+  $('#dlgCook').showModal(); wakeOn();
+}
+function setCookTab(t){
+  $('#cook').dataset.tab = t;
+  $$('[data-ctab]').forEach(b => b.setAttribute('aria-selected', b.dataset.ctab === t));
+}
+function renderCookStep(){
+  const n = C.steps.length, i = C.i;
+  if (!n){
+    $('#cookN').textContent = ''; $('#cookText').textContent = 'Rețeta nu are pași scriși.'; $('#cookTm').innerHTML = ''; $('#cookNext').textContent = '';
+  } else {
+    $('#cookN').textContent = `Pasul ${i+1} din ${n}`;
+    $('#cookText').textContent = C.steps[i];
+    $('#cookTm').innerHTML = findTimers(C.steps[i]).map(t => `<button class="btn gold" type="button" data-start="${t.sec}"><svg><use href="#i-timer"/></svg>Pornește ${esc(fmtDur(t.sec))}</button>`).join('');
+    $('#cookNext').textContent = i < n-1 ? 'Urmează: ' + C.steps[i+1] : '';
+  }
+  $('#cookPrev').disabled = i === 0;
+  $('#cookNextBtn').innerHTML = i >= n-1 ? '<svg><use href="#i-check"/></svg>Gata, poftă bună!' : 'Pasul următor';
+}
+function cookGo(d){
+  const n = C.steps.length;
+  if (d > 0 && C.i >= n-1){ $('#dlgCook').close(); return; }
+  C.i = Math.max(0, Math.min(n-1, C.i + d)); setCookTab('steps'); renderCookStep();
+}
+function beep(){
+  try{
+    const a = C.audio; if (!a) return;
+    [0, .35, .7].forEach(t => { const o = a.createOscillator(), g = a.createGain(); o.frequency.value = 880; o.connect(g); g.connect(a.destination);
+      g.gain.setValueAtTime(.0001, a.currentTime + t); g.gain.exponentialRampToValueAtTime(.4, a.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + t + .25);
+      o.start(a.currentTime + t); o.stop(a.currentTime + t + .3); });
+  }catch{}
+  try{ navigator.vibrate?.([300,150,300,150,300]); }catch{}
+}
+function startTimer(sec){
+  try{ C.audio = C.audio || new (window.AudioContext || window.webkitAudioContext)(); C.audio.resume?.(); }catch{}   // pornit la atingere, ca să poată suna mai târziu
+  C.timers.push({ id: Date.now() + Math.random(), end: Date.now() + sec*1000, label: `Pasul ${C.i+1}`, done:false });
+  if (!C.tick) C.tick = setInterval(tickTimers, 1000);
+  renderTimers();
+}
+function tickTimers(){
+  const now = Date.now();
+  C.timers.forEach(t => { if (!t.done && t.end <= now){ t.done = true; beep(); if (!$('#dlgCook').open) toast(`Timpul pentru ${t.label.toLowerCase()} a expirat.`); } });
+  if (!C.timers.length){ clearInterval(C.tick); C.tick = null; }
+  renderTimers();
+}
+function renderTimers(){
+  const now = Date.now();
+  $('#cookTimers').innerHTML = C.timers.map(t => `<span class="timer ${t.done?'done':''}">${esc(t.label)} · ${t.done ? 'gata!' : fmtClock((t.end-now)/1000)}<button type="button" data-stop="${t.id}" aria-label="Oprește cronometrul pentru ${esc(t.label)}"><svg><use href="#i-x"/></svg></button></span>`).join('');
+}
+$('#rvCook').onclick = () => { $('#dlgRec').close(); openCook(rvId); };
+$('#cookClose').onclick = () => $('#dlgCook').close();
+$('#dlgCook').addEventListener('close', wakeOff);
+$('#cookPrev').onclick = () => cookGo(-1);
+$('#cookNextBtn').onclick = () => cookGo(1);
+$$('[data-ctab]').forEach(b => b.onclick = () => setCookTab(b.dataset.ctab));
+$('#cookTm').addEventListener('click', e => { const b = e.target.closest('[data-start]'); if (b) startTimer(+b.dataset.start); });
+$('#cookTimers').addEventListener('click', e => { const b = e.target.closest('[data-stop]'); if (!b) return; C.timers = C.timers.filter(t => String(t.id) !== b.dataset.stop); renderTimers(); });
+$('#cookIngr').addEventListener('change', e => { const cb = e.target.closest('[data-ci]'); if (!cb || !C.r) return; const s2 = C.checked.get(C.r.id); if (cb.checked) s2.add(+cb.dataset.ci); else s2.delete(+cb.dataset.ci); });
+$('#dlgCook').addEventListener('keydown', e => { if (e.target.matches('input')) return; if (e.key === 'ArrowRight') cookGo(1); if (e.key === 'ArrowLeft') cookGo(-1); });
+// glisare stânga/dreapta între pași
+let swX = null, swY = null;
+$('#cookStep').addEventListener('touchstart', e => { swX = e.touches[0].clientX; swY = e.touches[0].clientY; }, { passive:true });
+$('#cookStep').addEventListener('touchend', e => {
+  if (swX == null) return; const dx = e.changedTouches[0].clientX - swX, dy = e.changedTouches[0].clientY - swY; swX = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) cookGo(dx < 0 ? 1 : -1);
+});
 
 boot();
 </script>

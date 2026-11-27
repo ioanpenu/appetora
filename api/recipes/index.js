@@ -46,6 +46,8 @@ export default async function (context, req) {
             ? b.imageBlob.trim() || null
             : null,
         paused: !!b.paused,
+        // true/false = ales de user; null = detectat automat din ingrediente (în interfață)
+        vegetarian: typeof b.vegetarian === "boolean" ? b.vegetarian : null,
         createdAt: new Date().toISOString(),
       };
 
@@ -74,6 +76,8 @@ export default async function (context, req) {
       if (typeof b.instructions === "string")
         rec.instructions = b.instructions;
       if (typeof b.paused === "boolean") rec.paused = b.paused;
+      if (typeof b.vegetarian === "boolean" || b.vegetarian === null)
+        rec.vegetarian = b.vegetarian;
       if (typeof b.imageBlob === "string")
         rec.imageBlob = b.imageBlob.trim() || null;
 
