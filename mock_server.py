@@ -83,7 +83,7 @@ class H(BaseHTTPRequestHandler):
             if p == '/api/settings':
                 if m == 'PUT':
                     b = self.body()
-                    for k in ('excl', 'vegDays', 'shopChecked'):
+                    for k in ('excl', 'vegDays', 'veganDays', 'shopChecked'):
                         if k in b: settings[k] = b[k]
                     settings['updatedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()) + str(time.time())
                 return self.send(200, {'settings': settings or None})
