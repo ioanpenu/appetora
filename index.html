@@ -281,6 +281,7 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .br-name{flex:1;min-width:0;width:0;border:1.5px solid transparent;border-radius:8px;padding:3px 6px;background:var(--sage);font-weight:600}
 .br-name:focus{outline:none;border-color:var(--ink);background:var(--paper)}
 .br-src{font-size:13px;color:var(--muted)}
+.br-line.todo .br-name,.br-line.todo .br-qty{background:var(--gold-soft);border-color:var(--gold)}
 .bring-lang{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
 .bring-lang select{min-height:36px;width:auto;padding:4px 10px}
 .bring-status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
@@ -1427,7 +1428,7 @@ function renderBring(checkedIdx){
     const on = checkedIdx ? checkedIdx.has(i) : r.on !== false;
     let body;
     if (BR_MODE === 'opt' && r.name != null){
-      body = `<span class="br-line"><input class="br-qty" data-bq="${i}" value="${esc(r.spec||'')}" placeholder="cantitate" aria-label="Cantitate pentru ${esc(r.name)}"/><input class="br-name" data-bn="${i}" value="${esc(r.name)}" aria-label="Produs"/></span><span class="br-src">din: ${esc(r.from.map(j => BR_RAWS[j]).join(', '))}</span>`;
+      body = `<span class="br-line${r.untouched?' todo':''}"><input class="br-qty" data-bq="${i}" value="${esc(r.spec||'')}" placeholder="cantitate" aria-label="Cantitate pentru ${esc(r.name)}"/><input class="br-name" data-bn="${i}" value="${esc(r.name)}" aria-label="Produs"/></span><span class="br-src">din: ${esc(r.from.map(j => BR_RAWS[j]).join(', '))}</span>`;
     } else if (!plainRo && r.name != null){
       body = `<span class="br-line">${r.spec?`<span class="br-spec">${esc(r.spec)}</span>`:''}<input class="br-name" data-bn="${i}" value="${esc(r.name)}" aria-label="Traducere pentru ${esc(r.src)}"/></span><span class="br-src">${esc(r.src)}</span>`;
     } else body = `<span>${esc(r.src)}</span>`;
@@ -1454,10 +1455,11 @@ async function loadBring(){
     const r = await api('/api/shop-optimize', { json:{ lang: bringLang() === 'none' ? 'ro' : bringLang(), items: BR_RAWS } });
     busy(false);
     if (r.ok && Array.isArray(r.body?.items)){
-      BR = r.body.items.map(it => ({ name: it.name, spec: it.spec || '', from: it.from || [], on: true }));
+      BR = r.body.items.map(it => ({ name: it.name, spec: it.spec || '', from: it.from || [], on: true, untouched: !!it.untouched }));
       renderBring();
-      const merged = BR_RAWS.length - BR.length;
-      bringNote(merged > 0 ? `Din ${BR_RAWS.length} ingrediente din rețete au rămas ${BR.length} produse de cumpărat. Poți corecta orice câmp.` : '');
+      const merged = BR_RAWS.length - BR.length, left = BR.filter(x => x.untouched).length;
+      bringNote([merged > 0 ? `Din ${BR_RAWS.length} ingrediente din rețete au rămas ${BR.length} produse de cumpărat.` : '',
+        left ? `${left} ${left===1?'produs a rămas':'produse au rămas'} neprelucrate (marcate cu galben); scrie-le tu cantitatea și numele.` : 'Poți corecta orice câmp.'].filter(Boolean).join(' '));
       return;
     }
     bringNote('Nu am putut optimiza lista: ' + (r.body?.aiError || errMsg(r, 'eroare necunoscută')) + '. Îți arăt lista simplă.', true);

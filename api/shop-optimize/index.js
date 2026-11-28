@@ -13,7 +13,7 @@ import { colHistory, colUsage } from "../shared/cosmos.js";
 
 const LANGS = { de: "German", en: "English", ro: "Romanian" };
 const DAILY_AI_CALLS = 40;
-const PROMPT_VERSION = 1;
+const PROMPT_VERSION = 2;
 const json = (status, body) => ({ status, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 const ymd = (d) => d.toISOString().slice(0, 10);
 
@@ -94,35 +94,54 @@ export default async function (context, req) {
     if ((day?.translations || 0) >= DAILY_AI_CALLS) return (context.res = json(429, { error: "Ai atins limita de liste optimizate pe azi." }));
 
     const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
-    let resp;
-    try {
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      resp = await openai.chat.completions.create({
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    let calls = 0, tokens = 0;
+    const ask = async (lines) => {
+      const resp = await openai.chat.completions.create({
         model,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt(lang, glossary) },
-          { role: "user", content: JSON.stringify(labels.map((text, i) => ({ i, text }))) }
+          { role: "user", content: JSON.stringify(lines.map((text, i) => ({ i, text }))) }
         ]
       });
-    } catch (e) {
-      return (context.res = json(200, { items: null, aiError: `OpenAI (${model}): ${e?.message || e}` }));
+      calls++; tokens += resp.usage?.total_tokens || 0;
+      const content = resp.choices?.[0]?.message?.content || "";
+      return { parsed: parseAi(content, lines.length), content };
+    };
+
+    let first;
+    try { first = await ask(labels); }
+    catch (e) { return (context.res = json(200, { items: null, aiError: `OpenAI (${model}): ${e?.message || e}` })); }
+    const parsed = first.parsed;
+    if (!parsed || !parsed.items.length) {
+      await logUsage(); return (context.res = json(200, { items: null, aiError: "Răspuns AI neclar: " + first.content.slice(0, 200) }));
     }
 
-    const usage = resp.usage || {};
-    await colUsage.items.upsert({
-      ...(day || { id: did, pk: upk, uid, date: ymd(new Date()), imports: 0 }),
-      translations: (day?.translations || 0) + 1,
-      translatedItems: (day?.translatedItems || 0) + labels.length,
-      translateTokens: (day?.translateTokens || 0) + (usage.total_tokens || 0),
-      updatedAt: new Date().toISOString()
-    });
-
-    const content = resp.choices?.[0]?.message?.content || "";
-    const parsed = parseAi(content, labels.length);
-    if (!parsed || !parsed.items.length) return (context.res = json(200, { items: null, aiError: "Răspuns AI neclar: " + content.slice(0, 200) }));
-    // ce a scăpat AI-ul rămâne pe listă, neatins
+    // la listele lungi AI-ul mai omite câte un rând: a doua cerere, doar cu ce a lipsit
+    if (parsed.missing.length) {
+      const miss = parsed.missing;
+      try {
+        const second = (await ask(miss.map((i) => labels[i]))).parsed;
+        if (second) {
+          for (const it of second.items) parsed.items.push({ ...it, from: it.from.map((j) => miss[j]) });
+          parsed.missing = second.missing.map((j) => miss[j]);
+        }
+      } catch (e) { context.log?.warn?.(`shop-optimize retry: ${e?.message || e}`); }
+    }
+    // ce tot a scăpat rămâne pe listă, neatins (marcat în interfață)
     for (const i of parsed.missing) parsed.items.push({ name: labels[i], spec: "", from: [i], untouched: true });
+    await logUsage();
+
+    async function logUsage() {
+      await colUsage.items.upsert({
+        ...(day || { id: did, pk: upk, uid, date: ymd(new Date()), imports: 0 }),
+        translations: (day?.translations || 0) + calls,
+        translatedItems: (day?.translatedItems || 0) + labels.length,
+        translateTokens: (day?.translateTokens || 0) + tokens,
+        updatedAt: new Date().toISOString()
+      });
+    }
 
     await colHistory.items.upsert({ id: cid, pk, kind: "shopopt", userId: uid, hash, lang, items: parsed.items, updatedAt: new Date().toISOString() });
     context.res = json(200, { items: parsed.items, cached: false });
