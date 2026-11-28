@@ -282,6 +282,8 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .bring-lang{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
 .bring-lang select{min-height:36px;width:auto;padding:4px 10px}
 .bring-status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.bring-note{margin:0;font-size:14px;border-radius:var(--r-sm);padding:8px 12px;background:var(--sage)}
+.bring-note.err{background:#F8E1DD;color:var(--danger)}
 .bring-status .spinner{border-color:var(--line);border-top-color:var(--ink);width:16px;height:16px}
 .bring-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .bring-bar .n{margin-left:auto;font-size:14px;color:var(--muted)}
@@ -653,6 +655,7 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
       </select>
     </label>
     <div class="bring-status" id="bringStatus" hidden><div class="spinner"></div><span>Traduc lista…</span></div>
+    <p class="bring-note" id="bringNote" hidden></p>
     <div class="bring-bar">
       <button class="btn quiet small" type="button" id="bringAll">Toate</button>
       <button class="btn quiet small" type="button" id="bringNone">Niciunul</button>
@@ -714,7 +717,9 @@ const errMsg = (r, fallback) => {
 
 let toastT;
 function toast(msg, isErr){
-  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (isErr ? ' err' : ''); t.hidden = false;
+  const t = $('#toast'); t.textContent = msg;
+  const dlg = [...document.querySelectorAll('dialog[open]')].pop();
+  if (t.parentElement !== (dlg || document.body)) (dlg || document.body).appendChild(t); t.className = 'toast' + (isErr ? ' err' : ''); t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(()=> t.hidden = true, 3200);
 }
 
@@ -1421,13 +1426,22 @@ const bringChecked = () => new Set($$('#bringList [data-bi]').filter(x => x.chec
 async function translateBring(){
   const lang = bringLang(), keep = bringChecked();
   BR.forEach(r => { r.name = null; r.spec = ''; r.key = null; r.orig = null; });
+  $('#bringNote').hidden = true;
   if (lang === 'none'){ renderBring(keep); return; }
   renderBring(keep); $('#bringStatus').hidden = false; $('#bringGo').disabled = true;
   const r = await api('/api/translate-items', { json:{ lang, items: BR.map(x => x.src) } });
   $('#bringStatus').hidden = true;
-  if (!r.ok || !Array.isArray(r.body?.items)){ toast(errMsg(r, 'Nu am putut traduce lista. O trimit în română.'), true); renderBring(keep); return; }
+  const note = (msg, err) => { const n = $('#bringNote'); n.textContent = msg; n.className = 'bring-note' + (err ? ' err' : ''); n.hidden = !msg; };
+  if (!r.ok || !Array.isArray(r.body?.items)){
+    note('Nu am putut traduce lista: ' + errMsg(r, 'eroare necunoscută') + '. Poți trimite lista în română sau încerca din nou.', true);
+    renderBring(keep); return;
+  }
   r.body.items.forEach((t, i) => { if (BR[i]) Object.assign(BR[i], { spec: t.spec || '', name: t.name, orig: t.name, key: t.key }); });
   renderBring(keep);
+  const n = r.body.untranslated || 0;
+  if (r.body.aiError) note(`Traducerea automată a eșuat (${r.body.aiError}). ${n} produse au rămas în română; le poți scrie tu în câmpuri.`, true);
+  else if (n) note(`${n} produse nu au fost traduse; le poți scrie tu în câmpuri.`);
+  else note('');
 }
 $('#btnBring').onclick = () => {
   const c = getChecked();

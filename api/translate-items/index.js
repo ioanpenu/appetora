@@ -45,6 +45,26 @@ function split(label, lang) {
   return { spec: [qty, unit].filter(Boolean).join(" "), name };
 }
 
+// acceptă mai multe forme de răspuns: {items:[{i,name}]}, {items:["..."]}, [..], {"ceapă":"Zwiebeln"}
+function parseAi(text, missing) {
+  let data;
+  try { data = JSON.parse(text); } catch { const m = /[\[{][\s\S]*[\]}]/.exec(text); try { data = m ? JSON.parse(m[0]) : null; } catch { data = null; } }
+  if (!data) return {};
+  let arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : Object.values(data).find(Array.isArray);
+  const out = {};
+  if (Array.isArray(arr)) {
+    arr.forEach((it, k) => {
+      const idx = typeof it === "object" && it ? Number(it.i ?? it.index ?? it.id ?? k) : k;
+      const name = typeof it === "string" ? it : it && (it.name ?? it.translation ?? it.de ?? it.en ?? it.target);
+      const src = missing[idx];
+      if (src && name) out[src] = String(name).trim().slice(0, 80);
+    });
+  } else if (typeof data === "object") {
+    for (const src of missing) { const v = data[src]; if (typeof v === "string" && v.trim()) out[src] = v.trim().slice(0, 80); }
+  }
+  return out;
+}
+
 export default async function (context, req) {
   try {
     const me = verifyFromRequest(req);
@@ -75,6 +95,7 @@ export default async function (context, req) {
     const rows = labels.map((src) => { const { spec, name } = split(src, lang); return { src, spec, srcName: name, key: norm(name).slice(0, 120) }; });
 
     const missing = [...new Set(rows.filter((r) => !mem.map[r.key]).map((r) => r.srcName))];
+    let aiError = null;
     if (missing.length) {
       // limită zilnică de apeluri AI, separată de importul de rețete
       const uid = me.uid, upk = `usage#${uid}`, did = `${uid}:${ymd(new Date())}`;
@@ -83,47 +104,56 @@ export default async function (context, req) {
       if ((day?.translations || 0) >= DAILY_AI_CALLS) return (context.res = json(429, { error: "Ai atins limita de traduceri pe azi." }));
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      const resp = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-        temperature: 0,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content:
-            `You translate grocery items (mostly Romanian) into ${LANGS[lang]} for the Bring! shopping list app. ` +
-            `Use the short generic product name exactly as it appears in the Bring! catalog in ${LANGS[lang]}, ` +
-            (lang === "de"
-              ? "e.g. Zwiebeln, Kartoffeln, Karotten, Eier, Hackfleisch, Saure Sahne, Knoblauch, Dill, Petersilie, Paprika, Reis, Mehl, Butter, Milch. "
-              : "e.g. Onions, Potatoes, Carrots, Eggs, Minced meat, Sour cream, Garlic, Dill, Parsley. ") +
-            `No quantities, no units, no brand names; keep a qualifier only when it changes the product (e.g. "Saure Sahne"). ` +
-            `Return JSON {"items":[{"i":<index>,"name":"..."}]} with one entry per input index.` },
-          { role: "user", content: JSON.stringify(missing.map((name, i) => ({ i, name }))) }
-        ]
-      });
-      let out = {};
-      try { out = JSON.parse(resp.choices?.[0]?.message?.content || "{}"); } catch { out = {}; }
-      for (const it of Array.isArray(out.items) ? out.items : []) {
-        const src = missing[it?.i], name = String(it?.name || "").trim().slice(0, 80);
-        if (src && name) mem.map[norm(src).slice(0, 120)] = name;
+      const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+      let resp = null;
+      try {
+        // fără temperature: modelele mai noi îl resping
+        resp = await openai.chat.completions.create({
+          model,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content:
+              `You translate grocery items (mostly Romanian) into ${LANGS[lang]} for the Bring! shopping list app. ` +
+              `Use the short generic product name exactly as it appears in the Bring! catalog in ${LANGS[lang]}, ` +
+              (lang === "de"
+                ? "e.g. Zwiebeln, Kartoffeln, Karotten, Eier, Hackfleisch, Saure Sahne, Knoblauch, Dill, Petersilie, Paprika, Reis, Mehl, Butter, Milch. "
+                : "e.g. Onions, Potatoes, Carrots, Eggs, Minced meat, Sour cream, Garlic, Dill, Parsley. ") +
+              `No quantities, no units, no brand names; keep a qualifier only when it changes the product (e.g. "Saure Sahne"). ` +
+              `Return JSON {"items":[{"i":<index>,"name":"..."}]} with one entry per input index.` },
+            { role: "user", content: JSON.stringify(missing.map((name, i) => ({ i, name }))) }
+          ]
+        });
+      } catch (e) {
+        aiError = `OpenAI (${model}): ${e?.message || e}`;
+        context.log?.error?.(aiError);
       }
-      mem.updatedAt = new Date().toISOString();
-      await colHistory.items.upsert(mem);
 
-      const usage = resp.usage || {};
-      await colUsage.items.upsert({
-        ...(day || { id: did, pk: upk, uid, date: ymd(new Date()), imports: 0 }),
-        translations: (day?.translations || 0) + 1,
-        translatedItems: (day?.translatedItems || 0) + missing.length,
-        translateTokens: (day?.translateTokens || 0) + (usage.total_tokens || 0),
-        updatedAt: new Date().toISOString()
-      });
+      if (resp) {
+        const got = parseAi(resp.choices?.[0]?.message?.content || "", missing);
+        for (const [src, name] of Object.entries(got)) mem.map[norm(src).slice(0, 120)] = name;
+        if (!Object.keys(got).length) aiError = "Răspuns AI fără traduceri: " + String(resp.choices?.[0]?.message?.content || "").slice(0, 200);
+        else { mem.updatedAt = new Date().toISOString(); await colHistory.items.upsert(mem); }
+
+        const usage = resp.usage || {};
+        await colUsage.items.upsert({
+          ...(day || { id: did, pk: upk, uid, date: ymd(new Date()), imports: 0 }),
+          translations: (day?.translations || 0) + 1,
+          translatedItems: (day?.translatedItems || 0) + missing.length,
+          translateTokens: (day?.translateTokens || 0) + (usage.total_tokens || 0),
+          updatedAt: new Date().toISOString()
+        });
+      }
     }
 
     context.res = json(200, {
       items: rows.map((r) => ({
         src: r.src, spec: r.spec, srcName: r.srcName, key: r.key,
         name: mem.map[r.key] || r.srcName,
-        cached: !missing.includes(r.srcName), manual: !!mem.manual[r.key]
-      }))
+        cached: !missing.includes(r.srcName), manual: !!mem.manual[r.key],
+        translated: !!mem.map[r.key]
+      })),
+      untranslated: rows.filter((r) => !mem.map[r.key]).length,
+      aiError
     });
   } catch (e) {
     context.log?.error?.(e);
