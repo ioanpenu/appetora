@@ -24,6 +24,7 @@ recipes = [
     R('9', 'Clătite cu brânză', 'Desert', ['2 ouă', '250 ml lapte', '150 g făină', '250 g brânză dulce', 'zahăr'], 6),
     R('10', 'Mici la grătar', 'Grătar', ['1 kg carne mixtă', 'usturoi', 'cimbru', 'bicarbonat'], 7),
 ]
+tr_mem = {}  # traduceri ținute minte (per limbă)
 bring = {}  # listele trimise spre Bring!
 settings = {}  # documentul de setări al userului
 plans = []  # planurile salvate, ca pe server (history/manual_plan)
@@ -84,7 +85,7 @@ class H(BaseHTTPRequestHandler):
             if p == '/api/settings':
                 if m == 'PUT':
                     b = self.body()
-                    for k in ('excl', 'vegDays', 'veganDays', 'shopChecked'):
+                    for k in ('excl', 'vegDays', 'veganDays', 'bringLang', 'shopChecked'):
                         if k in b: settings[k] = b[k]
                     settings['updatedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()) + str(time.time())
                 return self.send(200, {'settings': settings or None})
@@ -95,6 +96,24 @@ class H(BaseHTTPRequestHandler):
                 url = f'http://{host}/api/bring-list?id={bid}'
                 from urllib.parse import quote
                 return self.send(200, {'id': bid, 'url': url, 'deeplink': 'https://api.getbring.com/rest/bringrecipes/deeplink?url=' + quote(url, safe='') + '&source=web&baseQuantity=4&requestedQuantity=4'})
+            if p == '/api/translate-items':
+                # traducere simulată: dicționar mic + memorie, ca pe server
+                b = self.body(); lang = b.get('lang', 'de')
+                if 'learn' in b:
+                    tr_mem.setdefault(lang, {}).update(b['learn']); return self.send(200, {'ok': True})
+                DE = {'carne tocata': 'Hackfleisch', 'ceapa': 'Zwiebeln', 'cepe': 'Zwiebeln', 'morcovi': 'Karotten', 'cartofi': 'Kartoffeln',
+                      'ardei': 'Paprika', 'orez': 'Reis', 'smantana': 'Saure Sahne', 'oua': 'Eier', 'faina': 'Mehl', 'lapte': 'Milch', 'usturoi': 'Knoblauch'}
+                import re, unicodedata
+                nrm = lambda x: unicodedata.normalize('NFD', x.lower()).encode('ascii', 'ignore').decode().strip()
+                out = []
+                for src in b.get('items', []):
+                    m = re.match(r'^([\d.,/]+)\s*(linguri|lingura|catei|buc|kg|ml|g|l)?(?=\\s|$)\s*(de\s+)?(.*)$', src)
+                    spec, name = (' '.join(x for x in [m.group(1), {'linguri': 'EL', 'lingura': 'EL', 'catei': 'Zehen', 'buc': 'Stk.'}.get(m.group(2) or '', m.group(2) or '')] if x), m.group(4)) if m else ('', src)
+                    key = nrm(name)
+                    mem = tr_mem.get(lang, {})
+                    out.append({'src': src, 'spec': spec, 'srcName': name, 'key': key, 'name': mem.get(key) or DE.get(key) or name.capitalize(), 'cached': key in mem, 'manual': key in mem})
+                time.sleep(0.4)
+                return self.send(200, {'items': out})
             if p == '/api/usage/today': return self.send(200, {'calls': 2})
             if p in ('/api/import-image', '/api/import'):
                 self.body(); time.sleep(0.6); return self.send(200, IMPORTED)

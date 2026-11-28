@@ -272,7 +272,17 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .btn.bring:hover{background:#D23B3F;border-color:#D23B3F}
 .bring-list{list-style:none;margin:0;padding:0;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
 .bring-list label{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-bottom:1px dashed var(--line);cursor:pointer}
-.bring-list input{width:20px;height:20px;accent-color:#E8484C;margin:2px 0 0;flex:none}
+.bring-list input[type=checkbox]{width:20px;height:20px;accent-color:#E8484C;margin:2px 0 0;flex:none}
+.br-main{flex:1;min-width:0;display:grid;gap:2px}
+.br-line{display:flex;align-items:center;gap:6px}
+.br-spec{font-weight:700;color:var(--ink-2);white-space:nowrap}
+.br-name{flex:1;min-width:0;border:1.5px solid transparent;border-radius:8px;padding:3px 6px;background:var(--sage);font-weight:600}
+.br-name:focus{outline:none;border-color:var(--ink);background:var(--paper)}
+.br-src{font-size:13px;color:var(--muted)}
+.bring-lang{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.bring-lang select{min-height:36px;width:auto;padding:4px 10px}
+.bring-status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.bring-status .spinner{border-color:var(--line);border-top-color:var(--ink);width:16px;height:16px}
 .bring-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .bring-bar .n{margin-left:auto;font-size:14px;color:var(--muted)}
 
@@ -635,6 +645,14 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
   <div class="dlg-in">
     <h2 style="font-size:28px">Trimite în Bring!</h2>
     <p class="muted" style="margin:0">Alege ce vrei pe lista din Bring!. Se deschide aplicația Bring!, unde alegi lista și confirmi.</p>
+    <label class="bring-lang">Limba în Bring!
+      <select class="input" id="bringLang">
+        <option value="de">Germană</option>
+        <option value="en">Engleză</option>
+        <option value="none">Fără traducere</option>
+      </select>
+    </label>
+    <div class="bring-status" id="bringStatus" hidden><div class="spinner"></div><span>Traduc lista…</span></div>
     <div class="bring-bar">
       <button class="btn quiet small" type="button" id="bringAll">Toate</button>
       <button class="btn quiet small" type="button" id="bringNone">Niciunul</button>
@@ -1297,7 +1315,7 @@ const getChecked = () => S.settings.shopChecked || {};
 /* setări sincronizate între dispozitive (/api/settings), cu o copie locală pentru pornire rapidă */
 const SET_KEY = () => 'appetora_settings_' + (S.user?.id || S.user?.email || '');
 let setTimer = null, setPending = {};
-function applySettings(x){ ['excl','vegDays','veganDays','shopChecked','updatedAt'].forEach(k => { if (x[k] !== undefined) S.settings[k] = x[k]; }); }
+function applySettings(x){ ['excl','vegDays','veganDays','bringLang','shopChecked','updatedAt'].forEach(k => { if (x[k] !== undefined) S.settings[k] = x[k]; }); }
 async function loadSettings(){
   const cached = LS.get(SET_KEY(), null); if (cached) applySettings(cached);
   const r = await api('/api/settings');
@@ -1386,25 +1404,59 @@ $('#btnShopCopy').onclick = async () => {
    Bring! importă doar dintr-o pagină publică cu o rețetă (schema.org).
    Serverul salvează lista aleasă sub un link temporar, iar Bring! o citește de acolo. */
 const isPhone = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-function bringCount(){ const n = $$('#bringList input:checked').length; $('#bringN').textContent = `${n} din ${$$('#bringList input').length} alese`; $('#bringGo').disabled = !n; }
+function bringCount(){ const n = $$('#bringList [data-bi]:checked').length; $('#bringN').textContent = `${n} din ${$$('#bringList [data-bi]').length} alese`; $('#bringGo').disabled = !n || !$('#bringStatus').hidden; }
+// rândurile din dialog: {src, spec, name, key, orig}; name = traducerea (editabilă)
+let BR = [];
+const bringLang = () => S.settings.bringLang || 'de';
+function renderBring(checkedIdx){
+  const tr = bringLang() !== 'none';
+  $('#bringList').innerHTML = BR.map((r,i) => `<li><label>
+    <input type="checkbox" data-bi="${i}" ${checkedIdx.has(i)?'checked':''}/>
+    <span class="br-main">${tr && r.name != null
+      ? `<span class="br-line">${r.spec?`<span class="br-spec">${esc(r.spec)}</span>`:''}<input class="br-name" data-bn="${i}" value="${esc(r.name)}" aria-label="Traducere pentru ${esc(r.src)}"/></span><span class="br-src">${esc(r.src)}</span>`
+      : `<span>${esc(r.src)}</span>`}</span></label></li>`).join('');
+  bringCount();
+}
+const bringChecked = () => new Set($$('#bringList [data-bi]').filter(x => x.checked).map(x => +x.dataset.bi));
+async function translateBring(){
+  const lang = bringLang(), keep = bringChecked();
+  BR.forEach(r => { r.name = null; r.spec = ''; r.key = null; r.orig = null; });
+  if (lang === 'none'){ renderBring(keep); return; }
+  renderBring(keep); $('#bringStatus').hidden = false; $('#bringGo').disabled = true;
+  const r = await api('/api/translate-items', { json:{ lang, items: BR.map(x => x.src) } });
+  $('#bringStatus').hidden = true;
+  if (!r.ok || !Array.isArray(r.body?.items)){ toast(errMsg(r, 'Nu am putut traduce lista. O trimit în română.'), true); renderBring(keep); return; }
+  r.body.items.forEach((t, i) => { if (BR[i]) Object.assign(BR[i], { spec: t.spec || '', name: t.name, orig: t.name, key: t.key }); });
+  renderBring(keep);
+}
 $('#btnBring').onclick = () => {
   const c = getChecked();
+  BR = (S.shopItems||[]).map(it => ({ src: it.label, k: it.k, name: null, spec: '' }));
   // implicit: ce n-ai bifat încă în lista de cumpărături
-  $('#bringList').innerHTML = (S.shopItems||[]).map((it,i) => `<li><label><input type="checkbox" data-bi="${i}" ${c[it.k]?'':'checked'}/><span>${esc(it.label)}</span></label></li>`).join('');
+  const sel = new Set(BR.map((r,i) => c[r.k] ? -1 : i).filter(i => i >= 0));
+  $('#bringLang').value = bringLang();
   $('#bringDesk').hidden = isPhone();
   $('#bringDesk').textContent = 'Pe calculator, Bring! deschide pagina lui web. Ca să ajungă direct în aplicație, apasă butonul de pe telefonul pe care ai Bring!.';
-  bringCount(); $('#dlgBring').showModal();
+  renderBring(sel); $('#dlgBring').showModal();
+  translateBring();
 };
-$('#bringList').addEventListener('change', bringCount);
-$('#bringAll').onclick = () => { $$('#bringList input').forEach(x => x.checked = true); bringCount(); };
-$('#bringNone').onclick = () => { $$('#bringList input').forEach(x => x.checked = false); bringCount(); };
+$('#bringLang').onchange = () => { saveSettings({ bringLang: $('#bringLang').value }); translateBring(); };
+$('#bringList').addEventListener('change', e => { if (e.target.matches('[data-bi]')) bringCount(); });
+$('#bringList').addEventListener('input', e => { const x = e.target.closest('[data-bn]'); if (x) BR[+x.dataset.bn].name = x.value; });
+$('#bringAll').onclick = () => { $$('#bringList [data-bi]').forEach(x => x.checked = true); bringCount(); };
+$('#bringNone').onclick = () => { $$('#bringList [data-bi]').forEach(x => x.checked = false); bringCount(); };
 $('#bringGo').onclick = async () => {
-  const items = $$('#bringList input:checked').map(x => S.shopItems[+x.dataset.bi]?.label).filter(Boolean);
+  const lang = bringLang();
+  const chosen = [...bringChecked()].map(i => BR[i]).filter(Boolean);
+  const items = chosen.map(r => (lang !== 'none' && r.name) ? [r.spec, r.name.trim() || r.src].filter(Boolean).join(' ') : r.src);
   if (!items.length) return;
   const d = new Date();
   const btn = $('#bringGo'); btn.disabled = true;
   // pe calculator deschidem fila acum, cât timp apăsarea e „proaspătă”, altfel browserul o blochează
   const tab = isPhone() ? null : window.open('', '_blank');
+  // corecturile tale se țin minte pentru data viitoare
+  const learn = {}; BR.forEach(r => { if (r.key && r.name && r.name.trim() && r.name.trim() !== r.orig) learn[r.key] = r.name.trim(); });
+  if (lang !== 'none' && Object.keys(learn).length) api('/api/translate-items', { json:{ lang, learn } });
   const r = await api('/api/bring-list', { json:{ items, title: `Appetora, ${d.getDate()} ${MONTHS[d.getMonth()]}`, origin: location.origin } });
   btn.disabled = false;
   if (!r.ok || !r.body?.deeplink){ tab?.close(); return toast(errMsg(r, 'Nu am putut pregăti lista pentru Bring!.'), true); }

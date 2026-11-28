@@ -21,6 +21,7 @@ function clean(b) {
   const days = (a) => [...new Set(a.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6))].sort();
   if (Array.isArray(b.vegDays)) out.vegDays = days(b.vegDays);
   if (Array.isArray(b.veganDays)) out.veganDays = days(b.veganDays);
+  if (["de", "en", "none"].includes(b.bringLang)) out.bringLang = b.bringLang;
   if (b.shopChecked && typeof b.shopChecked === "object" && !Array.isArray(b.shopChecked)) {
     out.shopChecked = {};
     Object.keys(b.shopChecked).slice(0, 500).forEach((k) => {
@@ -48,8 +49,8 @@ export default async function (context, req) {
 
     if (req.method === "GET") {
       if (!doc) return (context.res = json(200, { settings: null }));
-      const { excl, vegDays, veganDays, shopChecked, updatedAt } = doc;
-      return (context.res = json(200, { settings: { excl, vegDays, veganDays, shopChecked, updatedAt } }));
+      const { excl, vegDays, veganDays, bringLang, shopChecked, updatedAt } = doc;
+      return (context.res = json(200, { settings: { excl, vegDays, veganDays, bringLang, shopChecked, updatedAt } }));
     }
 
     if (req.method === "PUT") {
@@ -60,8 +61,8 @@ export default async function (context, req) {
         updatedAt: new Date().toISOString()
       };
       await colHistory.items.upsert(next);
-      const { excl, vegDays, veganDays, shopChecked, updatedAt } = next;
-      return (context.res = json(200, { settings: { excl, vegDays, veganDays, shopChecked, updatedAt } }));
+      const { excl, vegDays, veganDays, bringLang, shopChecked, updatedAt } = next;
+      return (context.res = json(200, { settings: { excl, vegDays, veganDays, bringLang, shopChecked, updatedAt } }));
     }
 
     context.res = json(405, { error: "Method not allowed" });
