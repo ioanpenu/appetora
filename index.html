@@ -1077,6 +1077,7 @@ $('#impUrlGo').onclick = async () => {
   impBusy(false);
   if (!r.ok) return toast(errMsg(r, 'Nu am putut citi pagina.'), true);
   fillFromImport(r.body); $('#impLink').hidden = true; $('#impUrl').value = '';
+  if (r.body.source === 'schema.org') toast('Am preluat rețeta exact de pe pagină, fără AI. Verifică și salvează.');
 };
 $('#impTxtGo').onclick = async () => {
   const text = $('#impTxt').value.trim();
