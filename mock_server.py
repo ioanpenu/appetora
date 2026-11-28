@@ -85,7 +85,7 @@ class H(BaseHTTPRequestHandler):
             if p == '/api/settings':
                 if m == 'PUT':
                     b = self.body()
-                    for k in ('excl', 'vegDays', 'veganDays', 'bringLang', 'shopChecked'):
+                    for k in ('excl', 'vegDays', 'veganDays', 'bringLang', 'bringOptimize', 'shopChecked'):
                         if k in b: settings[k] = b[k]
                     settings['updatedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()) + str(time.time())
                 return self.send(200, {'settings': settings or None})
@@ -96,6 +96,14 @@ class H(BaseHTTPRequestHandler):
                 url = f'http://{host}/api/bring-list?id={bid}'
                 from urllib.parse import quote
                 return self.send(200, {'id': bid, 'url': url, 'deeplink': 'https://api.getbring.com/rest/bringrecipes/deeplink?url=' + quote(url, safe='') + '&source=web&baseQuantity=4&requestedQuantity=4'})
+            if p == '/api/shop-optimize':
+                # simulare: unește după ultimul cuvânt, fără cantități
+                b = self.body(); groups = {}
+                for i, t in enumerate(b.get('items', [])):
+                    k = t.split()[-1].lower().rstrip('i').rstrip('e')
+                    groups.setdefault(k, {'name': t.split()[-1].capitalize(), 'spec': '1 Packung', 'from': []})['from'].append(i)
+                time.sleep(0.5)
+                return self.send(200, {'items': list(groups.values()), 'cached': False})
             if p == '/api/translate-items':
                 # traducere simulată: dicționar mic + memorie, ca pe server
                 b = self.body(); lang = b.get('lang', 'de')
