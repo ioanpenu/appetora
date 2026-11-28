@@ -28,7 +28,7 @@ const UNITS = [
 const WORD_NUM = { o: "1", un: "1", una: "1", doi: "2", doua: "2", trei: "3", patru: "4", cinci: "5", jumatate: "½" };
 
 // „500 g de carne tocată (proaspătă)” -> {spec:"500 g", name:"carne tocată"}
-export function split(label, lang) {
+function split(label, lang) {
   const rest = String(label).replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
   const words = rest.split(" ");
   let qty = "", unit = "", i = 0;
