@@ -3,6 +3,7 @@ import { colUsage, colUsers } from "../shared/cosmos.js";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import OpenAI from "openai";
+import { BlobServiceClient } from "@azure/storage-blob";
 
 export default async function (context, req) {
   try {
@@ -16,11 +17,24 @@ export default async function (context, req) {
 
     const b = await readBody(req);
     let sourceText = "";
+    let pageImageUrl = null;   // poza rețetei de pe pagină, urcată în Blob la final
 
     if (b.url) {
       const page = await fetch(b.url, { headers: { "user-agent": "Mozilla/5.0 AppetoraBot/1.0" } });
       if (!page.ok) return respond(context, 400, { error: `Failed to fetch URL (${page.status})` });
       const html = await page.text();
+
+      // 1) rețeta structurată (schema.org/Recipe) din pagină: exactă, fără AI, fără cost,
+      //    nu intră în limita zilnică. Majoritatea site-urilor de rețete o au.
+      const ld = findRecipeLd(html);
+      pageImageUrl = pickImage(ld, html, b.url);
+      const fromLd = ld && recipeFromLd(ld);
+      if (fromLd && fromLd.ingredients.length) {
+        const imageBlob = await saveImageToBlob(uid, pageImageUrl, context);
+        return respond(context, 200, { ...fromLd, imageBlob, source: "schema.org" });
+      }
+
+      // 2) altfel: textul paginii, interpretat de AI
       const dom = new JSDOM(html, { url: b.url });
       const reader = new Readability(dom.window.document);
       const article = reader.parse();
@@ -107,6 +121,7 @@ export default async function (context, req) {
       await colUsage.items.upsert(newDoc);
     }
 
+    if (pageImageUrl) out.imageBlob = await saveImageToBlob(uid, pageImageUrl, context);
     return respond(context, 200, out);
   } catch (e) {
     context.log.error(e);
@@ -139,4 +154,121 @@ function safeJson(s){
     const j = m ? m[0] : s;
     return JSON.parse(j);
   }catch{ return null; }
+}
+
+/* ---------- rețeta structurată (schema.org/Recipe) ----------
+   Caută în <script type="application/ld+json"> și, pentru site-urile construite cu JavaScript
+   (ex. Picnic, Next.js), și în blocurile de date unde JSON-ul e scris cu ghilimele escapate. */
+function balancedObject(s, start) {
+  let depth = 0, inStr = false, esc = false;
+  for (let j = start; j < s.length; j++) {
+    const c = s[j];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === "\\") esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') inStr = true;
+    else if (c === "{") depth++;
+    else if (c === "}") { depth--; if (depth === 0) return s.slice(start, j + 1); }
+  }
+  return null;
+}
+function isRecipe(o) {
+  const t = o && typeof o === "object" ? o["@type"] : null;
+  return t === "Recipe" || (Array.isArray(t) && t.includes("Recipe"));
+}
+function findRecipeIn(o) {
+  if (Array.isArray(o)) { for (const x of o) { const r = findRecipeIn(x); if (r) return r; } return null; }
+  if (o && typeof o === "object") {
+    if (isRecipe(o)) return o;
+    for (const k of ["@graph", "mainEntity", "itemListElement"]) if (k in o) { const r = findRecipeIn(o[k]); if (r) return r; }
+  }
+  return null;
+}
+function findRecipeLd(html) {
+  for (const m of html.matchAll(/<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    try { const r = findRecipeIn(JSON.parse(m[1])); if (r) return r; } catch { /* JSON stricat, următorul */ }
+  }
+  const unescaped = html.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  for (const text of [html, unescaped]) {
+    for (const m of text.matchAll(/"@type"\s*:\s*"Recipe"/g)) {
+      let k = m.index;
+      for (let tries = 0; tries < 60; tries++) {
+        k = text.lastIndexOf("{", k - 1);
+        if (k < 0) break;
+        const blob = balancedObject(text, k);
+        if (!blob || k + blob.length <= m.index) continue;
+        try { const r = findRecipeIn(JSON.parse(blob)); if (r) return r; } catch { /* încearcă o acoladă mai sus */ }
+      }
+    }
+  }
+  return null;
+}
+function cleanText(s) {
+  return String(s ?? "")
+    .replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n))
+    .replace(/[ \t]+/g, " ").trim();
+}
+function stepsFromLd(ins) {
+  if (!ins) return [];
+  if (typeof ins === "string") return cleanText(ins).split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  if (Array.isArray(ins)) return ins.flatMap((x) => {
+    if (typeof x === "string") return [cleanText(x)];
+    if (x && (x["@type"] === "HowToSection" || Array.isArray(x.itemListElement))) return stepsFromLd(x.itemListElement);
+    return [cleanText(x?.text || x?.name || "")];
+  }).filter(Boolean);
+  if (ins.itemListElement) return stepsFromLd(ins.itemListElement);
+  return [];
+}
+function recipeFromLd(r) {
+  const cat = Array.isArray(r.recipeCategory) ? r.recipeCategory[0] : r.recipeCategory;
+  const ingr = Array.isArray(r.recipeIngredient) ? r.recipeIngredient : Array.isArray(r.ingredients) ? r.ingredients : [];
+  return {
+    name: cleanText(r.name || r.headline || ""),
+    category: cleanText(cat || "").split(",")[0].trim(),
+    ingredients: ingr.map(cleanText).filter(Boolean),
+    instructions: stepsFromLd(r.recipeInstructions).join("\n")
+  };
+}
+
+/* ---------- poza rețetei ----------
+   Din schema.org (image: text, listă sau {url}) sau din <meta property="og:image">.
+   Serverul o descarcă și o urcă în Blob (folderul userului); din browser n-ar merge (CORS). */
+function pickImage(ld, html, pageUrl) {
+  let img = ld && ld.image;
+  if (Array.isArray(img)) img = img[0];
+  if (img && typeof img === "object") img = img.url || img.contentUrl || (Array.isArray(img["@list"]) ? img["@list"][0] : null);
+  if (!img) {
+    const m = /<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)["'][^>]*content=["']([^"']+)["']/i.exec(html)
+          || /<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["'](?:og:image|twitter:image)["']/i.exec(html);
+    img = m && m[1];
+  }
+  if (!img || typeof img !== "string") return null;
+  try { const u = new URL(cleanText(img), pageUrl); return /^https?:$/.test(u.protocol) ? u.href : null; } catch { return null; }
+}
+async function saveImageToBlob(uid, imageUrl, context) {
+  if (!imageUrl) return null;
+  const conn = process.env.BLOB_CONN_STRING;
+  if (!conn) return null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    const res = await fetch(imageUrl, { headers: { "user-agent": "Mozilla/5.0 AppetoraBot/1.0", accept: "image/*" }, signal: ctrl.signal });
+    clearTimeout(t);
+    const ct = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    if (!res.ok || !/^image\/(jpeg|png|webp|gif|avif)$/.test(ct)) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (!buf.length || buf.length > 8 * 1024 * 1024) return null;
+    const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/avif": "avif" }[ct];
+    const blobPath = `${uid}/${Date.now()}_import.${ext}`;
+    const container = BlobServiceClient.fromConnectionString(conn).getContainerClient(process.env.BLOB_CONTAINER || "images");
+    await container.getBlockBlobClient(blobPath).uploadData(buf, { blobHTTPHeaders: { blobContentType: ct } });
+    return blobPath;
+  } catch (e) {
+    context.log?.warn?.(`import image: ${e?.message || e}`);
+    return null;   // fără poză, rețeta tot se importă
+  }
 }
