@@ -236,6 +236,9 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .ingr input{width:18px;height:18px;accent-color:var(--ink);margin-top:3px;flex:none}
 .ingr label{cursor:pointer}
 .ingr input:checked + label{text-decoration:line-through;color:var(--muted)}
+.pantry-h{font-size:18px!important;margin:18px 0 2px!important;color:var(--ink-2)}
+.ingr.pantry li{color:var(--muted)}
+.ingr .pantry-sep{display:block;border:0;padding:16px 0 4px;font-weight:700;color:var(--ink-2);font-size:15px}
 .steps{margin:0;padding-left:1.3em;display:grid;gap:10px;line-height:1.65;max-width:62ch}
 .steps li::marker{color:var(--gold);font-weight:700}
 .rv-foot{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
@@ -581,7 +584,8 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
   <div class="dlg-in">
     <div class="rv-head"><div class="muted" id="rvCat"></div><h2 id="rvName"></h2></div>
     <div class="rv-cols">
-      <div><h3>Ingrediente</h3><ul class="ingr" id="rvIngr"></ul></div>
+      <div><h3>Ingrediente</h3><ul class="ingr" id="rvIngr"></ul>
+        <div id="rvPantryBox" hidden><h3 class="pantry-h">Din cămară</h3><p class="hint" style="margin:0 0 4px">Le ai de obicei în casă, nu intră în lista de cumpărături.</p><ul class="ingr pantry" id="rvPantry"></ul></div></div>
       <div><h3>Preparare</h3><ol class="steps" id="rvSteps"></ol></div>
     </div>
     <div class="rv-foot">
@@ -609,7 +613,7 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
   <button class="btn icon-btn dlg-close" type="button" data-close aria-label="Închide"><svg><use href="#i-x"/></svg></button>
   <div class="dlg-in">
     <h2 style="font-size:30px">Ingrediente pe care le ai mereu</h2>
-    <p class="muted" style="margin:0">Nu apar în lista de cumpărături. De exemplu sare, piper, ulei.</p>
+    <p class="muted" style="margin:0">Apar separat în rețete, la „Din cămară”, și nu intră în lista de cumpărături. Sunt recunoscute și în germană sau engleză (sare = Salz = salt, ulei = Öl, piper = Pfeffer…).</p>
     <form id="exclForm" style="display:flex;gap:8px"><input class="input" id="exclIn" placeholder="ex. oțet" aria-label="Ingredient"/><button class="btn primary" type="submit">Adaugă</button></form>
     <div class="tag-list" id="exclTags"></div>
   </div>
@@ -936,7 +940,11 @@ async function openRecipe(id){
   rvId = id;
   $('#rvName').textContent = r.name;
   $('#rvCat').innerHTML = [esc(r.category || ''), dietBadge(r)].filter(Boolean).join(' · ');
-  $('#rvIngr').innerHTML = (r.ingredients||[]).map((x,i) => `<li><input type="checkbox" id="ri${i}"/><label for="ri${i}">${esc(x)}</label></li>`).join('') || '<li class="muted">Fără ingrediente.</li>';
+  const sp = splitPantry(r.ingredients);
+  const li = ({x,i}) => `<li><input type="checkbox" id="ri${i}"/><label for="ri${i}">${esc(x)}</label></li>`;
+  $('#rvIngr').innerHTML = sp.buy.map(li).join('') || `<li class="muted">${sp.pantry.length ? 'Doar ingrediente din cămară.' : 'Fără ingrediente.'}</li>`;
+  $('#rvPantry').innerHTML = sp.pantry.map(li).join('');
+  $('#rvPantryBox').hidden = !sp.pantry.length;
   const steps = stepsOf(r);
   $('#rvSteps').innerHTML = steps.map(s => `<li>${esc(s)}</li>`).join('') || '<li class="muted">Fără instrucțiuni.</li>';
   $('#rvPause').innerHTML = r.paused ? '<svg><use href="#i-shuffle"/></svg>Pune-o înapoi în meniu' : '<svg><use href="#i-pause"/></svg>Scoate-o din meniul generat';
@@ -1364,7 +1372,7 @@ function ingKey(s){
   return norm(String(s))
     .replace(/\([^)]*\)/g,' ')
     .replace(/\b\d+([.,/]\d+)?\b/g,' ')
-    .replace(/\b(g|gr|kg|ml|l|buc|bucati|lingura|linguri|lingurita|lingurite|cana|cani|legatura|catel|catei|varf de cutit|praf|un|o|doua|trei|de)\b/g,' ')
+    .replace(/\b(g|gr|kg|ml|l|buc|bucati|lingura|linguri|lingurita|lingurite|cana|cani|legatura|catel|catei|varf de cutit|praf|un|o|doua|trei|de|el|tl|stk|pck|prise|zehe|zehen|bund|tbsp|tsp|cup|cups|pinch|clove|cloves)\b/g,' ')
     .replace(/[.,:;•\-–]/g,' ').replace(/\s+/g,' ').trim();
 }
 // „2 căței de usturoi” -> „usturoi”, folosit când același ingredient vine din mai multe rețete
@@ -1374,14 +1382,58 @@ function stripQty(s){
     .replace(/^de\s+/i, '').trim();
   return t || s;
 }
+/* „Din cămară”: ingredientele din lista „le ai mereu” (și sinonimele lor în germană/engleză)
+   apar separat în rețetă și nu intră în lista de cumpărături. Se calculează la afișare,
+   deci se aplică imediat tuturor rețetelor, și celor vechi. */
+const PANTRY_SYN = [
+  ['sare','sare de mare','sare grunjoasa','salz','meersalz','salt','sea salt'],
+  ['piper','piper negru','piper macinat','pfeffer','schwarzer pfeffer','pepper','black pepper'],
+  ['ulei','ulei de floarea soarelui','ulei de masline','ulei vegetal','ol','sonnenblumenol','olivenol','rapsol','pflanzenol','speiseol','oil','olive oil','sunflower oil','vegetable oil'],
+  ['zahar','zucker','sugar'],
+  ['apa','wasser','water'],
+  ['otet','essig','vinegar'],
+  ['boia','boia dulce','boia iute','paprikapulver','paprika edelsuss','paprika rosenscharf','paprika powder'],
+  ['cimbru','thymian','thyme'],
+  ['busuioc','basilikum','basil'],
+  ['foi de dafin','foaie de dafin','lorbeerblatt','lorbeerblatter','bay leaf','bay leaves'],
+  ['oregano'],
+  ['nucsoara','muskat','muskatnuss','nutmeg'],
+  ['chimen','kreuzkummel','cumin'],
+  ['scortisoara','zimt','cinnamon'],
+  ['faina','mehl','flour'],
+  ['bicarbonat','natron','baking soda'],
+  ['praf de copt','backpulver','baking powder'],
+  ['unt','butter'],
+  ['mustar','senf','mustard'],
+  ['miere','honig','honey']
+];
+let pantryCache = { src:null, set:null };
+function pantrySet(){
+  const src = getExcl().join('|');   // după conținut: ștergerea modifică lista pe loc
+  if (pantryCache.src !== src){
+    const set = new Set(getExcl().map(norm).filter(Boolean));
+    PANTRY_SYN.forEach(g => { if (g.some(w => set.has(w))) g.forEach(w => set.add(w)); });
+    pantryCache = { src, set };
+  }
+  return pantryCache.set;
+}
+function isPantry(raw){
+  const k = ingKey(raw); if (!k) return false;
+  for (const x of pantrySet()) if (k === x || k.startsWith(x+' ') || k.endsWith(' '+x)) return true;
+  return false;
+}
+function splitPantry(list){
+  const buy = [], pantry = [];
+  (list||[]).forEach((x, i) => (isPantry(x) ? pantry : buy).push({ x, i }));
+  return { buy, pantry };
+}
 function renderShop(){
-  const excl = new Set(getExcl().map(norm));
   const agg = new Map();
   S.week.forEach(d => {
     const r = d.recipeId && S.byId.get(d.recipeId); if (!r) return;
     (r.ingredients||[]).forEach(raw => {
       const k = ingKey(raw); if (!k) return;
-      if ([...excl].some(x => k === x || k.startsWith(x+' ') || k.endsWith(' '+x))) return;
+      if (isPantry(raw)) return;
       if (!agg.has(k)) agg.set(k, { raw: String(raw).trim(), n:0, from:new Set(), raws:[] });
       const a = agg.get(k); a.n++; a.from.add(r.name); a.raws.push(String(raw).trim());
     });
@@ -1564,7 +1616,9 @@ function openCook(id){
   if (!C.checked.has(id)) C.checked.set(id, new Set());
   $('#cookName').textContent = r.name;
   const chk = C.checked.get(id);
-  $('#cookIngr').innerHTML = (r.ingredients||[]).map((x,i) => `<li><input type="checkbox" id="ci${i}" data-ci="${i}" ${chk.has(i)?'checked':''}/><label for="ci${i}">${esc(x)}</label></li>`).join('') || '<li class="muted">Fără ingrediente.</li>';
+  const csp = splitPantry(r.ingredients);
+  const cli = ({x,i}) => `<li><input type="checkbox" id="ci${i}" data-ci="${i}" ${chk.has(i)?'checked':''}/><label for="ci${i}">${esc(x)}</label></li>`;
+  $('#cookIngr').innerHTML = (csp.buy.map(cli).join('') + (csp.pantry.length ? `<li class="pantry-sep">Din cămară</li>` + csp.pantry.map(cli).join('') : '')) || '<li class="muted">Fără ingrediente.</li>';
   $('#cookTabIngr').textContent = `Ingrediente (${(r.ingredients||[]).length})`;
   $('#cookWake').textContent = 'wakeLock' in navigator ? 'Ecranul rămâne aprins cât gătești.' : '';
   setCookTab('steps');
