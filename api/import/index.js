@@ -3,6 +3,7 @@ import { colUsage, colUsers } from "../shared/cosmos.js";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import OpenAI from "openai";
+import { BlobServiceClient } from "@azure/storage-blob";
 
 export default async function (context, req) {
   try {
@@ -16,6 +17,7 @@ export default async function (context, req) {
 
     const b = await readBody(req);
     let sourceText = "";
+    let pageImageUrl = null;   // poza rețetei de pe pagină, urcată în Blob la final
 
     if (b.url) {
       const page = await fetch(b.url, { headers: { "user-agent": "Mozilla/5.0 AppetoraBot/1.0" } });
@@ -25,8 +27,12 @@ export default async function (context, req) {
       // 1) rețeta structurată (schema.org/Recipe) din pagină: exactă, fără AI, fără cost,
       //    nu intră în limita zilnică. Majoritatea site-urilor de rețete o au.
       const ld = findRecipeLd(html);
+      pageImageUrl = pickImage(ld, html, b.url);
       const fromLd = ld && recipeFromLd(ld);
-      if (fromLd && fromLd.ingredients.length) return respond(context, 200, { ...fromLd, source: "schema.org" });
+      if (fromLd && fromLd.ingredients.length) {
+        const imageBlob = await saveImageToBlob(uid, pageImageUrl, context);
+        return respond(context, 200, { ...fromLd, imageBlob, source: "schema.org" });
+      }
 
       // 2) altfel: textul paginii, interpretat de AI
       const dom = new JSDOM(html, { url: b.url });
@@ -115,6 +121,7 @@ export default async function (context, req) {
       await colUsage.items.upsert(newDoc);
     }
 
+    if (pageImageUrl) out.imageBlob = await saveImageToBlob(uid, pageImageUrl, context);
     return respond(context, 200, out);
   } catch (e) {
     context.log.error(e);
@@ -225,4 +232,43 @@ function recipeFromLd(r) {
     ingredients: ingr.map(cleanText).filter(Boolean),
     instructions: stepsFromLd(r.recipeInstructions).join("\n")
   };
+}
+
+/* ---------- poza rețetei ----------
+   Din schema.org (image: text, listă sau {url}) sau din <meta property="og:image">.
+   Serverul o descarcă și o urcă în Blob (folderul userului); din browser n-ar merge (CORS). */
+function pickImage(ld, html, pageUrl) {
+  let img = ld && ld.image;
+  if (Array.isArray(img)) img = img[0];
+  if (img && typeof img === "object") img = img.url || img.contentUrl || (Array.isArray(img["@list"]) ? img["@list"][0] : null);
+  if (!img) {
+    const m = /<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)["'][^>]*content=["']([^"']+)["']/i.exec(html)
+          || /<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["'](?:og:image|twitter:image)["']/i.exec(html);
+    img = m && m[1];
+  }
+  if (!img || typeof img !== "string") return null;
+  try { const u = new URL(cleanText(img), pageUrl); return /^https?:$/.test(u.protocol) ? u.href : null; } catch { return null; }
+}
+async function saveImageToBlob(uid, imageUrl, context) {
+  if (!imageUrl) return null;
+  const conn = process.env.BLOB_CONN_STRING;
+  if (!conn) return null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    const res = await fetch(imageUrl, { headers: { "user-agent": "Mozilla/5.0 AppetoraBot/1.0", accept: "image/*" }, signal: ctrl.signal });
+    clearTimeout(t);
+    const ct = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    if (!res.ok || !/^image\/(jpeg|png|webp|gif|avif)$/.test(ct)) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (!buf.length || buf.length > 8 * 1024 * 1024) return null;
+    const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/avif": "avif" }[ct];
+    const blobPath = `${uid}/${Date.now()}_import.${ext}`;
+    const container = BlobServiceClient.fromConnectionString(conn).getContainerClient(process.env.BLOB_CONTAINER || "images");
+    await container.getBlockBlobClient(blobPath).uploadData(buf, { blobHTTPHeaders: { blobContentType: ct } });
+    return blobPath;
+  } catch (e) {
+    context.log?.warn?.(`import image: ${e?.message || e}`);
+    return null;   // fără poză, rețeta tot se importă
+  }
 }

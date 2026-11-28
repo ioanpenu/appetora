@@ -1047,6 +1047,7 @@ function fillFromImport(o){
   if (o.category) $('#fCat').value = o.category;
   if (o.ingredients?.length) $('#fIngr').value = o.ingredients.join('\n');
   if (o.instructions) $('#fInstr').value = o.instructions;
+  if (o.imageBlob && !S.photoBlob) setPhoto(o.imageBlob);   // poza de pe site, urcată deja de server
   vegFormSync();
   toast('Gata. Verifică formularul și salvează.');
   $('#fName').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center' });
