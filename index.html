@@ -1055,7 +1055,10 @@ function fillFromImport(o){
   if (o.category) $('#fCat').value = o.category;
   if (o.ingredients?.length) $('#fIngr').value = o.ingredients.join('\n');
   if (o.instructions) $('#fInstr').value = o.instructions;
-  if (o.imageBlob && !S.photoBlob) setPhoto(o.imageBlob);   // poza de pe site, urcată deja de server
+  if (o.imageBlob && !S.photoBlob){   // poza de pe site, urcată deja de server
+    setPhoto(o.imageBlob);
+    imgUrl(o.imageBlob).then(u => { if (!u) toast('Poza a fost salvată, dar nu o pot afișa (adresa temporară lipsește).', true); });
+  }
   vegFormSync();
   toast('Gata. Verifică formularul și salvează.');
   $('#fName').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center' });
@@ -1086,7 +1089,8 @@ $('#impUrlGo').onclick = async () => {
   impBusy(false);
   if (!r.ok) return toast(errMsg(r, 'Nu am putut citi pagina.'), true);
   fillFromImport(r.body); $('#impLink').hidden = true; $('#impUrl').value = '';
-  if (r.body.source === 'schema.org') toast('Am preluat rețeta exact de pe pagină, fără AI. Verifică și salvează.');
+  if (r.body.imageError) toast(`Rețeta e importată, dar fără poză: ${r.body.imageError}.`, true);
+  else if (r.body.source === 'schema.org') toast('Am preluat rețeta exact de pe pagină, fără AI. Verifică și salvează.');
 };
 $('#impTxtGo').onclick = async () => {
   const text = $('#impTxt').value.trim();

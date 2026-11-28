@@ -30,8 +30,8 @@ export default async function (context, req) {
       pageImageUrl = pickImage(ld, html, b.url);
       const fromLd = ld && recipeFromLd(ld);
       if (fromLd && fromLd.ingredients.length) {
-        const imageBlob = await saveImageToBlob(uid, pageImageUrl, context);
-        return respond(context, 200, { ...fromLd, imageBlob, source: "schema.org" });
+        const img = await saveImageToBlob(uid, pageImageUrl, context);
+        return respond(context, 200, { ...fromLd, imageBlob: img.blob, imageError: img.error, imageUrl: pageImageUrl, source: "schema.org" });
       }
 
       // 2) altfel: textul paginii, interpretat de AI
@@ -121,7 +121,7 @@ export default async function (context, req) {
       await colUsage.items.upsert(newDoc);
     }
 
-    if (pageImageUrl) out.imageBlob = await saveImageToBlob(uid, pageImageUrl, context);
+    if (b.url) { const img = await saveImageToBlob(uid, pageImageUrl, context); out.imageBlob = img.blob; out.imageError = img.error; out.imageUrl = pageImageUrl; }
     return respond(context, 200, out);
   } catch (e) {
     context.log.error(e);
@@ -250,25 +250,29 @@ function pickImage(ld, html, pageUrl) {
   try { const u = new URL(cleanText(img), pageUrl); return /^https?:$/.test(u.protocol) ? u.href : null; } catch { return null; }
 }
 async function saveImageToBlob(uid, imageUrl, context) {
-  if (!imageUrl) return null;
+  if (!imageUrl) return { blob: null, error: "pagina nu are poză" };
   const conn = process.env.BLOB_CONN_STRING;
-  if (!conn) return null;
+  if (!conn) return { blob: null, error: "lipsește BLOB_CONN_STRING" };
+  let step = "descărcare";
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 10000);
     const res = await fetch(imageUrl, { headers: { "user-agent": "Mozilla/5.0 AppetoraBot/1.0", accept: "image/*" }, signal: ctrl.signal });
     clearTimeout(t);
     const ct = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-    if (!res.ok || !/^image\/(jpeg|png|webp|gif|avif)$/.test(ct)) return null;
+    if (!res.ok) return { blob: null, error: `site-ul a răspuns ${res.status} la descărcarea pozei` };
+    if (!/^image\/(jpeg|png|webp|gif|avif)$/.test(ct)) return { blob: null, error: `tip de fișier neacceptat (${ct || "necunoscut"})` };
     const buf = Buffer.from(await res.arrayBuffer());
-    if (!buf.length || buf.length > 8 * 1024 * 1024) return null;
+    if (!buf.length || buf.length > 8 * 1024 * 1024) return { blob: null, error: `poză goală sau prea mare (${buf.length} B)` };
+    step = "urcare în stocare";
     const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/avif": "avif" }[ct];
     const blobPath = `${uid}/${Date.now()}_import.${ext}`;
     const container = BlobServiceClient.fromConnectionString(conn).getContainerClient(process.env.BLOB_CONTAINER || "images");
     await container.getBlockBlobClient(blobPath).uploadData(buf, { blobHTTPHeaders: { blobContentType: ct } });
-    return blobPath;
+    return { blob: blobPath, error: null };
   } catch (e) {
-    context.log?.warn?.(`import image: ${e?.message || e}`);
-    return null;   // fără poză, rețeta tot se importă
+    const error = `${step}: ${e?.name === "AbortError" ? "a durat prea mult" : (e?.message || e)}`;
+    context.log?.warn?.(`import image (${imageUrl}): ${error}`);
+    return { blob: null, error };   // fără poză, rețeta tot se importă
   }
 }
