@@ -272,7 +272,22 @@ dialog::backdrop{background:rgba(18,56,44,.45)}
 .btn.bring:hover{background:#D23B3F;border-color:#D23B3F}
 .bring-list{list-style:none;margin:0;padding:0;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
 .bring-list label{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-bottom:1px dashed var(--line);cursor:pointer}
-.bring-list input{width:20px;height:20px;accent-color:#E8484C;margin:2px 0 0;flex:none}
+.bring-list input[type=checkbox]{width:20px;height:20px;accent-color:#E8484C;margin:2px 0 0;flex:none}
+.br-main{flex:1;min-width:0;display:grid;gap:2px}
+.br-line{display:flex;align-items:center;gap:6px}
+.br-spec{font-weight:700;color:var(--ink-2);white-space:nowrap}
+.br-qty{width:6.5em;min-width:0;flex:none;border:1.5px solid transparent;border-radius:8px;padding:3px 6px;background:var(--sage);font-weight:700;color:var(--ink-2)}
+.br-qty:focus{outline:none;border-color:var(--ink);background:var(--paper)}
+.br-name{flex:1;min-width:0;width:0;border:1.5px solid transparent;border-radius:8px;padding:3px 6px;background:var(--sage);font-weight:600}
+.br-name:focus{outline:none;border-color:var(--ink);background:var(--paper)}
+.br-src{font-size:13px;color:var(--muted)}
+.br-line.todo .br-name,.br-line.todo .br-qty{background:var(--gold-soft);border-color:var(--gold)}
+.bring-lang{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.bring-lang select{min-height:36px;width:auto;padding:4px 10px}
+.bring-status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.bring-note{margin:0;font-size:14px;border-radius:var(--r-sm);padding:8px 12px;background:var(--sage)}
+.bring-note.err{background:#F8E1DD;color:var(--danger)}
+.bring-status .spinner{border-color:var(--line);border-top-color:var(--ink);width:16px;height:16px}
 .bring-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .bring-bar .n{margin-left:auto;font-size:14px;color:var(--muted)}
 
@@ -635,6 +650,16 @@ dialog#dlgCook{width:100%;max-width:none;height:100%;height:100dvh;max-height:no
   <div class="dlg-in">
     <h2 style="font-size:28px">Trimite în Bring!</h2>
     <p class="muted" style="margin:0">Alege ce vrei pe lista din Bring!. Se deschide aplicația Bring!, unde alegi lista și confirmi.</p>
+    <label class="bring-lang">Limba în Bring!
+      <select class="input" id="bringLang">
+        <option value="de">Germană</option>
+        <option value="en">Engleză</option>
+        <option value="none">Română (fără traducere)</option>
+      </select>
+    </label>
+    <label class="switch small"><input type="checkbox" id="bringOpt"/> Unește dublurile și rotunjește cantitățile la ce se cumpără</label>
+    <div class="bring-status" id="bringStatus" hidden><div class="spinner"></div><span id="bringStatusTxt">Traduc lista…</span></div>
+    <p class="bring-note" id="bringNote" hidden></p>
     <div class="bring-bar">
       <button class="btn quiet small" type="button" id="bringAll">Toate</button>
       <button class="btn quiet small" type="button" id="bringNone">Niciunul</button>
@@ -696,7 +721,9 @@ const errMsg = (r, fallback) => {
 
 let toastT;
 function toast(msg, isErr){
-  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (isErr ? ' err' : ''); t.hidden = false;
+  const t = $('#toast'); t.textContent = msg;
+  const dlg = [...document.querySelectorAll('dialog[open]')].pop();
+  if (t.parentElement !== (dlg || document.body)) (dlg || document.body).appendChild(t); t.className = 'toast' + (isErr ? ' err' : ''); t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(()=> t.hidden = true, 3200);
 }
 
@@ -1297,7 +1324,7 @@ const getChecked = () => S.settings.shopChecked || {};
 /* setări sincronizate între dispozitive (/api/settings), cu o copie locală pentru pornire rapidă */
 const SET_KEY = () => 'appetora_settings_' + (S.user?.id || S.user?.email || '');
 let setTimer = null, setPending = {};
-function applySettings(x){ ['excl','vegDays','veganDays','shopChecked','updatedAt'].forEach(k => { if (x[k] !== undefined) S.settings[k] = x[k]; }); }
+function applySettings(x){ ['excl','vegDays','veganDays','bringLang','bringOptimize','shopChecked','updatedAt'].forEach(k => { if (x[k] !== undefined) S.settings[k] = x[k]; }); }
 async function loadSettings(){
   const cached = LS.get(SET_KEY(), null); if (cached) applySettings(cached);
   const r = await api('/api/settings');
@@ -1353,14 +1380,14 @@ function renderShop(){
     (r.ingredients||[]).forEach(raw => {
       const k = ingKey(raw); if (!k) return;
       if ([...excl].some(x => k === x || k.startsWith(x+' ') || k.endsWith(' '+x))) return;
-      if (!agg.has(k)) agg.set(k, { raw: String(raw).trim(), n:0, from:new Set() });
-      const a = agg.get(k); a.n++; a.from.add(r.name);
+      if (!agg.has(k)) agg.set(k, { raw: String(raw).trim(), n:0, from:new Set(), raws:[] });
+      const a = agg.get(k); a.n++; a.from.add(r.name); a.raws.push(String(raw).trim());
     });
   });
   const checked = getChecked();
   S.shopKeys = new Set(agg.keys());
   const items = [...agg.entries()].sort((a,b) => a[0].localeCompare(b[0],'ro'));
-  S.shopItems = items.map(([k,a]) => ({ k, label: a.n>1 ? stripQty(a.raw) : a.raw }));
+  S.shopItems = items.map(([k,a]) => ({ k, label: a.n>1 ? stripQty(a.raw) : a.raw, raws: a.raws }));
   $('#shopPanel').hidden = !items.length;
   $('#shop').innerHTML = items.map(([k,a]) => `<li><label class="${checked[k]?'done':''}" title="${esc([...a.from].join(', '))}">
     <input type="checkbox" data-k="${esc(k)}" ${checked[k]?'checked':''}/><span>${esc(a.n>1 ? stripQty(a.raw) : a.raw)}</span>${a.n>1?`<span class="qty">×${a.n}</span>`:''}</label></li>`).join('');
@@ -1386,25 +1413,106 @@ $('#btnShopCopy').onclick = async () => {
    Bring! importă doar dintr-o pagină publică cu o rețetă (schema.org).
    Serverul salvează lista aleasă sub un link temporar, iar Bring! o citește de acolo. */
 const isPhone = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-function bringCount(){ const n = $$('#bringList input:checked').length; $('#bringN').textContent = `${n} din ${$$('#bringList input').length} alese`; $('#bringGo').disabled = !n; }
-$('#btnBring').onclick = () => {
+function bringCount(){ const n = $$('#bringList [data-bi]:checked').length; $('#bringN').textContent = `${n} din ${$$('#bringList [data-bi]').length} alese`; $('#bringGo').disabled = !n || !$('#bringStatus').hidden; }
+// Dialogul Bring! are două moduri:
+//  - optimizat (implicit): un apel AI unește dublurile, rotunjește cantitățile la ce se cumpără și traduce;
+//    rândurile sunt produsele de cumpărat {name, spec, from:[linii din rețete]};
+//  - simplu: fiecare produs din lista Appetora, doar tradus (memoria de traduceri per ingredient).
+let BR = [], BR_MODE = 'opt', BR_RAWS = [];
+const bringLang = () => S.settings.bringLang || 'de';
+const bringOpt = () => S.settings.bringOptimize !== false;
+const bringNote = (msg, err) => { const n = $('#bringNote'); n.textContent = msg || ''; n.className = 'bring-note' + (err ? ' err' : ''); n.hidden = !msg; };
+function renderBring(checkedIdx){
+  const plainRo = BR_MODE === 'plain' && bringLang() === 'none';
+  $('#bringList').innerHTML = BR.map((r,i) => {
+    const on = checkedIdx ? checkedIdx.has(i) : r.on !== false;
+    let body;
+    if (BR_MODE === 'opt' && r.name != null){
+      body = `<span class="br-line${r.untouched?' todo':''}"><input class="br-qty" data-bq="${i}" value="${esc(r.spec||'')}" placeholder="cantitate" aria-label="Cantitate pentru ${esc(r.name)}"/><input class="br-name" data-bn="${i}" value="${esc(r.name)}" aria-label="Produs"/></span><span class="br-src">din: ${esc(r.from.map(j => BR_RAWS[j]).join(', '))}</span>`;
+    } else if (!plainRo && r.name != null){
+      body = `<span class="br-line">${r.spec?`<span class="br-spec">${esc(r.spec)}</span>`:''}<input class="br-name" data-bn="${i}" value="${esc(r.name)}" aria-label="Traducere pentru ${esc(r.src)}"/></span><span class="br-src">${esc(r.src)}</span>`;
+    } else body = `<span>${esc(r.src)}</span>`;
+    return `<li><label><input type="checkbox" data-bi="${i}" ${on?'checked':''}/><span class="br-main">${body}</span></label></li>`;
+  }).join('');
+  bringCount();
+}
+const bringChecked = () => new Set($$('#bringList [data-bi]').filter(x => x.checked).map(x => +x.dataset.bi));
+function busy(on, txt){ $('#bringStatus').hidden = !on; if (txt) $('#bringStatusTxt').textContent = txt; bringCount(); }
+
+// sursa: produsele din lista Appetora pe care nu le-ai bifat ca „am deja”
+function bringSource(){
   const c = getChecked();
-  // implicit: ce n-ai bifat încă în lista de cumpărături
-  $('#bringList').innerHTML = (S.shopItems||[]).map((it,i) => `<li><label><input type="checkbox" data-bi="${i}" ${c[it.k]?'':'checked'}/><span>${esc(it.label)}</span></label></li>`).join('');
+  return (S.shopItems||[]).filter(it => !c[it.k]);
+}
+async function loadBring(){
+  bringNote('');
+  const src = bringSource();
+  if (bringOpt()){
+    BR_MODE = 'opt';
+    BR_RAWS = src.flatMap(it => it.raws && it.raws.length ? it.raws : [it.label]);
+    BR = BR_RAWS.map((x, j) => ({ src: x, name: null, from: [j] }));
+    renderBring(); busy(true, 'Unesc dublurile, rotunjesc cantitățile' + (bringLang() !== 'none' ? ' și traduc' : '') + '…');
+    const r = await api('/api/shop-optimize', { json:{ lang: bringLang() === 'none' ? 'ro' : bringLang(), items: BR_RAWS } });
+    busy(false);
+    if (r.ok && Array.isArray(r.body?.items)){
+      BR = r.body.items.map(it => ({ name: it.name, spec: it.spec || '', from: it.from || [], on: true, untouched: !!it.untouched }));
+      renderBring();
+      const merged = BR_RAWS.length - BR.length, left = BR.filter(x => x.untouched).length;
+      bringNote([merged > 0 ? `Din ${BR_RAWS.length} ingrediente din rețete au rămas ${BR.length} produse de cumpărat.` : '',
+        left ? `${left} ${left===1?'produs a rămas':'produse au rămas'} neprelucrate (marcate cu galben); scrie-le tu cantitatea și numele.` : 'Poți corecta orice câmp.',
+        (r.body.dropped||[]).length ? `Am lăsat deoparte ce nu e un produs concret: ${r.body.dropped.map(j => BR_RAWS[j]).filter(Boolean).join(', ')}.` : ''].filter(Boolean).join(' '));
+      return;
+    }
+    bringNote('Nu am putut optimiza lista: ' + (r.body?.aiError || errMsg(r, 'eroare necunoscută')) + '. Îți arăt lista simplă.', true);
+  }
+  // modul simplu
+  BR_MODE = 'plain';
+  BR = src.map(it => ({ src: it.label, name: null, spec: '' }));
+  renderBring();
+  if (bringLang() === 'none') return;
+  busy(true, 'Traduc lista…');
+  const r = await api('/api/translate-items', { json:{ lang: bringLang(), items: BR.map(x => x.src) } });
+  busy(false);
+  if (!r.ok || !Array.isArray(r.body?.items)){ bringNote('Nu am putut traduce lista: ' + errMsg(r, 'eroare necunoscută') + '.', true); return; }
+  const keep = bringChecked();
+  r.body.items.forEach((t, i) => { if (BR[i]) Object.assign(BR[i], { spec: t.spec || '', name: t.name, orig: t.name, key: t.key }); });
+  renderBring(keep);
+  const n = r.body.untranslated || 0;
+  if (r.body.aiError) bringNote(`Traducerea automată a eșuat (${r.body.aiError}). ${n} produse au rămas în română; le poți scrie tu în câmpuri.`, true);
+  else if (n) bringNote(`${n} produse nu au fost traduse; le poți scrie tu în câmpuri.`);
+}
+$('#btnBring').onclick = () => {
+  $('#bringLang').value = bringLang();
+  $('#bringOpt').checked = bringOpt();
   $('#bringDesk').hidden = isPhone();
   $('#bringDesk').textContent = 'Pe calculator, Bring! deschide pagina lui web. Ca să ajungă direct în aplicație, apasă butonul de pe telefonul pe care ai Bring!.';
-  bringCount(); $('#dlgBring').showModal();
+  BR = []; renderBring(); $('#dlgBring').showModal();
+  loadBring();
 };
-$('#bringList').addEventListener('change', bringCount);
-$('#bringAll').onclick = () => { $$('#bringList input').forEach(x => x.checked = true); bringCount(); };
-$('#bringNone').onclick = () => { $$('#bringList input').forEach(x => x.checked = false); bringCount(); };
+$('#bringLang').onchange = () => { saveSettings({ bringLang: $('#bringLang').value }); loadBring(); };
+$('#bringOpt').onchange = () => { saveSettings({ bringOptimize: $('#bringOpt').checked }); loadBring(); };
+$('#bringList').addEventListener('change', e => { if (e.target.matches('[data-bi]')) bringCount(); });
+$('#bringList').addEventListener('input', e => {
+  const n = e.target.closest('[data-bn]'), q = e.target.closest('[data-bq]');
+  if (n) BR[+n.dataset.bn].name = n.value;
+  if (q) BR[+q.dataset.bq].spec = q.value;
+});
+$('#bringAll').onclick = () => { $$('#bringList [data-bi]').forEach(x => x.checked = true); bringCount(); };
+$('#bringNone').onclick = () => { $$('#bringList [data-bi]').forEach(x => x.checked = false); bringCount(); };
 $('#bringGo').onclick = async () => {
-  const items = $$('#bringList input:checked').map(x => S.shopItems[+x.dataset.bi]?.label).filter(Boolean);
+  const lang = bringLang();
+  const chosen = [...bringChecked()].map(i => BR[i]).filter(Boolean);
+  const items = chosen.map(r => r.name != null ? [r.spec && r.spec.trim(), r.name.trim() || r.src].filter(Boolean).join(' ') : r.src).filter(Boolean);
   if (!items.length) return;
   const d = new Date();
   const btn = $('#bringGo'); btn.disabled = true;
   // pe calculator deschidem fila acum, cât timp apăsarea e „proaspătă”, altfel browserul o blochează
   const tab = isPhone() ? null : window.open('', '_blank');
+  // modul simplu: corecturile de traducere se țin minte (și devin glosar pentru optimizare)
+  if (BR_MODE === 'plain' && lang !== 'none'){
+    const learn = {}; BR.forEach(r => { if (r.key && r.name && r.name.trim() && r.name.trim() !== r.orig) learn[r.key] = r.name.trim(); });
+    if (Object.keys(learn).length) api('/api/translate-items', { json:{ lang, learn } });
+  }
   const r = await api('/api/bring-list', { json:{ items, title: `Appetora, ${d.getDate()} ${MONTHS[d.getMonth()]}`, origin: location.origin } });
   btn.disabled = false;
   if (!r.ok || !r.body?.deeplink){ tab?.close(); return toast(errMsg(r, 'Nu am putut pregăti lista pentru Bring!.'), true); }
