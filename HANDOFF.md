@@ -38,7 +38,7 @@ mock_server.py      API simulat pentru teste locale (Python, fără Node)
 | `/api/auth/*` (register, login, me, logout) | autentificare |
 | `GET/POST/PUT/DELETE /api/recipes` | CRUD rețete; câmpuri: `name, category, ingredients[], instructions, paused, imageBlob, diet` (`diet`: `vegan`/`vegetarian`/`omnivor`/`null` = detectat automat în interfață) |
 | `POST /api/upload-url`, `GET /api/view-url` | poze în Blob |
-| `POST /api/import` `{url}`/`{text}` | limită 5/zi, contorizată în `usage.imports` |
+| `POST /api/import` `{url}`/`{text}` | din link: întâi schema.org/Recipe din pagină (ld+json sau JSON escapat, ex. Picnic/Next.js), preluată exact, fără AI și fără limită (`source: 'schema.org'`); altfel AI, limită 5/zi în `usage.imports`. Poza rețetei (schema.org `image` sau `og:image`) e descărcată de server și urcată în Blob → `imageBlob` |
 | `POST /api/import-image` | **fără limită zilnică și fără contorizare** (vezi TODO) |
 | `GET /api/usage/today` | consumul de azi |
 | `POST /api/plan-save` `{plan:[{date,recipeId,name,category,locked}]}` · `GET /api/plan-latest` | plan în `history` (`kind: manual_plan`) |
@@ -51,6 +51,7 @@ mock_server.py      API simulat pentru teste locale (Python, fără Node)
 ## Funcții în interfață
 - **Plan**: 7 zile, zile blocate, generare cu evitarea categoriei din ziua vecină și a rețetelor din planul anterior. La pornire câștigă cel mai recent dintre ciorna locală și planul de pe server.
 - **Zile fără carne**: o apăsare = vegetarian, două = vegan. Regimul rețetei se detectează din ingrediente (carne/pește → omnivor; ouă, lactate, miere → vegetarian; variantele vegetale ca „lapte de cocos” nu contează) sau se alege în formular.
+- **Din cămară**: ingredientele din lista „le ai mereu” (`excl`, extinsă cu sinonime DE/EN: Salz, Öl, Pfeffer…) apar separat în rețetă și în modul de gătit și nu intră în lista de cumpărături. Se calculează la afișare (`isPantry` în index.html), nu se salvează în rețete.
 - **Modul de gătit**: ecran întreg, un pas pe rând, cronometre detectate din text, Wake Lock.
 - **Bring!**: importul oficial Bring! (`api.getbring.com/rest/bringrecipes/deeplink?url=…&source=web`). Parserul se poate testa direct: `https://api.getbring.com/rest/bringrecipes/parser?url=<pagina>`.
 - **PWA**: bară de instalare (buton pe Android, „Arată pașii” pe iPhone), partajare link → import pe Android, bandă „fără internet”.
