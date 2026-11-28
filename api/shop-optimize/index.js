@@ -13,7 +13,7 @@ import { colHistory, colUsage } from "../shared/cosmos.js";
 
 const LANGS = { de: "German", en: "English", ro: "Romanian" };
 const DAILY_AI_CALLS = 40;
-const PROMPT_VERSION = 2;
+const PROMPT_VERSION = 3;
 const json = (status, body) => ({ status, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 const ymd = (d) => d.toISOString().slice(0, 10);
 
@@ -33,14 +33,16 @@ function systemPrompt(lang, glossary) {
     `2. Add up quantities, then round to what you actually buy:`,
     `   - liquids (milk, cream, wine, stock): a normal package (e.g. 1 l milk, 200 ml cream, 1 ${S.bottle} wine);`,
     `   - spoons, teaspoons, pinches, small amounts of pantry goods (rice 80 g, flour, sugar, tomato paste, spices, oil): one package ("1 ${S.pack}", or the usual container) or no quantity;`,
+    `   - dairy sold in packs: butter "1 ${S.pack}" (250 g), cream/sour cream 200 ml, cheese at least 200 g;`,
     `   - eggs: round up to 6 or 10; garlic cloves: "1 ${S.head}"; fresh herbs: "1 ${S.bunch}";`,
     `   - meat, cheese, vegetables sold by weight: sum and round up to the next 50 g (keep kg for >= 1 kg);`,
     `   - pieces (onions, carrots, tomatoes): sum, ranges take the upper bound, round up to whole pieces.`,
     `3. Product names: short generic names as in the Bring! catalog in ${L}, no quantities in the name, no brands; keep a qualifier only when it changes the product.`,
-    `4. "spec" is the quantity to buy in ${L}, short (e.g. ${S.ex}), or "" if not needed.`,
-    glossary.length ? `5. Always use these preferred names chosen by the user: ${glossary.map(([a, b]) => `"${a}" → "${b}"`).join("; ")}.` : ``,
-    `Every input index must appear in exactly one output item's "from" list.`,
-    `Return JSON: {"items":[{"name":"...","spec":"...","from":[0,3]}]}.`
+    `4. "spec" is the quantity to buy in ${L}, short (e.g. ${S.ex}), or "" if not needed. Units and containers (bottle, pack, can) belong in "spec", never in "name".`,
+    `5. Vague lines that are not a concrete product ("other spices", "salt to taste", "condimente după gust", "alte mirodenii") are dropped: put their index in "dropped" instead of an item.`,
+    glossary.length ? `6. Always use these preferred names chosen by the user: ${glossary.map(([a, b]) => `"${a}" → "${b}"`).join("; ")}.` : ``,
+    `Every input index must appear in exactly one output item's "from" list, or in "dropped".`,
+    `Return JSON: {"items":[{"name":"...","spec":"...","from":[0,3]}],"dropped":[5]}.`
   ].filter(Boolean).join("\n");
 }
 
@@ -50,6 +52,7 @@ function parseAi(text, n) {
   const arr = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : Object.values(data || {}).find(Array.isArray);
   if (!Array.isArray(arr)) return null;
   const used = new Set();
+  const dropped = (Array.isArray(data?.dropped) ? data.dropped : []).map(Number).filter((i) => Number.isInteger(i) && i >= 0 && i < n);
   const items = [];
   for (const it of arr) {
     const name = String(it?.name ?? "").trim().slice(0, 80);
@@ -59,7 +62,8 @@ function parseAi(text, n) {
     from.forEach((i) => used.add(i));
     items.push({ name, spec, from });
   }
-  return { items, missing: [...Array(n).keys()].filter((i) => !used.has(i)) };
+  dropped.forEach((i) => { if (!used.has(i)) used.add(i); });
+  return { items, dropped: dropped.filter((i) => !items.some((it) => it.from.includes(i))), missing: [...Array(n).keys()].filter((i) => !used.has(i)) };
 }
 
 export default async function (context, req) {
@@ -86,7 +90,7 @@ export default async function (context, req) {
     const cid = `shopopt_${me.uid}`;
     let cache = null;
     try { ({ resource: cache } = await colHistory.item(cid, pk).read()); } catch (e) { if (e.code !== 404) throw e; }
-    if (cache?.hash === hash && Array.isArray(cache.items)) return (context.res = json(200, { items: cache.items, cached: true }));
+    if (cache?.hash === hash && Array.isArray(cache.items)) return (context.res = json(200, { items: cache.items, dropped: cache.dropped || [], cached: true }));
 
     const uid = me.uid, upk = `usage#${uid}`, did = `${uid}:${ymd(new Date())}`;
     let day = null;
@@ -114,7 +118,7 @@ export default async function (context, req) {
     try { first = await ask(labels); }
     catch (e) { return (context.res = json(200, { items: null, aiError: `OpenAI (${model}): ${e?.message || e}` })); }
     const parsed = first.parsed;
-    if (!parsed || !parsed.items.length) {
+    if (!parsed || (!parsed.items.length && !parsed.dropped.length)) {
       await logUsage(); return (context.res = json(200, { items: null, aiError: "Răspuns AI neclar: " + first.content.slice(0, 200) }));
     }
 
@@ -125,6 +129,7 @@ export default async function (context, req) {
         const second = (await ask(miss.map((i) => labels[i]))).parsed;
         if (second) {
           for (const it of second.items) parsed.items.push({ ...it, from: it.from.map((j) => miss[j]) });
+          parsed.dropped.push(...second.dropped.map((j) => miss[j]));
           parsed.missing = second.missing.map((j) => miss[j]);
         }
       } catch (e) { context.log?.warn?.(`shop-optimize retry: ${e?.message || e}`); }
@@ -143,8 +148,8 @@ export default async function (context, req) {
       });
     }
 
-    await colHistory.items.upsert({ id: cid, pk, kind: "shopopt", userId: uid, hash, lang, items: parsed.items, updatedAt: new Date().toISOString() });
-    context.res = json(200, { items: parsed.items, cached: false });
+    await colHistory.items.upsert({ id: cid, pk, kind: "shopopt", userId: uid, hash, lang, items: parsed.items, dropped: parsed.dropped, updatedAt: new Date().toISOString() });
+    context.res = json(200, { items: parsed.items, dropped: parsed.dropped, cached: false });
   } catch (e) {
     context.log?.error?.(e);
     context.res = json(500, { error: e?.message || String(e) });

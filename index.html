@@ -1459,7 +1459,8 @@ async function loadBring(){
       renderBring();
       const merged = BR_RAWS.length - BR.length, left = BR.filter(x => x.untouched).length;
       bringNote([merged > 0 ? `Din ${BR_RAWS.length} ingrediente din rețete au rămas ${BR.length} produse de cumpărat.` : '',
-        left ? `${left} ${left===1?'produs a rămas':'produse au rămas'} neprelucrate (marcate cu galben); scrie-le tu cantitatea și numele.` : 'Poți corecta orice câmp.'].filter(Boolean).join(' '));
+        left ? `${left} ${left===1?'produs a rămas':'produse au rămas'} neprelucrate (marcate cu galben); scrie-le tu cantitatea și numele.` : 'Poți corecta orice câmp.',
+        (r.body.dropped||[]).length ? `Am lăsat deoparte ce nu e un produs concret: ${r.body.dropped.map(j => BR_RAWS[j]).filter(Boolean).join(', ')}.` : ''].filter(Boolean).join(' '));
       return;
     }
     bringNote('Nu am putut optimiza lista: ' + (r.body?.aiError || errMsg(r, 'eroare necunoscută')) + '. Îți arăt lista simplă.', true);
